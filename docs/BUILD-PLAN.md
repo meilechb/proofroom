@@ -294,27 +294,27 @@ Galleries
 - [x] 3.57 `analytics.ts` exists with record and summaries (extend per 3.56).
 
 CRM and sales
-- [ ] 3.58 `clients.ts`: create, update, stage change, tag add/remove, merge by email, archive, search.
-  - [ ] 3.58.1 createClient(studio, input) with email dedupe
-  - [ ] 3.58.2 updateClient(id, patch)
-  - [ ] 3.58.3 setStage(id, stage) with event
-  - [ ] 3.58.4 addTag/removeTag(id, tag)
-  - [ ] 3.58.5 mergeClients(keepId, dropId) moving all references
-  - [ ] 3.58.6 archiveClient/restoreClient(id)
-  - [ ] 3.58.7 searchClients(studio, q, filters, cursor)
-- [ ] 3.59 `clients.ts`: `recordEvent(clientId, kind, ref)` feeding `client_events`.
-- [ ] 3.60 `orders.ts`: create from package, next order number (per studio, transactional), update, cancel, schedule, agreement sign.
-  - [ ] 3.60.1 createOrder(studio, client, package, when) inside a transaction taking next_order_number
-  - [ ] 3.60.2 updateOrder(id, patch) with recompute rules
-  - [ ] 3.60.3 cancelOrder(id, reason)
-  - [ ] 3.60.4 rescheduleOrder(id, when)
-  - [ ] 3.60.5 signAgreement(id, name, ip, version)
-  - [ ] 3.60.6 orderSummary(id) for the session page
-- [ ] 3.61 `packages.ts`: CRUD and ordering.
+- [x] 3.58 `clients.ts`: create, update, stage change, tag add/remove, merge by email, archive, search.
+  - [x] 3.58.1 createClient(studio, input) with email dedupe
+  - [x] 3.58.2 updateClient(id, patch)
+  - [x] 3.58.3 setStage(id, stage) with event
+  - [x] 3.58.4 addTag/removeTag(id, tag)
+  - [x] 3.58.5 mergeClients(keepId, dropId) moving all references
+  - [x] 3.58.6 archiveClient/restoreClient(id)
+  - [x] 3.58.7 searchClients(studio, q, filters, cursor)
+- [x] 3.59 `clients.ts`: `recordEvent(clientId, kind, ref)` feeding `client_events`.
+- [x] 3.60 `orders.ts`: create from package, next order number (per studio, transactional), update, cancel, schedule, agreement sign.
+  - [x] 3.60.1 createOrder(studio, client, package, when) inside a transaction taking next_order_number
+  - [x] 3.60.2 updateOrder(id, patch) with recompute rules
+  - [x] 3.60.3 cancelOrder(id, reason)
+  - [x] 3.60.4 rescheduleOrder(id, when)
+  - [x] 3.60.5 signAgreement(id, name, ip, version)
+  - [x] 3.60.6 orderSummary(id) for the session page
+- [x] 3.61 `packages.ts`: CRUD and ordering.
 - [x] 3.62 `agreements.ts`: render template with variables, versioning, `CONTRACT_VERSION` per studio template.
-- [ ] 3.63 `tasks.ts`: CRUD, due today, overdue.
-- [ ] 3.64 `csv.ts`: export clients and payments; parse client CSV with column mapping and validation report.
-- [ ] 3.65 `ical.ts`: studio sessions feed with token.
+- [x] 3.63 `tasks.ts`: CRUD, due today, overdue.
+- [x] 3.64 `csv.ts`: export clients and payments; parse client CSV with column mapping and validation report.
+- [x] 3.65 `ical.ts`: studio sessions feed with token.
 
 Website
 - [ ] 3.66 `site/schema.ts`: zod schemas for site settings (template, colors, font, logo asset, favicon asset), page sections per page, area pages, SEO.
