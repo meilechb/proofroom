@@ -87,7 +87,7 @@ Legend: `[ ]` not started, `[x]` done, `[~]` partly done, `[-]` removed by decis
   - [ ] 1.26.4 Payments: subscription vs studio Stripe connection
   - [ ] 1.26.5 Email and sending domains
   - [ ] 1.26.6 Lightroom API and plugin
-- [ ] 1.27 `docs/NAME-CANDIDATES.md`: the September 9 availability list, for the naming decision later.
+- [x] 1.27 `docs/NAME-CANDIDATES.md`: the September 9 availability list, for the naming decision later.
 - [ ] 1.28 Root repo `tsconfig.json` and `eslint.config.mjs` exclude `saas/` (done in commit 64f6053); confirm root `npm run build` still passes after every saas change touching root files.
 - [x] 1.29 `saas/.nvmrc` with Node 22.
 - [ ] 1.30 Rename pass (when the name is chosen): env default, cookie name `pr_session`, token prefix `pr_live_`, plugin folder and id, email footer, docs. One commit.
