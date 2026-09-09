@@ -14,7 +14,8 @@
     "stripe:setup": "node scripts/stripe-setup.mjs",
     "plugin:zip": "node scripts/plugin-zip.mjs",
     "platform:admin": "node scripts/make-platform-admin.mjs",
-    "env:check": "node scripts/check-env.mjs"
+    "env:check": "node scripts/check-env.mjs",
+    "check": "bash scripts/check.sh"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

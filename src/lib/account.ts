@@ -6,6 +6,7 @@ import { hashToken, randomToken } from "@/lib/tokens";
 import { TRIAL_DAYS } from "@/lib/plans";
 import { generateReferralCode } from "@/lib/referrals";
 import { DEFAULT_AGREEMENT_MD } from "@/lib/agreements";
+import { defaultSite } from "@/lib/site/defaults";
 import type { Studio, User } from "@/lib/types";
 
 /** Account-level operations: users, studios, one-time tokens, lockout. */
@@ -76,6 +77,10 @@ export async function createStudioForUser(userId: string, input: { studioName: s
 /** Defaults every new studio gets: packages, a referral code, agreement v1. Safe to re-run. */
 export async function seedStudioDefaults(studioId: string) {
   await ensureReferralCode(studioId);
+  const studio = one<{ name: string; site: Record<string, unknown> }>(await db()`select name, site from studios where id = ${studioId}`);
+  if (studio && Object.keys(studio.site ?? {}).length === 0) {
+    await db()`update studios set site = ${JSON.stringify(defaultSite(studio.name))}::jsonb where id = ${studioId}`;
+  }
   await db()`
     insert into agreement_templates (studio_id, version, body_md, is_active)
     values (${studioId}, 1, ${DEFAULT_AGREEMENT_MD}, true)
