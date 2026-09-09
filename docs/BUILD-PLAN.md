@@ -370,14 +370,14 @@ Referrals, imports, booking, planning
   - [x] 3.84.6 voidReferral(id, reason)
 - [x] 3.85 `referrals.ts` fraud checks: same user, same email, same payment method fingerprint (from Stripe customer default payment method), cap 12 per year.
 - [x] 3.86 `referrals.ts` tests for each rule.
-- [ ] 3.87 `imports.ts`: create import, accept zip uploads, scan entries, map folders to galleries, stream photos into storage, progress, finish, log.
-  - [ ] 3.87.1 createImport(studio, source)
-  - [ ] 3.87.2 registerFile(importId, blob)
-  - [ ] 3.87.3 scanZip(file) → entries grouped by folder
-  - [ ] 3.87.4 proposeGalleries(entries) → titles, counts
-  - [ ] 3.87.5 processChunk(importId, n) idempotent
-  - [ ] 3.87.6 finishImport(importId) summary and email
-- [ ] 3.88 `imports/pixieset.ts`, `imports/pictime.ts`, `imports/shootproof.ts`: folder naming conventions and client CSV shapes (documented from their export formats; where a format cannot be verified, treat as plain zip).
+- [x] 3.87 `imports.ts`: create import, accept zip uploads, scan entries, map folders to galleries, stream photos into storage, progress, finish, log.
+  - [x] 3.87.1 createImport(studio, source)
+  - [x] 3.87.2 registerFile(importId, blob)
+  - [x] 3.87.3 scanZip(file) → entries grouped by folder
+  - [x] 3.87.4 proposeGalleries(entries) → titles, counts
+  - [x] 3.87.5 processChunk(importId, n) idempotent
+  - [x] 3.87.6 finishImport(importId) summary and email
+- [x] 3.88 `imports/pixieset.ts`, `imports/pictime.ts`, `imports/shootproof.ts`: folder naming conventions and client CSV shapes (documented from their export formats; where a format cannot be verified, treat as plain zip).
 - [x] 3.89 `booking.ts`: availability from weekly hours minus existing slots and buffers, slot generation per package duration, hold for 15 minutes, confirm, cancel.
   - [x] 3.89.1 weeklyHours → slots for a date
   - [x] 3.89.2 subtract existing slots and buffers
