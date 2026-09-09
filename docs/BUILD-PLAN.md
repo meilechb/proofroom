@@ -270,27 +270,27 @@ Storage and images
 
 Galleries
 - [x] 3.49 `gallery-access.ts`: code and password checking, cookie grant per gallery, expiry check.
-- [ ] 3.50 `gallery-access.ts`: download PIN check, pay-gate check (`order balance == 0` or gallery not gated), sharing flag.
-- [ ] 3.51 `gallery-access.ts`: rate-limited unlock attempts and lockout per gallery + ip.
-- [ ] 3.52 `galleries.ts`: create, update settings, publish, unpublish, regenerate code, duplicate to finals from favorites, expire, counts.
-  - [ ] 3.52.1 createGallery(studio, input)
-  - [ ] 3.52.2 updateGallerySettings(id, patch)
-  - [ ] 3.52.3 publishGallery(id) / unpublishGallery(id)
-  - [ ] 3.52.4 regenerateAccessCode(id)
-  - [ ] 3.52.5 duplicateFinalsFromFavorites(id)
-  - [ ] 3.52.6 expireGalleries(now) for cron
-  - [ ] 3.52.7 galleryCounts(id) photos, favorites, unresolved notes
-- [ ] 3.53 `galleries.ts`: team event helpers: create parent, bulk-create children from a names list, per-child codes, summary.
-- [ ] 3.54 `photos.ts`: begin upload, complete upload (record, variants, usage), reorder, rename, soft delete, restore, purge.
-  - [ ] 3.54.1 beginUpload(gallery, filename, size, sha256)
-  - [ ] 3.54.2 completeUpload(photoId) variants + usage
-  - [ ] 3.54.3 reorderPhotos(gallery, ids)
-  - [ ] 3.54.4 renamePhoto(id, filename)
-  - [ ] 3.54.5 softDeletePhoto(id) / restorePhoto(id)
-  - [ ] 3.54.6 purgeDeleted(olderThan) for cron
-  - [ ] 3.54.7 movePhoto(id, targetGallery)
+- [x] 3.50 `gallery-access.ts`: download PIN check, pay-gate check (`order balance == 0` or gallery not gated), sharing flag.
+- [x] 3.51 `gallery-access.ts`: rate-limited unlock attempts and lockout per gallery + ip.
+- [x] 3.52 `galleries.ts`: create, update settings, publish, unpublish, regenerate code, duplicate to finals from favorites, expire, counts.
+  - [x] 3.52.1 createGallery(studio, input)
+  - [x] 3.52.2 updateGallerySettings(id, patch)
+  - [x] 3.52.3 publishGallery(id) / unpublishGallery(id)
+  - [x] 3.52.4 regenerateAccessCode(id)
+  - [x] 3.52.5 duplicateFinalsFromFavorites(id)
+  - [x] 3.52.6 expireGalleries(now) for cron
+  - [x] 3.52.7 galleryCounts(id) photos, favorites, unresolved notes
+- [x] 3.53 `galleries.ts`: team event helpers: create parent, bulk-create children from a names list, per-child codes, summary.
+- [x] 3.54 `photos.ts`: begin upload, complete upload (record, variants, usage), reorder, rename, soft delete, restore, purge.
+  - [x] 3.54.1 beginUpload(gallery, filename, size, sha256)
+  - [x] 3.54.2 completeUpload(photoId) variants + usage
+  - [x] 3.54.3 reorderPhotos(gallery, ids)
+  - [x] 3.54.4 renamePhoto(id, filename)
+  - [x] 3.54.5 softDeletePhoto(id) / restorePhoto(id)
+  - [x] 3.54.6 purgeDeleted(olderThan) for cron
+  - [x] 3.54.7 movePhoto(id, targetGallery)
 - [x] 3.55 `zip.ts`: streaming zip (fflate) of originals or web size, with filename de-duplication.
-- [ ] 3.56 `analytics.ts`: `track(kind, key, visitorHash)` deduped per day; `summary(studio, range)`.
+- [x] 3.56 `analytics.ts`: `track(kind, key, visitorHash)` deduped per day; `summary(studio, range)`.
 - [x] 3.57 `analytics.ts` exists with record and summaries (extend per 3.56).
 
 CRM and sales
