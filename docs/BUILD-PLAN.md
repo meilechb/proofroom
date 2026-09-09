@@ -530,49 +530,49 @@ Validation and types
 
 ## Phase 8. Marketing site (root domain)
 
-- [ ] 8.1 `(marketing)/layout.tsx`: header with logo, nav (Features, Pricing, Lightroom, Compare, Log in, Start free), footer with legal links and status.
-- [ ] 8.2 Mobile nav (hamburger, focus trap, closes on route change) tested on a 375 px viewport.
-- [ ] 8.3 Home hero: "Cull in Lightroom. Deliver in one click. Get paid in your own Stripe." with two CTAs and a product screenshot placeholder swapped for real screenshots at Phase 22.
-- [ ] 8.4 Home: three-step section (shoot, publish from Lightroom, client picks and pays).
-- [ ] 8.5 Home: feature grid (website templates, galleries, CRM, payments in your Stripe, email from your domain, team days, booking, import).
-- [ ] 8.6 Home: "Your money is yours" section explaining 0% commission and own Stripe.
-- [ ] 8.7 Home: Lightroom plugin section with screenshot.
-- [ ] 8.8 Home: pricing teaser ($40/month, everything included, 14-day trial).
-- [ ] 8.9 Home: FAQ (8 questions) and final CTA.
-- [ ] 8.10 `/pricing`: single plan card, full feature list, "everything included" table, FAQ, referral note.
-- [ ] 8.11 `/features/website`, `/features/galleries`, `/features/crm`, `/features/payments`, `/features/lightroom`, `/features/team-headshots`, `/features/booking`, `/features/email`.
-  - [ ] 8.11.1 /features/website
-  - [ ] 8.11.2 /features/galleries
-  - [ ] 8.11.3 /features/crm
-  - [ ] 8.11.4 /features/payments
-  - [ ] 8.11.5 /features/lightroom
-  - [ ] 8.11.6 /features/team-headshots
-  - [ ] 8.11.7 /features/booking
-  - [ ] 8.11.8 /features/email
-- [ ] 8.12 `/compare/pixieset`, `/compare/pic-time`, `/compare/shootproof`, `/compare/cloudspot`, `/compare/honeybook` with tables from `docs/MARKET-RESEARCH.md` and a "last checked" date.
-  - [ ] 8.12.1 /compare/pixieset
-  - [ ] 8.12.2 /compare/pic-time
-  - [ ] 8.12.3 /compare/shootproof
-  - [ ] 8.12.4 /compare/cloudspot
-  - [ ] 8.12.5 /compare/honeybook
-- [ ] 8.13 `/lightroom`: install guide, screenshots, download link (requires login for the actual zip).
-- [ ] 8.14 `/security`: data handling, storage, payments never touched, backups.
-- [ ] 8.15 `/terms`, `/privacy`, `/cookies`, `/dpa`, `/referrals` (program terms), `/fair-use`.
-  - [ ] 8.15.1 /terms
-  - [ ] 8.15.2 /privacy
-  - [ ] 8.15.3 /cookies
-  - [ ] 8.15.4 /dpa
-  - [ ] 8.15.5 /referrals
-  - [ ] 8.15.6 /fair-use
-- [ ] 8.16 `/contact`: form to `leads`, rate limit, honeypot, notice email to `PLATFORM_ALERT_EMAIL`.
-- [ ] 8.17 `/changelog` rendering `CHANGELOG.md`.
-- [ ] 8.18 `sitemap.ts`, `robots.ts` (disallow `/studio`, `/admin`, `/api`).
-- [ ] 8.19 `opengraph-image.tsx` and per-page metadata.
-- [ ] 8.20 JSON-LD Organization and SoftwareApplication.
-- [ ] 8.21 Marketing analytics: page view beacon to `analytics_daily` with `studio_id null`.
-- [ ] 8.22 Signup CTA carries `?ref=` through from marketing pages.
-- [ ] 8.23 Accessibility pass: landmarks, skip link, focus styles, contrast, alt text.
-- [ ] 8.24 Lighthouse run recorded in docs (target 95+ performance, 100 accessibility).
+- [x] 8.1 `(marketing)/layout.tsx`: header with logo, nav (Features, Pricing, Lightroom, Compare, Log in, Start free), footer with legal links and status.
+- [x] 8.2 Mobile nav (hamburger, focus trap, closes on route change) tested on a 375 px viewport.
+- [x] 8.3 Home hero: "Cull in Lightroom. Deliver in one click. Get paid in your own Stripe." with two CTAs and a product screenshot placeholder swapped for real screenshots at Phase 22.
+- [x] 8.4 Home: three-step section (shoot, publish from Lightroom, client picks and pays).
+- [x] 8.5 Home: feature grid (website templates, galleries, CRM, payments in your Stripe, email from your domain, team days, booking, import).
+- [x] 8.6 Home: "Your money is yours" section explaining 0% commission and own Stripe.
+- [x] 8.7 Home: Lightroom plugin section with screenshot.
+- [x] 8.8 Home: pricing teaser ($40/month, everything included, 14-day trial).
+- [x] 8.9 Home: FAQ (8 questions) and final CTA.
+- [x] 8.10 `/pricing`: single plan card, full feature list, "everything included" table, FAQ, referral note.
+- [x] 8.11 `/features/website`, `/features/galleries`, `/features/crm`, `/features/payments`, `/features/lightroom`, `/features/team-headshots`, `/features/booking`, `/features/email`.
+  - [x] 8.11.1 /features/website
+  - [x] 8.11.2 /features/galleries
+  - [x] 8.11.3 /features/crm
+  - [x] 8.11.4 /features/payments
+  - [x] 8.11.5 /features/lightroom
+  - [x] 8.11.6 /features/team-headshots
+  - [x] 8.11.7 /features/booking
+  - [x] 8.11.8 /features/email
+- [x] 8.12 `/compare/pixieset`, `/compare/pic-time`, `/compare/shootproof`, `/compare/cloudspot`, `/compare/honeybook` with tables from `docs/MARKET-RESEARCH.md` and a "last checked" date.
+  - [x] 8.12.1 /compare/pixieset
+  - [x] 8.12.2 /compare/pic-time
+  - [x] 8.12.3 /compare/shootproof
+  - [x] 8.12.4 /compare/cloudspot
+  - [x] 8.12.5 /compare/honeybook
+- [x] 8.13 `/lightroom`: install guide, screenshots, download link (requires login for the actual zip).
+- [x] 8.14 `/security`: data handling, storage, payments never touched, backups.
+- [x] 8.15 `/terms`, `/privacy`, `/cookies`, `/dpa`, `/referrals` (program terms), `/fair-use`. Company legal name and governing law are placeholders (`COMPANY`, `JURISDICTION` in `components/marketing/legal-content.tsx`) until counsel reviews; see 22.x launch list.
+  - [x] 8.15.1 /terms
+  - [x] 8.15.2 /privacy
+  - [x] 8.15.3 /cookies
+  - [x] 8.15.4 /dpa
+  - [x] 8.15.5 /referrals
+  - [x] 8.15.6 /fair-use
+- [x] 8.16 `/contact`: form to `leads`, rate limit, honeypot, notice email to `PLATFORM_ALERT_EMAIL`.
+- [x] 8.17 `/changelog` rendering `CHANGELOG.md`.
+- [x] 8.18 `sitemap.ts`, `robots.ts` (disallow `/studio`, `/admin`, `/api`).
+- [x] 8.19 `opengraph-image.tsx` and per-page metadata.
+- [x] 8.20 JSON-LD Organization and SoftwareApplication.
+- [x] 8.21 Marketing analytics: page view beacon to `analytics_daily` with `studio_id null`. Built as its own table `marketing_views_daily (day, path, referrer, count)` because `analytics_daily` keys on a non-null `studio_id`.
+- [x] 8.22 Signup CTA carries `?ref=` through from marketing pages.
+- [x] 8.23 Accessibility pass: landmarks, skip link, focus styles, contrast, alt text.
+- [ ] 8.24 Lighthouse run recorded in docs (target 95+ performance, 100 accessibility). Runs at Phase 22 against a deployed preview.
 
 ## Phase 9. Studio shell, onboarding, dashboard
 
@@ -1042,7 +1042,7 @@ Plugin
 - [ ] 19.7 Email log across studios with failure rate and bounce rate.
 - [ ] 19.8 Referrals list with void and re-grant.
 - [ ] 19.9 Platform settings: signups open, maintenance banner text, minimum plugin version.
-- [ ] 19.10 `GET /api/health`: db, blob, stripe, resend reachability (cached 60 s).
+- [x] 19.10 `GET /api/health`: db, blob, stripe, resend reachability (cached 60 s).
 - [ ] 19.11 Daily platform digest email to `PLATFORM_ALERT_EMAIL`: signups, conversions, failures, storage outliers.
 - [ ] 19.12 Tests: admin guard, suspend blocks studio writes.
 
@@ -1057,7 +1057,7 @@ Plugin
 - [ ] 20.7 Fraud rules enforced (3.85) with reasons stored on void.
 - [ ] 20.8 Void on refund or dispute of the referred studio's first invoice within 30 days; remove discount going forward.
 - [ ] 20.9 Emails: "Your friend joined", "Your 10% for 12 months is on", "Your reward is queued".
-- [ ] 20.10 `/referrals` public terms page; pricing page mention; onboarding checklist item.
+- [~] 20.10 `/referrals` public terms page; pricing page mention; onboarding checklist item.
 - [ ] 20.11 Platform admin views (19.8).
 - [ ] 20.12 Tests: reward path, queue path, void path, cap.
 
