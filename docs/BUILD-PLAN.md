@@ -466,67 +466,67 @@ Validation and types
 
 ## Phase 6. Platform subscription (our $40/month)
 
-- [ ] 6.1 `/studio/billing` page: state badge (trial with days left, active, past due, read-only), price, next invoice date, card on file (last 4), invoices list.
-- [ ] 6.2 "Start subscription" button → `POST /api/billing/checkout` (Stripe Checkout, subscription mode, `customer` created if missing, trial end carried over if still in trial, referral coupon applied if a pending reward exists).
-- [ ] 6.3 "Manage billing" → `POST /api/billing/portal` (Customer Portal configured for card update and cancel).
-- [ ] 6.4 `/studio/billing/success` and `/studio/billing/cancelled` pages.
-- [ ] 6.5 `POST /api/stripe/webhook`: verify signature, idempotency via `stripe_events`, handle `checkout.session.completed`, `customer.subscription.created|updated|deleted`, `invoice.paid`, `invoice.payment_failed`.
-  - [ ] 6.5.1 checkout.session.completed (subscription mode) → link customer and subscription
-  - [ ] 6.5.2 customer.subscription.created → status, period
-  - [ ] 6.5.3 customer.subscription.updated → status, cancel flag, period
-  - [ ] 6.5.4 customer.subscription.deleted → cancelled, start retention clock
-  - [ ] 6.5.5 invoice.paid → active, clear read-only, referral hook
-  - [ ] 6.5.6 invoice.payment_failed → past_due, email
-- [ ] 6.6 Webhook maps subscription status to studio columns; clears `read_only_since` on active.
-- [ ] 6.7 `invoice.paid` for a studio's first paid invoice calls `referrals.onFirstPaidInvoice()`.
-- [ ] 6.8 Trial banner in studio shell: days left, subscribe link; turns red at 3 days.
-- [ ] 6.9 Read-only mode: `requireWritableStudio` blocks mutations; UI shows a persistent notice with the subscribe button; galleries and site stay live through grace.
+- [x] 6.1 `/studio/billing` page: state badge (trial with days left, active, past due, read-only), price, next invoice date, card on file (last 4), invoices list.
+- [x] 6.2 "Start subscription" button → `POST /api/billing/checkout` (Stripe Checkout, subscription mode, `customer` created if missing, trial end carried over if still in trial, referral coupon applied if a pending reward exists).
+- [x] 6.3 "Manage billing" → `POST /api/billing/portal` (Customer Portal configured for card update and cancel).
+- [x] 6.4 `/studio/billing/success` and `/studio/billing/cancelled` pages.
+- [x] 6.5 `POST /api/stripe/webhook`: verify signature, idempotency via `stripe_events`, handle `checkout.session.completed`, `customer.subscription.created|updated|deleted`, `invoice.paid`, `invoice.payment_failed`.
+  - [x] 6.5.1 checkout.session.completed (subscription mode) → link customer and subscription
+  - [x] 6.5.2 customer.subscription.created → status, period
+  - [x] 6.5.3 customer.subscription.updated → status, cancel flag, period
+  - [x] 6.5.4 customer.subscription.deleted → cancelled, start retention clock
+  - [x] 6.5.5 invoice.paid → active, clear read-only, referral hook
+  - [x] 6.5.6 invoice.payment_failed → past_due, email
+- [x] 6.6 Webhook maps subscription status to studio columns; clears `read_only_since` on active.
+- [x] 6.7 `invoice.paid` for a studio's first paid invoice calls `referrals.onFirstPaidInvoice()`.
+- [x] 6.8 Trial banner in studio shell: days left, subscribe link; turns red at 3 days.
+- [x] 6.9 Read-only mode: `requireWritableStudio` blocks mutations; UI shows a persistent notice with the subscribe button; galleries and site stay live through grace.
 - [ ] 6.10 Grace end: cron locks galleries (status stays, access page shows "This gallery is temporarily unavailable, contact {Studio}").
-- [ ] 6.11 Cancellation: `cancel_at_period_end` shown with date and "resume" via portal.
+- [x] 6.11 Cancellation: `cancel_at_period_end` shown with date and "resume" via portal.
 - [ ] 6.12 Data retention: 90 days after cancellation, cron purges the studio (blobs then rows) and emails the owner 14 and 3 days before.
-- [ ] 6.13 Emails: trial ending in 3 days, trial ended, payment failed (with portal link), subscription cancelled, purge warning.
-  - [ ] 6.13.1 Trial ends in 3 days
-  - [ ] 6.13.2 Trial ended (read-only starts)
-  - [ ] 6.13.3 Payment failed with portal link
-  - [ ] 6.13.4 Subscription cancelled with end date
-  - [ ] 6.13.5 Purge warning at 14 and 3 days
-- [ ] 6.14 Invoice PDF links from Stripe shown on the billing page.
-- [ ] 6.15 Billing page copy explains: one plan, everything included, unlimited seats, cancel any time.
+- [x] 6.13 Emails: trial ending in 3 days, trial ended, payment failed (with portal link), subscription cancelled, purge warning.
+  - [x] 6.13.1 Trial ends in 3 days
+  - [x] 6.13.2 Trial ended (read-only starts)
+  - [x] 6.13.3 Payment failed with portal link
+  - [x] 6.13.4 Subscription cancelled with end date
+  - [x] 6.13.5 Purge warning at 14 and 3 days
+- [x] 6.14 Invoice PDF links from Stripe shown on the billing page.
+- [x] 6.15 Billing page copy explains: one plan, everything included, unlimited seats, cancel any time.
 - [ ] 6.16 Platform admin can extend a trial or comp a studio (sets `plan_override = comped`); billing page reflects it.
 - [ ] 6.17 Tests: webhook handlers with fixture events; read-only transitions.
-- [ ] 6.18 `docs/SETUP.md` section: create the product and price, Customer Portal settings (allow cancel, allow card update, no plan switching), webhook endpoint for account events.
+- [x] 6.18 `docs/SETUP.md` section: create the product and price, Customer Portal settings (allow cancel, allow card update, no plan switching), webhook endpoint for account events.
 
 ## Phase 7. Studio's Stripe connection and client payments
 
-- [ ] 7.1 `/studio/settings/payments` page with three states: not connected, connecting (details not submitted or charges disabled), connected (account id, charges enabled, link to their Stripe Dashboard).
-  - [ ] 7.1.1 Not connected: two buttons and the plain-language box
-  - [ ] 7.1.2 Connecting: 'finish setup in Stripe' button (new Account Link) and what is missing
-  - [ ] 7.1.3 Connected: account id, charges enabled badge, Dashboard link, disconnect
-- [ ] 7.2 Plain-language box: "Payments go straight to your Stripe account. We never hold your money and never take a cut. Refunds and disputes are handled in your own Stripe Dashboard."
-- [ ] 7.3 Button "Connect existing Stripe account" → `GET /api/connect/oauth/start` (signed state, prefill email, business name, website URL).
-- [ ] 7.4 `GET /api/connect/oauth/callback`: verify state, exchange code, store `stripe_account_id`, method `oauth`, refresh status, audit, redirect with toast.
-- [ ] 7.5 Callback error handling: `access_denied` → friendly message; expired code → retry link.
-- [ ] 7.6 Button "Create a new Stripe account" → `POST /api/connect/onboard`: create account (defaults), Account Link with return and refresh URLs, redirect.
-- [ ] 7.7 `GET /api/connect/return`: refresh status, show "finish setup" if `details_submitted` is false.
-- [ ] 7.8 `GET /api/connect/refresh`: new Account Link and redirect.
-- [ ] 7.9 "Disconnect" button: OAuth → deauthorize; onboarding → clear id; confirm dialog explains existing payment records stay.
-- [ ] 7.10 Manual mode toggle: "I'll collect payment myself" with instructions text and optional Payment Link URL; pay page shows these instead of Checkout.
-- [ ] 7.11 `POST /api/stripe/connect-webhook` (endpoint created with "Events from: Connected accounts"): verify with `STRIPE_CONNECT_WEBHOOK_SECRET`, read `event.account`, idempotency, dispatch.
-- [ ] 7.12 Handle `checkout.session.completed` and `checkout.session.async_payment_succeeded`: record payment, mark deposit or balance paid, unlock pay-gated galleries, send receipt, client event.
-- [ ] 7.13 Handle `checkout.session.async_payment_failed`: mark attempt failed, email studio.
-- [ ] 7.14 Handle `charge.refunded`: set `refunded_cents`, order status, client event, notify studio.
-- [ ] 7.15 Handle `charge.dispute.created|closed`: set dispute status, notify studio with a link to their Dashboard.
-- [ ] 7.16 Handle `account.updated`: refresh `charges_enabled`, `details_submitted`.
-- [ ] 7.17 Handle `account.application.deauthorized`: clear connection, notify owner.
-- [ ] 7.18 `POST /api/pay/checkout` (tenant): validate order belongs to the host's studio, choose deposit, balance or full, create Checkout Session on the studio's account with `Stripe-Account`, no application fee, studio branding, metadata, redirect.
-- [ ] 7.19 Checkout Session details: customer email prefilled, `payment_intent_data.description` with order number, statement descriptor left to the studio's account settings.
+- [x] 7.1 `/studio/settings/payments` page with three states: not connected, connecting (details not submitted or charges disabled), connected (account id, charges enabled, link to their Stripe Dashboard).
+  - [x] 7.1.1 Not connected: two buttons and the plain-language box
+  - [x] 7.1.2 Connecting: 'finish setup in Stripe' button (new Account Link) and what is missing
+  - [x] 7.1.3 Connected: account id, charges enabled badge, Dashboard link, disconnect
+- [x] 7.2 Plain-language box: "Payments go straight to your Stripe account. We never hold your money and never take a cut. Refunds and disputes are handled in your own Stripe Dashboard."
+- [x] 7.3 Button "Connect existing Stripe account" → `GET /api/connect/oauth/start` (signed state, prefill email, business name, website URL).
+- [x] 7.4 `GET /api/connect/oauth/callback`: verify state, exchange code, store `stripe_account_id`, method `oauth`, refresh status, audit, redirect with toast.
+- [x] 7.5 Callback error handling: `access_denied` → friendly message; expired code → retry link.
+- [x] 7.6 Button "Create a new Stripe account" → `POST /api/connect/onboard`: create account (defaults), Account Link with return and refresh URLs, redirect.
+- [x] 7.7 `GET /api/connect/return`: refresh status, show "finish setup" if `details_submitted` is false.
+- [x] 7.8 `GET /api/connect/refresh`: new Account Link and redirect.
+- [x] 7.9 "Disconnect" button: OAuth → deauthorize; onboarding → clear id; confirm dialog explains existing payment records stay.
+- [x] 7.10 Manual mode toggle: "I'll collect payment myself" with instructions text and optional Payment Link URL; pay page shows these instead of Checkout.
+- [x] 7.11 `POST /api/stripe/connect-webhook` (endpoint created with "Events from: Connected accounts"): verify with `STRIPE_CONNECT_WEBHOOK_SECRET`, read `event.account`, idempotency, dispatch.
+- [x] 7.12 Handle `checkout.session.completed` and `checkout.session.async_payment_succeeded`: record payment, mark deposit or balance paid, unlock pay-gated galleries, send receipt, client event.
+- [x] 7.13 Handle `checkout.session.async_payment_failed`: mark attempt failed, email studio.
+- [x] 7.14 Handle `charge.refunded`: set `refunded_cents`, order status, client event, notify studio.
+- [x] 7.15 Handle `charge.dispute.created|closed`: set dispute status, notify studio with a link to their Dashboard.
+- [x] 7.16 Handle `account.updated`: refresh `charges_enabled`, `details_submitted`.
+- [x] 7.17 Handle `account.application.deauthorized`: clear connection, notify owner.
+- [x] 7.18 `POST /api/pay/checkout` (tenant): validate order belongs to the host's studio, choose deposit, balance or full, create Checkout Session on the studio's account with `Stripe-Account`, no application fee, studio branding, metadata, redirect.
+- [x] 7.19 Checkout Session details: customer email prefilled, `payment_intent_data.description` with order number, statement descriptor left to the studio's account settings.
 - [ ] 7.20 Success page reads the session on the studio's account, shows "You paid {Studio}", amount, and next steps; cancel page returns to the order.
 - [ ] 7.21 Studio-side session page: payments list with method, amount, status, refund and dispute badges, "View in Stripe" link (`https://dashboard.stripe.com/payments/{id}`), no refund button.
-- [ ] 7.22 Receipt email from us after each successful payment (in addition to Stripe's own receipt if the studio enabled it).
-- [ ] 7.23 Test mode notice: when platform keys are test keys, pay pages show a test badge.
+- [x] 7.22 Receipt email from us after each successful payment (in addition to Stripe's own receipt if the studio enabled it).
+- [x] 7.23 Test mode notice: when platform keys are test keys, pay pages show a test badge.
 - [ ] 7.24 Tests: OAuth state signing and expiry; webhook dispatch by event type; pay checkout rejects orders from another studio.
-- [ ] 7.25 `docs/SETUP.md` section from Appendix A (platform profile, branding, OAuth redirect URIs, connect webhook).
-- [ ] 7.26 Stripe CLI recipes in docs: `stripe listen --forward-connect-to localhost:3000/api/stripe/connect-webhook` and `stripe trigger --stripe-account acct_x checkout.session.completed`.
+- [x] 7.25 `docs/SETUP.md` section from Appendix A (platform profile, branding, OAuth redirect URIs, connect webhook).
+- [x] 7.26 Stripe CLI recipes in docs: `stripe listen --forward-connect-to localhost:3000/api/stripe/connect-webhook` and `stripe trigger --stripe-account acct_x checkout.session.completed`.
 
 ## Phase 8. Marketing site (root domain)
 
@@ -964,7 +964,7 @@ Sending domains
 
 ## Phase 17. Settings, team, data
 
-- [ ] 17.1 `/studio/settings` hub with tabs: Profile, Branding, Website, Domain, Payments, Email domain, Emails, Agreement, Bookings, Team, Lightroom, Referrals, Billing, Data.
+- [~] 17.1 `/studio/settings` hub with tabs: Profile, Branding, Website, Domain, Payments, Email domain, Emails, Agreement, Bookings, Team, Lightroom, Referrals, Billing, Data.
 - [ ] 17.2 Profile: studio name, legal name, email, phone, address, timezone, currency, business hours.
 - [ ] 17.3 Branding: logo (asset), brand color, favicon; used by app emails and tenant pages.
 - [ ] 17.4 Team: members with role and last login; invite by email with role; change role; remove; pending invites with resend and revoke; owner transfer.
