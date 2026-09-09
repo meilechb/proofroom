@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { signupAction } from "../actions";
 import { initialActionState } from "@/lib/action-state";
 import { normalizeSlug } from "@/lib/slug";
@@ -9,13 +9,23 @@ import { Field, Input } from "@/components/ui";
 import { FormMessage } from "@/components/forms/form-message";
 import { SubmitButton } from "@/components/forms/submit-button";
 
-export function SignupForm() {
+export function SignupForm({ refCode = "" }: { refCode?: string }) {
   const [state, action] = useActionState(signupAction, initialActionState);
   const [studioName, setStudioName] = useState(state.values?.studioName ?? "");
   const [slug, setSlug] = useState(state.values?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(false);
   const [check, setCheck] = useState<{ ok: boolean; message: string } | null>(null);
   const domain = appDomain();
+  // The browser's timezone is written straight into the hidden input after mount
+  // (no state: the server render has no way to know it and must not guess).
+  const timezoneRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    try {
+      if (timezoneRef.current) timezoneRef.current.value = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+    } catch {
+      // leave empty; the server falls back to the default zone
+    }
+  }, []);
 
   // Debounced availability check. State resets happen in the change handlers,
   // not here, so the effect only schedules the network call.
@@ -49,6 +59,13 @@ export function SignupForm() {
   return (
     <form action={action} className="mt-6 space-y-4" noValidate>
       <FormMessage state={state} />
+      <input type="hidden" name="ref" value={refCode} />
+      <input type="hidden" name="timezone" ref={timezoneRef} defaultValue="" />
+      {/* Honeypot: hidden from people, filled by bots. */}
+      <div className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+        <label htmlFor="website">Website</label>
+        <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
       <Field label="Your name" htmlFor="name" error={state.fields?.name}>
         <Input id="name" name="name" autoComplete="name" required defaultValue={state.values?.name} />
       </Field>

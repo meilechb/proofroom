@@ -38,6 +38,7 @@ export async function createUserWithStudio(input: {
   password: string;
   studioName: string;
   slug: string;
+  timezone?: string | null;
 }): Promise<{ user: User; studio: Studio }> {
   const passwordHash = hashPassword(input.password);
   const trialEnds = new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString();
@@ -50,8 +51,8 @@ export async function createUserWithStudio(input: {
   if (!user) throw new Error("Could not create the account.");
   const studio = one<Studio>(
     await db()`
-      insert into studios (slug, name, legal_name, email, trial_ends_at, onboarding)
-      values (${input.slug}, ${input.studioName}, ${input.studioName}, ${input.email}, ${trialEnds}, '{}'::jsonb)
+      insert into studios (slug, name, legal_name, email, trial_ends_at, onboarding, timezone)
+      values (${input.slug}, ${input.studioName}, ${input.studioName}, ${input.email}, ${trialEnds}, '{}'::jsonb, ${validTimezone(input.timezone) ?? "America/New_York"})
       returning *`
   );
   if (!studio) throw new Error("Could not create the studio.");
@@ -94,15 +95,26 @@ export async function seedStudioDefaults(studioId: string) {
   }
 }
 
-/** Returns the user on success, or a reason. Applies lockout after repeated failures. */
-export async function checkCredentials(email: string, password: string): Promise<{ user: User } | { error: "invalid" | "locked" }> {
+/** IANA zone names only; anything else falls back to the default. */
+export function validTimezone(tz: string | null | undefined) {
+  if (!tz || tz.length > 64) return null;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return tz;
+  } catch {
+    return null;
+  }
+}
+
+/** Returns the user on success, or a reason (with the lock end when locked). Applies lockout after repeated failures. */
+export async function checkCredentials(email: string, password: string): Promise<{ user: User } | { error: "invalid" | "locked"; lockedUntil?: string | null }> {
   const user = await findUserByEmail(email);
   if (!user) {
     // Burn similar time to a real check so timing does not reveal existence.
     verifyPassword(password, "scrypt:32768:8:1:AAAAAAAAAAAAAAAAAAAAAA:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
     return { error: "invalid" };
   }
-  if (user.locked_until && new Date(user.locked_until) > new Date()) return { error: "locked" };
+  if (user.locked_until && new Date(user.locked_until) > new Date()) return { error: "locked", lockedUntil: user.locked_until };
   if (!verifyPassword(password, user.password_hash)) {
     const failed = (user.failed_logins ?? 0) + 1;
     const lock = failed >= MAX_FAILED_LOGINS;
@@ -110,7 +122,7 @@ export async function checkCredentials(email: string, password: string): Promise
       update users set failed_logins = ${lock ? 0 : failed},
         locked_until = ${lock ? new Date(Date.now() + LOCK_MINUTES * 60000).toISOString() : null}
       where id = ${user.id}`;
-    return { error: lock ? "locked" : "invalid" };
+    return lock ? { error: "locked", lockedUntil: new Date(Date.now() + LOCK_MINUTES * 60000).toISOString() } : { error: "invalid" };
   }
   await db()`update users set failed_logins = 0, locked_until = null, last_login_at = now() where id = ${user.id}`;
   const { password_hash: _ph, failed_logins: _fl, locked_until: _lu, ...safe } = user;
@@ -118,29 +130,59 @@ export async function checkCredentials(email: string, password: string): Promise
   return { user: safe };
 }
 
-export type TokenKind = "verify_email" | "reset_password" | "magic_link";
+export type TokenKind = "verify_email" | "reset_password" | "magic_link" | "change_email";
 
-const TOKEN_TTL_MINUTES: Record<TokenKind, number> = { verify_email: 24 * 60, reset_password: 60, magic_link: 15 };
+const TOKEN_TTL_MINUTES: Record<TokenKind, number> = { verify_email: 24 * 60, reset_password: 60, magic_link: 15, change_email: 60 };
 
 /** Creates a single-use token, invalidating earlier unused tokens of the same kind. */
-export async function issueAuthToken(userId: string, kind: TokenKind) {
+export async function issueAuthToken(userId: string, kind: TokenKind, meta: Record<string, string> = {}) {
   const token = randomToken(32);
   const expires = new Date(Date.now() + TOKEN_TTL_MINUTES[kind] * 60000).toISOString();
   await db()`update auth_tokens set used_at = now() where user_id = ${userId} and kind = ${kind} and used_at is null`;
-  await db()`insert into auth_tokens (kind, user_id, token_hash, expires_at) values (${kind}, ${userId}, ${hashToken(token)}, ${expires})`;
+  await db()`insert into auth_tokens (kind, user_id, token_hash, expires_at, meta) values (${kind}, ${userId}, ${hashToken(token)}, ${expires}, ${JSON.stringify(meta)}::jsonb)`;
   return token;
 }
 
 /** Consumes a token; returns the user id or null when invalid, expired or already used. */
 export async function consumeAuthToken(token: string, kind: TokenKind): Promise<string | null> {
+  return (await consumeAuthTokenWithMeta(token, kind))?.user_id ?? null;
+}
+
+export async function consumeAuthTokenWithMeta(token: string, kind: TokenKind): Promise<{ user_id: string; meta: Record<string, string> } | null> {
   if (!token || token.length > 200) return null;
-  const row = one<{ user_id: string }>(
+  return one<{ user_id: string; meta: Record<string, string> }>(
     await db()`
       update auth_tokens set used_at = now()
       where token_hash = ${hashToken(token)} and kind = ${kind} and used_at is null and expires_at > now()
-      returning user_id`
+      returning user_id, meta`
   );
-  return row?.user_id ?? null;
+}
+
+/** Applies a verified email change; fails if another account took the address meanwhile. */
+export async function applyEmailChange(userId: string, newEmail: string) {
+  const taken = await findUserByEmail(newEmail);
+  if (taken && taken.id !== userId) return { error: "That email is now used by another account." } as const;
+  await db()`update users set email = ${newEmail.toLowerCase()}, email_verified_at = now(), updated_at = now() where id = ${userId}`;
+  return { ok: true } as const;
+}
+
+export async function updateUserName(userId: string, name: string) {
+  await db()`update users set name = ${name.trim()}, updated_at = now() where id = ${userId}`;
+}
+
+/** Sole ownership of any live studio blocks account deletion (plan 5.21). */
+export async function soleOwnedStudios(userId: string) {
+  return (await db()`
+    select s.name from memberships m join studios s on s.id = m.studio_id
+    where m.user_id = ${userId} and m.role = 'owner' and s.deleted_at is null
+      and not exists (select 1 from memberships m2 where m2.studio_id = m.studio_id and m2.role = 'owner' and m2.user_id <> ${userId})`) as { name: string }[];
+}
+
+export async function softDeleteUser(userId: string) {
+  const anon = `deleted+${userId}@deleted.invalid`;
+  await db()`delete from memberships where user_id = ${userId}`;
+  await db()`delete from sessions where user_id = ${userId}`;
+  await db()`update users set email = ${anon}, name = 'Deleted account', password_hash = null, updated_at = now() where id = ${userId}`;
 }
 
 export async function markEmailVerified(userId: string) {

@@ -887,3 +887,8 @@ drop trigger if exists session_plans_set_updated_at on session_plans;
 create trigger session_plans_set_updated_at before update on session_plans for each row execute function set_updated_at();
 drop trigger if exists platform_settings_set_updated_at on platform_settings;
 create trigger platform_settings_set_updated_at before update on platform_settings for each row execute function set_updated_at();
+
+-- auth_tokens: email change tokens carry the new address in meta (plan 5.18)
+alter table auth_tokens add column if not exists meta jsonb not null default '{}'::jsonb;
+alter table auth_tokens drop constraint if exists auth_tokens_kind_check;
+alter table auth_tokens add constraint auth_tokens_kind_check check (kind in ('verify_email', 'reset_password', 'magic_link', 'change_email'));

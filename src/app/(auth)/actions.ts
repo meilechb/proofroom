@@ -26,6 +26,10 @@ import { hashToken } from "@/lib/tokens";
 import { emailSchema, fieldErrors, loginSchema, signupSchema } from "@/lib/validation";
 import { formValues, str, type ActionState } from "@/lib/action-state";
 import { log } from "@/lib/logger";
+import { captureAtSignup } from "@/lib/referrals-server";
+import { cookies } from "next/headers";
+
+const REF_COOKIE = "ref";
 
 function safeNext(next: string | null | undefined, fallback = "/studio") {
   return next && /^\/(?!\/)[\w\-/?=&%.]*$/.test(next) ? next : fallback;
@@ -34,6 +38,11 @@ function safeNext(next: string | null | undefined, fallback = "/studio") {
 export async function signupAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const values = formValues(formData, ["name", "email", "studioName", "slug"]);
   const ip = clientIp(await headers());
+  // Honeypot (plan 5.6): real people never fill a field they cannot see.
+  if (str(formData, "website", 200)) {
+    log.warn("signup.honeypot", { ip });
+    return { error: "Something went wrong. Please try again.", values };
+  }
   const rl = await rateLimit(`signup:${ip}`, 5, 3600);
   if (!rl.ok) return { error: "Too many sign-up attempts from this network. Try again in an hour.", values };
 
@@ -60,12 +69,18 @@ export async function signupAction(_prev: ActionState, formData: FormData): Prom
     return { fields: { slug: "That address is taken. Try another." }, values, error: "Please fix the highlighted fields." };
   }
 
-  const { user, studio } = await createUserWithStudio(data);
+  const { user, studio } = await createUserWithStudio({ ...data, timezone: str(formData, "timezone", 64) || null });
+  const store = await cookies();
+  const refCode = str(formData, "ref", 16) || store.get(REF_COOKIE)?.value || null;
+  if (refCode) {
+    await captureAtSignup(studio.id, refCode, user.email).catch((error) => log.warn("signup.referral_failed", { error: error instanceof Error ? error.message : String(error) }));
+    store.delete(REF_COOKIE);
+  }
   const token = await issueAuthToken(user.id, "verify_email");
   await sendVerificationEmail(user.email, user.name, token);
   await createSession(user.id, studio.id);
   await audit({ studioId: studio.id, actorUserId: user.id, action: "studio.created", targetType: "studio", targetId: studio.id, ip });
-  log.info("signup", { studio: studio.slug });
+  log.info("signup", { studio: studio.slug, referred: Boolean(refCode) });
   redirect("/studio?welcome=1");
 }
 
@@ -79,10 +94,11 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
 
   const result = await checkCredentials(parsed.data.email, parsed.data.password);
   if ("error" in result) {
+    const minutes = result.lockedUntil ? Math.max(1, Math.ceil((new Date(result.lockedUntil).getTime() - Date.now()) / 60000)) : 15;
     return {
       error:
         result.error === "locked"
-          ? "This account is temporarily locked after too many failed attempts. Try again in 15 minutes or reset your password."
+          ? `This account is temporarily locked after too many failed attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}, or reset your password.`
           : "That email and password do not match.",
       values,
     };
