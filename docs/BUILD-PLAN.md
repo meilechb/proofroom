@@ -440,28 +440,28 @@ Validation and types
 - [x] 5.1 `(auth)/layout.tsx` centered card.
 - [x] 5.2 `(auth)/actions.ts`: signup, login, logout, forgot, reset, resend verification, accept invite, switch studio, create studio, slug check.
 - [x] 5.3 `/signup` with live slug check and password guidance.
-- [ ] 5.4 `/signup?ref=CODE`: read code from query, set cookie `ref` (30 days), show "Referred by {Studio}: you both get 10% off for 12 months".
-- [ ] 5.5 Signup action: store `referred_by_code`, create `referrals` row as `signed_up`, ignore invalid or self codes silently.
-- [ ] 5.6 Signup action: honeypot field and rate limit by ip and email.
-- [ ] 5.7 Signup: studio name, your name, email, password, subdomain; timezone auto-detected client side and posted.
+- [x] 5.4 `/signup?ref=CODE`: read code from query, set cookie `ref` (30 days), show "Referred by {Studio}: you both get 10% off for 12 months".
+- [x] 5.5 Signup action: store `referred_by_code`, create `referrals` row as `signed_up`, ignore invalid or self codes silently.
+- [x] 5.6 Signup action: honeypot field and rate limit by ip and email.
+- [x] 5.7 Signup: studio name, your name, email, password, subdomain; timezone auto-detected client side and posted.
 - [x] 5.8 `/login` with `next` redirect and generic error text.
-- [ ] 5.9 `/login`: lockout message with minutes remaining; link to reset.
+- [x] 5.9 `/login`: lockout message with minutes remaining; link to reset.
 - [x] 5.10 `/forgot-password` (always says "if the account exists").
 - [x] 5.11 `/reset-password?token=` with strength check and session revoke on success.
 - [x] 5.12 `/verify-email` route consumes token, marks verified, redirects with banner.
 - [x] 5.13 `/logout` route.
 - [x] 5.14 `/invite/[token]`: new user sets password; existing user joins.
-- [ ] 5.15 Invite page: expired and already-accepted states.
+- [x] 5.15 Invite page: expired and already-accepted states.
 - [x] 5.16 `/api/slug-check`.
-- [ ] 5.17 `/account` page: name, email, password, sessions, danger zone.
-- [ ] 5.18 Change email: send verification to the new address, switch on confirm, notify old address.
-- [ ] 5.19 Change password: requires current password; revokes other sessions.
-- [ ] 5.20 Active sessions list with device, last seen, revoke button.
-- [ ] 5.21 Delete account: blocked if sole owner of a live studio (explain), else soft delete and sign out.
-- [ ] 5.22 Verification banner with resend, rate limited.
-- [ ] 5.23 Session cookie: `SameSite=Lax`, `Secure` in production, domain scoped to root domain so the studio app works on the root host only (tenant hosts never receive it).
-- [ ] 5.24 Auth pages `metadata` (noindex) and titles.
-- [ ] 5.25 Tests: password rules, token consume-once, lockout counter, slug reserved list.
+- [x] 5.17 `/account` page: name, email, password, sessions, danger zone.
+- [x] 5.18 Change email: send verification to the new address, switch on confirm, notify old address.
+- [x] 5.19 Change password: requires current password; revokes other sessions.
+- [x] 5.20 Active sessions list with device, last seen, revoke button.
+- [x] 5.21 Delete account: blocked if sole owner of a live studio (explain), else soft delete and sign out.
+- [x] 5.22 Verification banner with resend, rate limited.
+- [x] 5.23 Session cookie: `SameSite=Lax`, `Secure` in production, host-only (no Domain attribute), so browsers never send it to tenant subdomains or custom domains.
+- [x] 5.24 Auth pages `metadata` (noindex) and titles.
+- [x] 5.25 Tests: password rules, token consume-once, lockout counter, slug reserved list.
 - [ ] 5.26 Onboarding redirect: first login after signup goes to `/studio/welcome`.
 
 ## Phase 6. Platform subscription (our $40/month)
