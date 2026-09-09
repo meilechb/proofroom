@@ -37,6 +37,18 @@ export type Studio = {
   cancel_at_period_end: boolean;
   stripe_account_id: string | null;
   stripe_account_status: "none" | "pending" | "enabled" | "restricted";
+  stripe_connect_method: "oauth" | "onboarding" | "manual" | "none";
+  stripe_charges_enabled: boolean;
+  stripe_details_submitted: boolean;
+  stripe_connected_at: string | null;
+  manual_payment_instructions: string | null;
+  manual_payment_link: string | null;
+  referral_code: string | null;
+  referred_by_code: string | null;
+  site_template: "editorial" | "gallery";
+  site: Record<string, unknown>;
+  site_draft: Record<string, unknown> | null;
+  site_published_at: string | null;
   next_order_number: number;
   storage_bytes: number;
   onboarding: Record<string, boolean>;
@@ -58,6 +70,12 @@ export type Client = {
   company: string | null;
   notes: string | null;
   archived: boolean;
+  stage: ClientStage;
+  tags: string[];
+  source: string | null;
+  unsubscribed_at: string | null;
+  last_activity_at: string | null;
+  archived_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -142,6 +160,11 @@ export type Order = {
   contract_signed_ip: string | null;
   contract_portfolio_ok: boolean | null;
   paid_at: string | null;
+  scheduled_at: string | null;
+  location: string | null;
+  discount_cents: number;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -155,14 +178,22 @@ export type Payment = {
   kind: PaymentKind;
   amount_cents: number;
   currency: string;
-  status: "pending" | "paid" | "refunded";
+  status: PaymentStatus;
   method: string;
   stripe_account_id: string | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
+  stripe_charge_id: string | null;
+  refunded_cents: number;
+  dispute_status: string | null;
+  disputed_at: string | null;
+  receipt_url: string | null;
+  failure_message: string | null;
   paid_at: string | null;
   created_at: string;
 };
+
+export type PaymentStatus = "pending" | "paid" | "partially_refunded" | "refunded" | "failed" | "disputed";
 
 export type OrderMoney = {
   price_cents: number;
@@ -226,6 +257,18 @@ export type Gallery = {
   source: "web" | "lightroom";
   parent_id: string | null;
   subject_name: string | null;
+  password_hash: string | null;
+  download_pin_hash: string | null;
+  download_size: "web" | "full" | "both";
+  pay_gated: boolean;
+  allow_comments: boolean;
+  allow_client_upload: boolean;
+  allow_sharing: boolean;
+  watermark: boolean;
+  cover_photo_id: string | null;
+  sort_mode: "manual" | "filename" | "captured";
+  published_at: string | null;
+  view_count: number;
   created_at: string;
   updated_at: string;
 };
@@ -236,12 +279,17 @@ export type Photo = {
   gallery_id: string;
   original_url: string;
   preview_url: string;
+  thumb_url: string | null;
   lr_photo_id: string | null;
   filename: string;
   width: number | null;
   height: number | null;
   size_bytes: number;
   sort_order: number;
+  sha256: string | null;
+  uploaded_by: "studio" | "client" | "plugin";
+  captured_at: string | null;
+  deleted_at: string | null;
   created_at: string;
 };
 
@@ -277,6 +325,14 @@ export type EmailLogRow = {
   subject: string;
   status: "sent" | "failed" | "skipped";
   error: string | null;
+  template_key: string | null;
+  from_domain: string | null;
+  related_type: string | null;
+  related_id: string | null;
+  opened_at: string | null;
+  clicked_at: string | null;
+  bounced_at: string | null;
+  complained_at: string | null;
   created_at: string;
 };
 

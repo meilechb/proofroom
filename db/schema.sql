@@ -529,3 +529,96 @@ create table if not exists automation_sends (
   sent_at timestamptz not null default now(),
   primary key (studio_id, rule, target)
 );
+
+-- ---------------------------------------------------------------------------
+-- Revision 4 additions (September 2026). Columns are added with
+-- "add column if not exists" so fresh and existing databases converge.
+-- ---------------------------------------------------------------------------
+
+-- studios: the studio's own Stripe account connection (plan 2.6)
+alter table studios add column if not exists stripe_connect_method text not null default 'none';
+alter table studios drop constraint if exists studios_stripe_connect_method_check;
+alter table studios add constraint studios_stripe_connect_method_check check (stripe_connect_method in ('oauth', 'onboarding', 'manual', 'none'));
+alter table studios add column if not exists stripe_charges_enabled boolean not null default false;
+alter table studios add column if not exists stripe_details_submitted boolean not null default false;
+alter table studios add column if not exists stripe_connected_at timestamptz;
+alter table studios add column if not exists manual_payment_instructions text;
+alter table studios add column if not exists manual_payment_link text;
+
+-- studios: referral code and the template website (plan 2.8)
+alter table studios add column if not exists referral_code text;
+create unique index if not exists studios_referral_code_idx on studios (referral_code) where referral_code is not null;
+alter table studios add column if not exists referred_by_code text;
+alter table studios add column if not exists site_template text not null default 'editorial';
+alter table studios drop constraint if exists studios_site_template_check;
+alter table studios add constraint studios_site_template_check check (site_template in ('editorial', 'gallery'));
+alter table studios add column if not exists site jsonb not null default '{}'::jsonb;
+alter table studios add column if not exists site_draft jsonb;
+alter table studios add column if not exists site_published_at timestamptz;
+
+-- clients: pipeline stage, activity, archive timestamp, one client per email (plan 2.19)
+alter table clients add column if not exists stage text not null default 'lead';
+alter table clients drop constraint if exists clients_stage_check;
+alter table clients add constraint clients_stage_check check (stage in ('lead', 'awaiting_payment', 'booked', 'proofing', 'delivered', 'archived'));
+alter table clients add column if not exists last_activity_at timestamptz;
+alter table clients add column if not exists archived_at timestamptz;
+alter table clients add column if not exists source text;
+create unique index if not exists clients_studio_email_unique_idx on clients (studio_id, lower(email));
+
+-- orders: scheduling and cancellation details (plan 2.27)
+alter table orders add column if not exists scheduled_at timestamptz;
+alter table orders add column if not exists location text;
+alter table orders add column if not exists discount_cents integer not null default 0;
+alter table orders add column if not exists cancelled_at timestamptz;
+alter table orders add column if not exists cancel_reason text;
+
+-- payments: refunds and disputes mirrored from the studio's Stripe account (plan 2.29)
+alter table payments add column if not exists stripe_charge_id text;
+alter table payments add column if not exists refunded_cents integer not null default 0;
+alter table payments add column if not exists dispute_status text;
+alter table payments add column if not exists disputed_at timestamptz;
+alter table payments add column if not exists receipt_url text;
+alter table payments add column if not exists failure_message text;
+alter table payments drop constraint if exists payments_status_check;
+alter table payments add constraint payments_status_check check (status in ('pending', 'paid', 'partially_refunded', 'refunded', 'failed', 'disputed'));
+
+-- galleries: access, download and proofing options (plan 2.33)
+alter table galleries add column if not exists password_hash text;
+alter table galleries add column if not exists download_pin_hash text;
+alter table galleries add column if not exists download_size text not null default 'web';
+alter table galleries drop constraint if exists galleries_download_size_check;
+alter table galleries add constraint galleries_download_size_check check (download_size in ('web', 'full', 'both'));
+alter table galleries add column if not exists pay_gated boolean not null default false;
+alter table galleries add column if not exists allow_comments boolean not null default true;
+alter table galleries add column if not exists allow_client_upload boolean not null default false;
+alter table galleries add column if not exists allow_sharing boolean not null default true;
+alter table galleries add column if not exists watermark boolean not null default false;
+alter table galleries add column if not exists cover_photo_id uuid references photos (id) on delete set null;
+alter table galleries add column if not exists sort_mode text not null default 'manual';
+alter table galleries drop constraint if exists galleries_sort_mode_check;
+alter table galleries add constraint galleries_sort_mode_check check (sort_mode in ('manual', 'filename', 'captured'));
+alter table galleries add column if not exists published_at timestamptz;
+alter table galleries add column if not exists view_count integer not null default 0;
+
+-- photos: duplicates, provenance, soft delete (plan 2.35)
+alter table photos add column if not exists thumb_url text;
+alter table photos add column if not exists sha256 text;
+alter table photos add column if not exists uploaded_by text not null default 'studio';
+alter table photos drop constraint if exists photos_uploaded_by_check;
+alter table photos add constraint photos_uploaded_by_check check (uploaded_by in ('studio', 'client', 'plugin'));
+alter table photos add column if not exists captured_at timestamptz;
+alter table photos add column if not exists deleted_at timestamptz;
+
+-- assets: usage tracking and soft delete (plan 2.41)
+alter table assets add column if not exists usage_count integer not null default 0;
+alter table assets add column if not exists deleted_at timestamptz;
+
+-- email_log: delivery events from Resend and what the email was about (plan 2.49)
+alter table email_log add column if not exists template_key text;
+alter table email_log add column if not exists from_domain text;
+alter table email_log add column if not exists related_type text;
+alter table email_log add column if not exists related_id uuid;
+alter table email_log add column if not exists opened_at timestamptz;
+alter table email_log add column if not exists clicked_at timestamptz;
+alter table email_log add column if not exists bounced_at timestamptz;
+alter table email_log add column if not exists complained_at timestamptz;
