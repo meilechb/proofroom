@@ -2,7 +2,7 @@ import "server-only";
 
 import { Unzip, UnzipInflate } from "fflate";
 import { db, one, rows } from "@/lib/db";
-import { downloadBlob, PREVIEW_MAX_EDGE, THUMB_MAX_EDGE, captureTime, makeWebVersion, putJpeg, sha256 } from "@/lib/images";
+import { PREVIEW_MAX_EDGE, THUMB_MAX_EDGE, captureTime, makeWebVersion, putJpeg, sha256 } from "@/lib/images";
 import { galleryPath, safeFilename } from "@/lib/storage";
 import { put } from "@vercel/blob";
 import { blobToken } from "@/lib/storage";

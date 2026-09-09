@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, type ComponentProps } from "react";
+import { useId, useState, type ComponentProps } from "react";
 import { cx, Input } from "@/components/ui";
 import { contrastRatio } from "@/lib/site/theme";
 
@@ -36,10 +36,8 @@ export function ColorField({ name, label, defaultValue = "#111111", swatches = [
 export function DateTimeField({ name, label, timeZone, defaultValue, required, hint }: { name: string; label: string; timeZone: string; defaultValue?: string | null; required?: boolean; hint?: string }) {
   const id = useId();
   const [local, setLocal] = useState(() => (defaultValue ? toLocalInput(defaultValue, timeZone) : ""));
-  const [iso, setIso] = useState(() => (defaultValue ? new Date(defaultValue).toISOString() : ""));
-  useEffect(() => {
-    setIso(local ? fromLocalInput(local, timeZone) : "");
-  }, [local, timeZone]);
+  // Derived during render: the posted ISO value always matches what is shown.
+  const iso = local ? fromLocalInput(local, timeZone) : "";
   return (
     <div>
       <label htmlFor={id} className="label">{label}</label>
