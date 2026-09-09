@@ -37,3 +37,14 @@ export async function refreshStorage(studioId: string) {
   await db()`update studios set storage_bytes = ${usage.storageBytes}, updated_at = now() where id = ${studioId}`;
   return usage.storageBytes;
 }
+
+/** Adjust the cached counter immediately after an upload or delete; refreshStorage() corrects drift daily. */
+export async function addBytes(studioId: string, bytes: number) {
+  if (!bytes) return;
+  await db()`update studios set storage_bytes = greatest(0, storage_bytes + ${bytes}) where id = ${studioId}`;
+}
+
+export async function subtractBytes(studioId: string, bytes: number) {
+  if (!bytes) return;
+  await db()`update studios set storage_bytes = greatest(0, storage_bytes - ${bytes}) where id = ${studioId}`;
+}
