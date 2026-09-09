@@ -22,7 +22,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/studio
           (select count(*)::int from orders where studio_id = ${s.id} and status not in ('cancelled','draft') and paid_at is null) as unpaid,
           (select count(*)::int from inquiries where studio_id = ${s.id} and status = 'new') as inbox,
           (select count(*)::int from packages where studio_id = ${s.id} and is_active) as packages,
-          (select count(*)::int from site_pages where studio_id = ${s.id} and is_published) as pages,
+          (select case when site_published_at is null then 0 else 1 end from studios where id = ${s.id}) as pages,
           (select count(*)::int from api_tokens where studio_id = ${s.id} and revoked_at is null) as tokens,
           (select count(*)::int from assets where studio_id = ${s.id}) as assets,
           0 as unpaid_cents`

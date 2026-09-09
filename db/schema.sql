@@ -622,3 +622,222 @@ alter table email_log add column if not exists opened_at timestamptz;
 alter table email_log add column if not exists clicked_at timestamptz;
 alter table email_log add column if not exists bounced_at timestamptz;
 alter table email_log add column if not exists complained_at timestamptz;
+
+-- ---------------------------------------------------------------------------
+-- Revision 4 new tables
+-- ---------------------------------------------------------------------------
+
+-- Platform-wide toggles (signups_open, maintenance_banner, min_plugin_version). Plan 2.17.
+create table if not exists platform_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+-- The template website replaces site_pages: the site lives in studios.site / site_draft. Plan 2.44.
+drop table if exists site_pages;
+
+-- Client timeline: system events (gallery sent, payment received, email sent). Plan 2.24.
+create table if not exists client_events (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  client_id uuid not null references clients (id) on delete cascade,
+  kind text not null,
+  ref_type text,
+  ref_id uuid,
+  summary text not null default '',
+  meta jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists client_events_client_idx on client_events (client_id, created_at desc);
+
+-- Per-studio agreement text, versioned; orders store the version they were signed under. Plan 2.31.
+create table if not exists agreement_templates (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  version integer not null,
+  body_md text not null,
+  is_active boolean not null default true,
+  created_by uuid references users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  unique (studio_id, version)
+);
+
+-- Gallery analytics per visitor. Plan 2.38, 2.39.
+create table if not exists gallery_visits (
+  gallery_id uuid not null references galleries (id) on delete cascade,
+  visitor_hash text not null,
+  first_seen timestamptz not null default now(),
+  last_seen timestamptz not null default now(),
+  views integer not null default 1,
+  downloads integer not null default 0,
+  primary key (gallery_id, visitor_hash)
+);
+
+create table if not exists gallery_downloads (
+  id uuid primary key default gen_random_uuid(),
+  gallery_id uuid not null references galleries (id) on delete cascade,
+  photo_id uuid references photos (id) on delete set null,
+  kind text not null check (kind in ('single', 'selection', 'zip')),
+  size text not null default 'web' check (size in ('web', 'full')),
+  visitor_hash text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists gallery_downloads_gallery_idx on gallery_downloads (gallery_id, created_at desc);
+
+-- Local area landing pages (/headshots/[town]). Plan 2.45.
+create table if not exists site_areas (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  town text not null,
+  slug text not null,
+  intro_override text,
+  is_published boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  unique (studio_id, slug)
+);
+
+-- The studio's own sending domain in Resend. One per studio. Plan 2.51.
+create table if not exists sending_domains (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null unique references studios (id) on delete cascade,
+  domain text not null unique,
+  resend_domain_id text unique,
+  status text not null default 'not_started' check (status in ('not_started', 'pending', 'verified', 'failed', 'temporary_failure')),
+  records jsonb not null default '[]'::jsonb,
+  from_local_part text not null default 'hello',
+  region text,
+  verified_at timestamptz,
+  last_checked_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Addresses we must never email again for a studio (hard bounce, complaint, manual). Plan 2.52.
+create table if not exists suppressions (
+  studio_id uuid not null references studios (id) on delete cascade,
+  email text not null,
+  reason text not null check (reason in ('bounce', 'complaint', 'manual', 'unsubscribe')),
+  created_at timestamptz not null default now(),
+  primary key (studio_id, email)
+);
+
+-- One-off emails to a filtered client list. Plan 2.53.
+create table if not exists broadcasts (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  subject text not null,
+  body text not null,
+  filter jsonb not null default '{}'::jsonb,
+  status text not null default 'draft' check (status in ('draft', 'scheduled', 'sending', 'sent', 'cancelled')),
+  scheduled_at timestamptz,
+  sent_at timestamptz,
+  recipient_count integer not null default 0,
+  sent_count integer not null default 0,
+  created_by uuid references users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists broadcasts_studio_idx on broadcasts (studio_id, created_at desc);
+
+-- Referral program: 10% off for 12 months for both parties. Plan 2.54, 2.55.
+create table if not exists referrals (
+  id uuid primary key default gen_random_uuid(),
+  referrer_studio_id uuid not null references studios (id) on delete cascade,
+  code text not null,
+  referred_studio_id uuid references studios (id) on delete set null,
+  referred_email text,
+  status text not null default 'invited' check (status in ('invited', 'signed_up', 'rewarded', 'void')),
+  signed_up_at timestamptz,
+  rewarded_at timestamptz,
+  invoice_id text,
+  referrer_reward_state text not null default 'none' check (referrer_reward_state in ('none', 'pending', 'queued', 'applied', 'reversed')),
+  referred_reward_state text not null default 'none' check (referred_reward_state in ('none', 'pending', 'queued', 'applied', 'reversed')),
+  void_reason text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists referrals_referrer_idx on referrals (referrer_studio_id, created_at desc);
+create unique index if not exists referrals_referred_studio_idx on referrals (referred_studio_id) where referred_studio_id is not null;
+
+create table if not exists reward_queue (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  coupon_id text not null,
+  reason text not null,
+  referral_id uuid references referrals (id) on delete set null,
+  apply_after timestamptz,
+  applied_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists reward_queue_pending_idx on reward_queue (studio_id) where applied_at is null;
+
+-- Imports from other gallery tools or plain zips. Plan 2.56, 2.57.
+create table if not exists imports (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  source text not null check (source in ('pixieset', 'pictime', 'shootproof', 'zip', 'csv')),
+  status text not null default 'uploading' check (status in ('uploading', 'scanning', 'review', 'running', 'done', 'failed', 'cancelled')),
+  mapping jsonb not null default '{}'::jsonb,
+  file_count integer not null default 0,
+  gallery_count integer not null default 0,
+  photo_count integer not null default 0,
+  processed_count integer not null default 0,
+  log jsonb not null default '[]'::jsonb,
+  started_at timestamptz,
+  finished_at timestamptz,
+  created_by uuid references users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists import_files (
+  id uuid primary key default gen_random_uuid(),
+  import_id uuid not null references imports (id) on delete cascade,
+  url text not null,
+  filename text not null,
+  size_bytes bigint not null default 0,
+  status text not null default 'pending' check (status in ('pending', 'scanned', 'processed', 'failed')),
+  error text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists import_files_import_idx on import_files (import_id);
+
+-- Booking page slots. Confirmed and held slots for one studio cannot overlap. Plan 2.59.
+create extension if not exists btree_gist;
+
+create table if not exists booking_slots (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  package_id uuid references packages (id) on delete set null,
+  client_id uuid references clients (id) on delete set null,
+  order_id uuid references orders (id) on delete set null,
+  status text not null default 'held' check (status in ('held', 'confirmed', 'cancelled', 'no_show', 'completed')),
+  hold_expires_at timestamptz,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (ends_at > starts_at),
+  exclude using gist (studio_id with =, tstzrange(starts_at, ends_at) with &&) where (status in ('held', 'confirmed'))
+);
+
+create index if not exists booking_slots_studio_idx on booking_slots (studio_id, starts_at);
+
+-- Session planning: notes, shot list, mood board. Plan 2.60.
+create table if not exists session_plans (
+  order_id uuid primary key references orders (id) on delete cascade,
+  studio_id uuid not null references studios (id) on delete cascade,
+  notes_md text not null default '',
+  shot_list jsonb not null default '[]'::jsonb,
+  mood_asset_ids uuid[] not null default '{}',
+  client_visible boolean not null default false,
+  updated_at timestamptz not null default now()
+);
