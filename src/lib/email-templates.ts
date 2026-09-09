@@ -16,6 +16,10 @@ export const templateKeys = [
   "gallery_expiring",
   "thank_you",
   "review_request",
+  "booking_confirmed",
+  "booking_reminder",
+  "import_finished",
+  "session_plan_shared",
 ] as const;
 
 export type TemplateKey = (typeof templateKeys)[number];
@@ -135,6 +139,43 @@ export const emailTemplates: EmailTemplateDef[] = [
     defaults: { subject: "Would you leave a quick review?", body: `Hi {{client_name}},\n\nIf you were happy with your photos, a short review helps other people find {{studio_name}}. It takes a minute.\n\n${sig}`, cta_label: "Leave a review" },
     variables: [{ name: "review_url", description: "Where to leave the review" }],
     sample: { client_name: "Sarah Cohen", review_url: "https://g.page/r/example/review" },
+  },
+  {
+    key: "booking_confirmed",
+    name: "Booking confirmed",
+    when: "Automatically when a client books a time on your booking page.",
+    hasCta: true,
+    defaults: { subject: "You're booked: {{session_title}} on {{session_date}}", body: `Hi {{client_name}},\n\nYour session is booked for {{session_date}} at {{session_time}}.\n\n{{location}}\n\nNeed to change it? Use the link below.\n\n${sig}`, cta_label: "View or reschedule" },
+    variables: [{ name: "session_title", description: "Session name" }, { name: "session_date", description: "Date" }, { name: "session_time", description: "Start time" }, { name: "location", description: "Where to come" }, { name: "hub_url", description: "Client hub link" }],
+    sample: { client_name: "Sarah Cohen", session_title: "Individual headshot", session_date: "October 14, 2026", session_time: "10:00 AM", location: "12 Main St, Suite 3", hub_url: "https://studio.example.com/my/abc" },
+  },
+  {
+    key: "booking_reminder",
+    name: "Session reminder",
+    when: "Automation: the day before a session.",
+    automation: { label: "Remind clients the day before", defaultDays: 1 },
+    hasCta: false,
+    defaults: { subject: "See you tomorrow: {{session_title}}", body: `Hi {{client_name}},\n\nA reminder that your session is tomorrow, {{session_date}} at {{session_time}}.\n\n{{location}}\n\nBring a couple of outfit options and arrive a few minutes early.\n\n${sig}` },
+    variables: [{ name: "session_title", description: "Session name" }, { name: "session_date", description: "Date" }, { name: "session_time", description: "Start time" }, { name: "location", description: "Where to come" }],
+    sample: { client_name: "Sarah Cohen", session_title: "Individual headshot", session_date: "October 14, 2026", session_time: "10:00 AM", location: "12 Main St, Suite 3" },
+  },
+  {
+    key: "import_finished",
+    name: "Import finished",
+    when: "Sent to you when an import from another gallery tool completes.",
+    hasCta: true,
+    defaults: { subject: "Your import is done: {{gallery_count}} galleries", body: `Your import from {{source}} finished. {{gallery_count}} galleries and {{photo_count}} photos were created as drafts. Review them and publish when ready.\n\n{{summary}}`, cta_label: "Open galleries" },
+    variables: [{ name: "source", description: "Where the files came from" }, { name: "gallery_count", description: "Galleries created" }, { name: "photo_count", description: "Photos imported" }, { name: "summary", description: "Errors, if any" }, { name: "galleries_url", description: "Link to your galleries" }],
+    sample: { client_name: "", source: "Pixieset", gallery_count: "12", photo_count: "860", summary: "No errors.", galleries_url: "https://app.example.com/studio/galleries" },
+  },
+  {
+    key: "session_plan_shared",
+    name: "Session plan shared",
+    when: "When you share a session plan (shot list, mood board) with a client.",
+    hasCta: true,
+    defaults: { subject: "Plan for {{session_title}}", body: `Hi {{client_name}},\n\nHere is the plan for your session on {{session_date}}: what we will shoot, the looks, and a few reference images. Reply with anything you would like to add.\n\n${sig}`, cta_label: "View the plan" },
+    variables: [{ name: "session_title", description: "Session name" }, { name: "session_date", description: "Date" }, { name: "plan_url", description: "Link to the plan" }],
+    sample: { client_name: "Sarah Cohen", session_title: "Individual headshot", session_date: "October 14, 2026", plan_url: "https://studio.example.com/my/abc/plan" },
   },
 ];
 
