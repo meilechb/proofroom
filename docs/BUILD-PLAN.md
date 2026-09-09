@@ -219,7 +219,7 @@ Auth and sessions
 - [x] 3.14 `audit.ts`: `audit(studioId, userId, action, target, meta)`.
 - [x] 3.15 `slug.ts`: `RESERVED_SLUGS`, `studioSlugProblem()`, `slugify()`.
 - [x] 3.16 `account.ts`: create user with studio, create studio for user, seed defaults, check credentials with lockout, issue and consume tokens, mark verified, set password, slug available, find by email.
-- [~] 3.17 `account.ts`: on studio creation also generate `referral_code` (done), seed agreement template v1 (done), seed site defaults (waits for 3.67).
+- [x] 3.17 `account.ts`: on studio creation also generate `referral_code`, seed agreement template v1, seed site defaults.
 
 Tenancy and URLs
 - [x] 3.18 `tenant.ts`: `classifyHost()`, `studioBaseUrl()`, `galleryUrl()`, `payUrl()`, `tenantPath()`.
@@ -317,28 +317,28 @@ CRM and sales
 - [x] 3.65 `ical.ts`: studio sessions feed with token.
 
 Website
-- [ ] 3.66 `site/schema.ts`: zod schemas for site settings (template, colors, font, logo asset, favicon asset), page sections per page, area pages, SEO.
-  - [ ] 3.66.1 siteSettingsSchema (template, colors, base, font, logo, favicon)
-  - [ ] 3.66.2 homeSectionsSchema
-  - [ ] 3.66.3 portfolioPageSchema
-  - [ ] 3.66.4 pricingPageSchema
-  - [ ] 3.66.5 aboutPageSchema
-  - [ ] 3.66.6 contactPageSchema
-  - [ ] 3.66.7 galleryPageSchema and bookPageSchema
-  - [ ] 3.66.8 areasSchema
-  - [ ] 3.66.9 seoSchema
-- [ ] 3.67 `site/defaults.ts`: starter copy per section, adapted from the current studio site, with `{studio}` and `{location}` placeholders.
-  - [ ] 3.67.1 Home defaults
-  - [ ] 3.67.2 Portfolio defaults
-  - [ ] 3.67.3 Pricing defaults
-  - [ ] 3.67.4 About defaults
-  - [ ] 3.67.5 Contact defaults
-  - [ ] 3.67.6 FAQ default questions (8)
-- [ ] 3.68 `site/theme.ts`: CSS variables from colors and base; contrast check helper.
-- [ ] 3.69 `site/publish.ts`: draft → live copy, validation, `site_published_at`.
-- [ ] 3.70 `site/seo.ts`: title and description resolution, LocalBusiness JSON-LD, OG image URL.
-- [ ] 3.71 Delete old block schemas from `site.ts`.
-- [ ] 3.72 `site` tests: defaults validate, publish rejects invalid draft, theme contrast fails on bad pairs.
+- [x] 3.66 `site/schema.ts`: zod schemas for site settings (template, colors, font, logo asset, favicon asset), page sections per page, area pages, SEO.
+  - [x] 3.66.1 siteSettingsSchema (template, colors, base, font, logo, favicon)
+  - [x] 3.66.2 homeSectionsSchema
+  - [x] 3.66.3 portfolioPageSchema
+  - [x] 3.66.4 pricingPageSchema
+  - [x] 3.66.5 aboutPageSchema
+  - [x] 3.66.6 contactPageSchema
+  - [x] 3.66.7 galleryPageSchema and bookPageSchema
+  - [x] 3.66.8 areasSchema
+  - [x] 3.66.9 seoSchema
+- [x] 3.67 `site/defaults.ts`: starter copy per section, adapted from the current studio site, with `{studio}` and `{location}` placeholders.
+  - [x] 3.67.1 Home defaults
+  - [x] 3.67.2 Portfolio defaults
+  - [x] 3.67.3 Pricing defaults
+  - [x] 3.67.4 About defaults
+  - [x] 3.67.5 Contact defaults
+  - [x] 3.67.6 FAQ default questions (8)
+- [x] 3.68 `site/theme.ts`: CSS variables from colors and base; contrast check helper.
+- [x] 3.69 `site/publish.ts`: draft → live copy, validation, `site_published_at`.
+- [x] 3.70 `site/seo.ts`: title and description resolution, LocalBusiness JSON-LD, OG image URL.
+- [x] 3.71 Delete old block schemas from `site.ts`.
+- [x] 3.72 `site` tests: defaults validate, publish rejects invalid draft, theme contrast fails on bad pairs.
 
 Email
 - [x] 3.73 `email.ts`: Resend send, `emailLayout()`, dry-run when not configured.
