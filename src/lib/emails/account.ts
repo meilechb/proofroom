@@ -38,24 +38,4 @@ export async function sendInviteEmail(to: string, studioName: string, inviterNam
   });
 }
 
-export async function sendTrialEndingEmail(to: string, studioName: string, daysLeft: number) {
-  const url = `${appUrl()}/studio/billing`;
-  return sendEmail({
-    to,
-    kind: "trial_ending",
-    subject: `${daysLeft} day${daysLeft === 1 ? "" : "s"} left on your ${APP_NAME} trial`,
-    text: `Your Pro trial for ${studioName} ends in ${daysLeft} day${daysLeft === 1 ? "" : "s"}. After that the studio moves to the Free plan: galleries stay online, and uploads pause once you are over the Free storage limit.\n\nPick a plan to keep everything running:\n${url}\n\n${sig}`,
-    cta: { label: "Choose a plan", url },
-  });
-}
-
-export async function sendPaymentFailedEmail(to: string, studioName: string) {
-  const url = `${appUrl()}/studio/billing`;
-  return sendEmail({
-    to,
-    kind: "payment_failed",
-    subject: `Payment failed for ${studioName}`,
-    text: `We could not charge the card on file for ${studioName}. Stripe will retry over the next few days. To avoid interruption, update the card in billing:\n${url}\n\n${sig}`,
-    cta: { label: "Update payment method", url },
-  });
-}
+// Billing mail (trial, payment failed, cancellation, referrals) lives in emails/billing.ts.
