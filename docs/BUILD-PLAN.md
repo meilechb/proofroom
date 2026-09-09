@@ -259,13 +259,13 @@ Client payments (studio's Stripe account)
 
 Storage and images
 - [x] 3.40 `storage.ts`: two Blob stores, per-studio key prefixes, `put`, `del`, `signedGet`.
-- [ ] 3.41 `storage.ts`: `clientUploadToken(studio, gallery, filename, size)` for browser direct uploads with size and type limits.
-- [ ] 3.42 `storage.ts`: `deleteMany()` batching and retry.
+- [x] 3.41 `storage.ts`: `clientUploadToken(studio, gallery, filename, size)` for browser direct uploads with size and type limits.
+- [x] 3.42 `storage.ts`: `deleteMany()` batching and retry.
 - [x] 3.43 `images.ts`: sharp preview (1600), thumb (480), logo resize.
-- [ ] 3.44 `images.ts`: text watermark overlay (studio name, diagonal, 30% opacity) applied to previews when the gallery has watermark on.
-- [ ] 3.45 `images.ts`: EXIF orientation fix, strip metadata on previews, keep on originals.
-- [ ] 3.46 `images.ts`: `sha256(buffer)` for duplicate detection.
-- [ ] 3.47 `usage.ts`: `recomputeStorage(studio)`, `addBytes()`, `subtractBytes()`, `getUsage()`.
+- [x] 3.44 `images.ts`: text watermark overlay (studio name, diagonal, 30% opacity) applied to previews when the gallery has watermark on.
+- [x] 3.45 `images.ts`: EXIF orientation fix, strip metadata on previews, keep on originals.
+- [x] 3.46 `images.ts`: `sha256(buffer)` for duplicate detection.
+- [x] 3.47 `usage.ts`: `recomputeStorage(studio)`, `addBytes()`, `subtractBytes()`, `getUsage()`.
 - [x] 3.48 `usage.ts`: remove `LimitError` and assert helpers (no caps).
 
 Galleries
@@ -289,7 +289,7 @@ Galleries
   - [ ] 3.54.5 softDeletePhoto(id) / restorePhoto(id)
   - [ ] 3.54.6 purgeDeleted(olderThan) for cron
   - [ ] 3.54.7 movePhoto(id, targetGallery)
-- [ ] 3.55 `zip.ts`: streaming zip (fflate) of originals or web size, with filename de-duplication.
+- [x] 3.55 `zip.ts`: streaming zip (fflate) of originals or web size, with filename de-duplication.
 - [ ] 3.56 `analytics.ts`: `track(kind, key, visitorHash)` deduped per day; `summary(studio, range)`.
 - [x] 3.57 `analytics.ts` exists with record and summaries (extend per 3.56).
 
