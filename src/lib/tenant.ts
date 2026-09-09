@@ -48,3 +48,23 @@ export function payUrl(studio: Pick<Studio, "slug" | "custom_domain" | "custom_d
 export function tenantPath(slug: string, path = "") {
   return `/t/${slug}${path}`;
 }
+
+type StudioHost = Pick<Studio, "slug" | "custom_domain" | "custom_domain_verified_at">;
+
+export function bookingUrl(studio: StudioHost) {
+  return `${studioBaseUrl(studio)}/book`;
+}
+
+/** Client hub entered through an emailed magic link token. */
+export function clientHubUrl(studio: StudioHost, token: string) {
+  return `${studioBaseUrl(studio)}/my/${token}`;
+}
+
+/** Local area landing page, e.g. /headshots/brooklyn. */
+export function areaUrl(studio: StudioHost, areaSlug: string) {
+  return `${studioBaseUrl(studio)}/headshots/${areaSlug}`;
+}
+
+export function unsubscribeUrl(studio: StudioHost, token: string) {
+  return `${studioBaseUrl(studio)}/u/${token}`;
+}
