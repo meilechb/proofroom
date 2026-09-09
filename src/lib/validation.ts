@@ -46,3 +46,92 @@ export function fieldErrors(error: z.ZodError): Record<string, string> {
   }
   return out;
 }
+
+// Revision 4 schemas (plan 3.93)
+
+export const packageSchema = z.object({
+  name: z.string().trim().min(1, "Name the package.").max(80),
+  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  priceCents: z.coerce.number().int().min(0).max(10_000_000),
+  depositCents: z.coerce.number().int().min(0).max(10_000_000),
+  includedFinals: z.coerce.number().int().min(0).max(1000),
+  extraFinalCents: z.coerce.number().int().min(0).max(1_000_000),
+  turnaround: z.string().trim().max(120).optional().or(z.literal("")),
+  isFeatured: z.coerce.boolean().optional(),
+  isActive: z.coerce.boolean().optional(),
+});
+
+export const orderSchema = z.object({
+  clientId: z.string().uuid(),
+  packageId: z.string().uuid().optional().or(z.literal("")),
+  title: z.string().trim().max(120).optional().or(z.literal("")),
+  scheduledAt: z.string().datetime({ offset: true }).optional().or(z.literal("")),
+  location: z.string().trim().max(200).optional().or(z.literal("")),
+  notes: z.string().trim().max(5000).optional().or(z.literal("")),
+  discountCents: z.coerce.number().int().min(0).max(10_000_000).optional(),
+});
+
+export const gallerySettingsSchema = z.object({
+  title: z.string().trim().min(1, "Give the gallery a title.").max(120),
+  kind: z.enum(["proof", "final"]),
+  welcome_message: z.string().trim().max(2000).optional().or(z.literal("")),
+  allow_downloads: z.coerce.boolean().optional(),
+  allow_comments: z.coerce.boolean().optional(),
+  allow_client_upload: z.coerce.boolean().optional(),
+  allow_sharing: z.coerce.boolean().optional(),
+  watermark: z.coerce.boolean().optional(),
+  pay_gated: z.coerce.boolean().optional(),
+  download_size: z.enum(["web", "full", "both"]).optional(),
+  sort_mode: z.enum(["manual", "filename", "captured"]).optional(),
+  expires_at: z.string().date().optional().or(z.literal("")),
+  password: z.string().max(64).optional().or(z.literal("")),
+  download_pin: z.string().regex(/^\d{4,8}$/, "Use 4 to 8 digits.").optional().or(z.literal("")),
+});
+
+export const sendingDomainSchema = z.object({ domain: domainSchema, fromLocalPart: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{1,64}$/, "Use letters, numbers, dots, dashes or underscores.").default("hello") });
+
+export const referralCodeSchema = z.string().trim().toUpperCase().regex(/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/, "That code is not valid.");
+
+const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM.");
+const window = z.object({ start: hhmm, end: hhmm }).refine((w) => w.start < w.end, { message: "End must be after start." });
+
+export const bookingSettingsSchema = z.object({
+  enabled: z.coerce.boolean(),
+  weekly: z.object({ "0": z.array(window), "1": z.array(window), "2": z.array(window), "3": z.array(window), "4": z.array(window), "5": z.array(window), "6": z.array(window) }),
+  bufferMinutes: z.coerce.number().int().min(0).max(240),
+  leadTimeHours: z.coerce.number().int().min(0).max(24 * 60),
+  maxPerDay: z.coerce.number().int().min(1).max(50),
+  slotStepMinutes: z.coerce.number().int().min(5).max(240),
+  depositRequired: z.coerce.boolean(),
+  policy: z.string().trim().max(2000),
+  blockedDates: z.array(z.string().date()).max(366),
+});
+
+export const bookingRequestSchema = z.object({
+  packageId: z.string().uuid(),
+  startsAt: z.string().datetime({ offset: true }),
+  name: z.string().trim().min(1, "Enter your name.").max(120),
+  email: emailSchema,
+  phone: z.string().trim().max(40).optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  agree: z.literal(true, { error: "Please agree to the policy." }),
+});
+
+export const importMappingSchema = z.object({
+  galleries: z.array(z.object({ folder: z.string().max(300), title: z.string().trim().min(1).max(120), clientId: z.string().uuid().nullable(), clientEmail: emailSchema.optional(), clientName: z.string().trim().max(120).optional(), kind: z.enum(["proof", "final"]), include: z.boolean() })).max(500),
+});
+
+export const shotItemSchema = z.object({ id: z.string().max(40), text: z.string().trim().min(1).max(200), done: z.boolean() });
+
+export const sessionPlanSchema = z.object({
+  notes_md: z.string().max(20000).optional(),
+  shot_list: z.array(shotItemSchema).max(200).optional(),
+  mood_asset_ids: z.array(z.string().uuid()).max(60).optional(),
+  client_visible: z.coerce.boolean().optional(),
+});
+
+export const broadcastFilterSchema = z.object({
+  stages: z.array(z.enum(["lead", "awaiting_payment", "booked", "proofing", "delivered", "archived"])).optional(),
+  tags: z.array(z.string().trim().toLowerCase().max(40)).optional(),
+  activeSinceDays: z.coerce.number().int().min(1).max(3650).optional(),
+});
