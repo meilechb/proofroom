@@ -67,12 +67,12 @@ Legend: `[ ]` not started, `[x]` done, `[~]` partly done, `[-]` removed by decis
 - [x] 1.17 `scripts/make-platform-admin.mjs <email>`.
 - [x] 1.18 `scripts/plugin-zip.mjs` stamps `__SITE_URL__` into the plugin config and zips it.
 - [ ] 1.19 `scripts/seed-demo.mjs`: creates a demo studio with clients, sessions, galleries (placeholder images), for local testing; refuses to run against a production URL.
-- [ ] 1.20 `scripts/check-env.mjs`: lists required env vars and which are missing; used by `npm run dev` preflight.
-- [ ] 1.21 `.github/workflows/saas.yml`: on push and PR touching `saas/**`, run install, typecheck, lint, test, build with no secrets.
-- [ ] 1.22 `.github/workflows/saas.yml`: cache npm; Node 22.
-- [ ] 1.23 `saas/vercel.json`: cron `0 6 * * *` hitting `/api/cron/daily`, and `*/15 * * * *` hitting `/api/cron/frequent`.
-- [ ] 1.24 `saas/README.md`: what this app is, how to run locally, where the docs are.
-- [ ] 1.25 `docs/SETUP.md` skeleton: Vercel, Neon, Blob, Stripe, Resend, DNS, first admin.
+- [x] 1.20 `scripts/check-env.mjs`: lists required env vars and which are missing; used by `npm run dev` preflight.
+- [x] 1.21 `.github/workflows/saas.yml`: on push and PR touching `saas/**`, run install, typecheck, lint, test, build with no secrets.
+- [x] 1.22 `.github/workflows/saas.yml`: cache npm; Node 22.
+- [x] 1.23 `saas/vercel.json`: cron `0 6 * * *` hitting `/api/cron/daily`, and `*/15 * * * *` hitting `/api/cron/frequent`.
+- [x] 1.24 `saas/README.md`: what this app is, how to run locally, where the docs are.
+- [~] 1.25 `docs/SETUP.md` skeleton: Vercel, Neon, Blob, Stripe, Resend, DNS, first admin.
   - [ ] 1.25.1 Vercel project (Root Directory saas, Pro plan, wildcard domain, env vars)
   - [ ] 1.25.2 Neon project, branch, connection string, migrate on build
   - [ ] 1.25.3 Vercel Blob: private and public stores, tokens
@@ -80,7 +80,7 @@ Legend: `[ ]` not started, `[x]` done, `[~]` partly done, `[-]` removed by decis
   - [ ] 1.25.5 Resend: API key, platform domain records, webhook
   - [ ] 1.25.6 DNS: root, wildcard, app subdomain, mail subdomain
   - [ ] 1.25.7 First platform admin via script; first test studio
-- [ ] 1.26 `docs/ARCHITECTURE.md` skeleton: tenancy, auth, storage, payments, email, plugin.
+- [~] 1.26 `docs/ARCHITECTURE.md` skeleton: tenancy, auth, storage, payments, email, plugin.
   - [ ] 1.26.1 Tenancy and host routing
   - [ ] 1.26.2 Auth and sessions
   - [ ] 1.26.3 Storage and image pipeline
@@ -89,11 +89,11 @@ Legend: `[ ]` not started, `[x]` done, `[~]` partly done, `[-]` removed by decis
   - [ ] 1.26.6 Lightroom API and plugin
 - [ ] 1.27 `docs/NAME-CANDIDATES.md`: the September 9 availability list, for the naming decision later.
 - [ ] 1.28 Root repo `tsconfig.json` and `eslint.config.mjs` exclude `saas/` (done in commit 64f6053); confirm root `npm run build` still passes after every saas change touching root files.
-- [ ] 1.29 `saas/.nvmrc` with Node 22.
+- [x] 1.29 `saas/.nvmrc` with Node 22.
 - [ ] 1.30 Rename pass (when the name is chosen): env default, cookie name `pr_session`, token prefix `pr_live_`, plugin folder and id, email footer, docs. One commit.
-- [ ] 1.31 `saas/src/instrumentation.ts`: request id per request in logs.
-- [ ] 1.32 Error reporting hook: `logger.error` writes structured JSON; SETUP notes how to ship to Vercel logs drain later.
-- [ ] 1.33 `saas/CHANGELOG.md` started; every phase appends a line.
+- [x] 1.31 `saas/src/instrumentation.ts`: request id per request in logs.
+- [x] 1.32 Error reporting hook: `logger.error` writes structured JSON; SETUP notes how to ship to Vercel logs drain later.
+- [x] 1.33 `saas/CHANGELOG.md` started; every phase appends a line.
 
 ## Phase 2. Database schema (`saas/db/schema.sql`)
 
