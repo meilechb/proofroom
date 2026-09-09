@@ -5,6 +5,7 @@ import { Logo } from "@/components/ui";
 import { StudioNav } from "@/components/studio/nav";
 import { StudioSwitcher } from "@/components/studio/switcher";
 import { Banners } from "@/components/studio/banners";
+import { ToastProvider } from "@/components/ui/toast";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -33,7 +34,9 @@ export default async function StudioLayout({ children }: { children: React.React
       </aside>
       <div className="flex-1 min-w-0">
         <Banners user={ctx.user} studio={ctx.studio} billing={ctx.billing} />
-        <main className="container-x py-6 lg:py-8">{children}</main>
+        <ToastProvider>
+          <main className="container-x py-6 lg:py-8">{children}</main>
+        </ToastProvider>
       </div>
     </div>
   );
