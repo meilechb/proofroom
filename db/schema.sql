@@ -841,3 +841,49 @@ create table if not exists session_plans (
   client_visible boolean not null default false,
   updated_at timestamptz not null default now()
 );
+
+-- ---------------------------------------------------------------------------
+-- Indexes for list queries (plan 2.61 to 2.64)
+-- ---------------------------------------------------------------------------
+create index if not exists clients_studio_stage_idx on clients (studio_id, stage);
+create index if not exists inquiries_studio_unread_idx on inquiries (studio_id) where status = 'new';
+create index if not exists orders_studio_status_idx on orders (studio_id, status);
+create index if not exists orders_studio_scheduled_idx on orders (studio_id, scheduled_at);
+create index if not exists payments_studio_paid_idx on payments (studio_id, paid_at);
+create index if not exists galleries_studio_published_idx on galleries (studio_id) where status = 'published';
+create index if not exists photos_sha256_idx on photos (sha256) where sha256 is not null;
+create index if not exists photo_comments_unresolved_idx on photo_comments (gallery_id) where not resolved;
+create index if not exists photo_selections_kind_idx on photo_selections (gallery_id, selected);
+create index if not exists assets_studio_kind_idx on assets (studio_id, kind);
+create index if not exists assets_tags_idx on assets using gin (tags);
+create index if not exists sessions_expires_idx on sessions (expires_at);
+create index if not exists email_log_related_idx on email_log (related_type, related_id);
+
+-- ---------------------------------------------------------------------------
+-- updated_at maintenance (plan 2.65). The function body stays on one line
+-- because scripts/db-migrate.mjs splits statements on ";" at end of line.
+-- ---------------------------------------------------------------------------
+create or replace function set_updated_at() returns trigger language plpgsql as $$ begin new.updated_at = now(); return new; end $$;
+
+drop trigger if exists studios_set_updated_at on studios;
+create trigger studios_set_updated_at before update on studios for each row execute function set_updated_at();
+drop trigger if exists users_set_updated_at on users;
+create trigger users_set_updated_at before update on users for each row execute function set_updated_at();
+drop trigger if exists clients_set_updated_at on clients;
+create trigger clients_set_updated_at before update on clients for each row execute function set_updated_at();
+drop trigger if exists orders_set_updated_at on orders;
+create trigger orders_set_updated_at before update on orders for each row execute function set_updated_at();
+drop trigger if exists galleries_set_updated_at on galleries;
+create trigger galleries_set_updated_at before update on galleries for each row execute function set_updated_at();
+drop trigger if exists sending_domains_set_updated_at on sending_domains;
+create trigger sending_domains_set_updated_at before update on sending_domains for each row execute function set_updated_at();
+drop trigger if exists broadcasts_set_updated_at on broadcasts;
+create trigger broadcasts_set_updated_at before update on broadcasts for each row execute function set_updated_at();
+drop trigger if exists imports_set_updated_at on imports;
+create trigger imports_set_updated_at before update on imports for each row execute function set_updated_at();
+drop trigger if exists booking_slots_set_updated_at on booking_slots;
+create trigger booking_slots_set_updated_at before update on booking_slots for each row execute function set_updated_at();
+drop trigger if exists session_plans_set_updated_at on session_plans;
+create trigger session_plans_set_updated_at before update on session_plans for each row execute function set_updated_at();
+drop trigger if exists platform_settings_set_updated_at on platform_settings;
+create trigger platform_settings_set_updated_at before update on platform_settings for each row execute function set_updated_at();

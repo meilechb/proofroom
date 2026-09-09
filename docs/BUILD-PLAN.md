@@ -103,9 +103,9 @@ Identity and tenancy
 - [x] 2.3 `studios` billing columns (plan, trial_ends_at, stripe_customer_id, stripe_subscription_id, subscription_status, current_period_end, cancel_at_period_end).
 - [x] 2.4 `studios`: drop `billing_interval`; `plan` defaults to `studio`; add `read_only_since`, `grace_ends_at`.
 - [x] 2.5 `studios` Stripe connection columns (stripe_account_id, stripe_account_status).
-- [ ] 2.6 `studios`: add `stripe_connect_method` (`oauth` | `onboarding` | `manual` | `none`), `stripe_charges_enabled` bool, `stripe_details_submitted` bool, `stripe_connected_at`, `manual_payment_instructions` text, `manual_payment_link` text.
+- [x] 2.6 `studios`: add `stripe_connect_method` (`oauth` | `onboarding` | `manual` | `none`), `stripe_charges_enabled` bool, `stripe_details_submitted` bool, `stripe_connected_at`, `manual_payment_instructions` text, `manual_payment_link` text.
 - [x] 2.7 `studios` domain columns (custom_domain unique, custom_domain_verified_at).
-- [ ] 2.8 `studios`: add `referral_code` unique, `referred_by_code`, `site` jsonb, `site_draft` jsonb, `site_published_at`, `site_template` text.
+- [x] 2.8 `studios`: add `referral_code` unique, `referred_by_code`, `site` jsonb, `site_draft` jsonb, `site_published_at`, `site_template` text.
 - [x] 2.9 `memberships` (studio_id, user_id, role, created_at) unique pair.
 - [x] 2.10 `invitations` (studio_id, email, role, token_hash, expires_at, accepted_at, invited_by).
 - [x] 2.11 `sessions` (id, user_id, studio_id, token_hash unique, expires_at, created_at, last_seen_at, user_agent, ip).
@@ -119,84 +119,84 @@ Identity and tenancy
 - [x] 2.14 `audit_log` (studio_id, user_id, action, target_type, target_id, meta jsonb, created_at).
 - [x] 2.15 `api_tokens` (studio_id, name, token_hash unique, last_used_at, revoked_at, created_by).
 - [x] 2.16 `stripe_events` (id primary, type, processed_at) for idempotency.
-- [ ] 2.17 `platform_settings` (key, value jsonb) for toggles such as signups_open, maintenance_banner.
+- [x] 2.17 `platform_settings` (key, value jsonb) for toggles such as signups_open, maintenance_banner.
 
 CRM
 - [x] 2.18 `clients` (studio_id, name, email, phone, company, stage, notes, tags text[], unsubscribed_at, source, created_at, updated_at).
-- [ ] 2.19 `clients`: unique (studio_id, lower(email)) where email not null; add `last_activity_at`, `archived_at`.
+- [x] 2.19 `clients`: unique (studio_id, lower(email)) where email not null; add `last_activity_at`, `archived_at`.
 - [x] 2.20 `inquiries` (studio_id, name, email, phone, message, source, read_at, archived_at, client_id, created_at).
 - [x] 2.21 `booking_requests` (studio_id, client_id, package_id, requested_at, preferred_times, status, notes).
 - [x] 2.22 `tasks` (studio_id, client_id, order_id, title, due_at, done_at, assigned_user_id, created_by).
 - [x] 2.23 `client_notes` (studio_id, client_id, author_user_id, body, kind, created_at).
-- [ ] 2.24 `client_events` (studio_id, client_id, kind, ref_type, ref_id, created_at) for the timeline (gallery sent, payment received, email sent).
+- [x] 2.24 `client_events` (studio_id, client_id, kind, ref_type, ref_id, created_at) for the timeline (gallery sent, payment received, email sent).
 - [x] 2.25 `leads` (platform-level contact form).
 
 Sales
 - [x] 2.26 `packages` (studio_id, name, description, price_cents, deposit_cents, included_finals, extra_final_cents, duration_minutes, is_active, show_on_site, sort_order).
 - [x] 2.27 `orders` (studio_id, order_number, client_id, package_id, title, scheduled_at, status, total_cents, deposit_cents, discount_cents, notes, contract_version, contract_signed_at, contract_signer_name, contract_ip, created_at) unique (studio_id, order_number).
 - [x] 2.28 `payments` (studio_id, order_id, amount_cents, method, status, stripe_account_id, stripe_checkout_session_id, stripe_payment_intent_id, stripe_charge_id, refunded_cents, paid_at, created_at).
-- [ ] 2.29 `payments`: drop `platform_fee_cents`; add `dispute_status`, `disputed_at`, `receipt_url`.
+- [x] 2.29 `payments`: drop `platform_fee_cents`; add `dispute_status`, `disputed_at`, `receipt_url`.
 - [x] 2.30 `documents` (studio_id, client_id, order_id, kind, title, blob_path, size_bytes, created_at).
-- [ ] 2.31 `agreement_templates` (studio_id, version, body_md, created_at, is_active) replacing the single hard-coded contract.
+- [x] 2.31 `agreement_templates` (studio_id, version, body_md, created_at, is_active) replacing the single hard-coded contract.
 
 Galleries
 - [x] 2.32 `galleries` (studio_id, client_id, order_id, parent_id, subject_name, slug unique per studio, title, kind, status, access_code_hash, password_hash, welcome, allow_downloads, allow_comments, expires_at, published_at, watermark, download_pin_hash, view_count, created_at).
-- [ ] 2.33 `galleries`: add `download_size` (`web` | `full` | `both`), `pay_gated` bool, `allow_client_upload` bool, `allow_sharing` bool, `cover_photo_id`, `sort_mode`.
+- [x] 2.33 `galleries`: add `download_size` (`web` | `full` | `both`), `pay_gated` bool, `allow_client_upload` bool, `allow_sharing` bool, `cover_photo_id`, `sort_mode`.
 - [x] 2.34 `photos` (gallery_id, studio_id, filename, blob_path, preview_path, thumb_path, width, height, size_bytes, sort_order, lr_id, created_at).
-- [ ] 2.35 `photos`: add `sha256`, `uploaded_by` (`studio` | `client` | `plugin`), `deleted_at` for soft delete with 30-day purge.
+- [x] 2.35 `photos`: add `sha256`, `uploaded_by` (`studio` | `client` | `plugin`), `deleted_at` for soft delete with 30-day purge.
 - [x] 2.36 `photo_comments` (photo_id, gallery_id, author_role, author_name, body, resolved_at, created_at).
 - [x] 2.37 `photo_selections` (photo_id, gallery_id, kind, created_at) unique (photo_id, kind).
-- [ ] 2.38 `gallery_visits` (gallery_id, visitor_hash, first_seen, last_seen, views, downloads) for per-gallery analytics.
-- [ ] 2.39 `gallery_downloads` (gallery_id, photo_id nullable, kind, visitor_hash, created_at).
+- [x] 2.38 `gallery_visits` (gallery_id, visitor_hash, first_seen, last_seen, views, downloads) for per-gallery analytics.
+- [x] 2.39 `gallery_downloads` (gallery_id, photo_id nullable, kind, visitor_hash, created_at).
 
 Website, portfolio, assets
 - [x] 2.40 `assets` (studio_id, kind, filename, blob_path, variants jsonb, width, height, size_bytes, alt, tags text[], created_at).
-- [ ] 2.41 `assets`: add `usage_count` int maintained by triggers or app code; `deleted_at`.
+- [x] 2.41 `assets`: add `usage_count` int maintained by triggers or app code; `deleted_at`.
 - [x] 2.42 `portfolio_items` (studio_id, asset_id, category, caption, featured, sort_order, published).
 - [x] 2.43 `reviews` (studio_id, author, role, body, rating, published, sort_order).
-- [ ] 2.44 Drop `site_pages`; the site lives in `studios.site` / `site_draft` (see 2.8).
-- [ ] 2.45 `site_areas` (studio_id, town, slug, intro_override, published) for local landing pages.
+- [x] 2.44 Drop `site_pages`; the site lives in `studios.site` / `site_draft` (see 2.8).
+- [x] 2.45 `site_areas` (studio_id, town, slug, intro_override, published) for local landing pages.
 - [x] 2.46 `analytics_daily` (studio_id, day, kind, key, count) unique quadruple.
 
 Email
 - [x] 2.47 `email_templates` (studio_id, key, subject, body, updated_at) unique (studio_id, key).
 - [x] 2.48 `email_log` (studio_id, to_email, template_key, subject, provider_id, status, error, related_type, related_id, created_at).
-- [ ] 2.49 `email_log`: add `opened_at`, `clicked_at`, `bounced_at`, `complained_at`, `from_domain`.
+- [x] 2.49 `email_log`: add `opened_at`, `clicked_at`, `bounced_at`, `complained_at`, `from_domain`.
 - [x] 2.50 `automation_sends` (studio_id, rule, target_type, target_id, sent_at) unique triple.
-- [ ] 2.51 `sending_domains` (studio_id unique, domain, resend_domain_id, status, records jsonb, from_local_part, region, verified_at, last_checked_at, created_at).
-- [ ] 2.52 `suppressions` (studio_id, email, reason, created_at) unique (studio_id, email).
-- [ ] 2.53 `broadcasts` (studio_id, subject, body, filter jsonb, status, scheduled_at, sent_at, recipient_count, created_by).
+- [x] 2.51 `sending_domains` (studio_id unique, domain, resend_domain_id, status, records jsonb, from_local_part, region, verified_at, last_checked_at, created_at).
+- [x] 2.52 `suppressions` (studio_id, email, reason, created_at) unique (studio_id, email).
+- [x] 2.53 `broadcasts` (studio_id, subject, body, filter jsonb, status, scheduled_at, sent_at, recipient_count, created_by).
 
 Referrals, imports, booking, planning
-- [ ] 2.54 `referrals` (referrer_studio_id, code, referred_studio_id, status, signed_up_at, rewarded_at, invoice_id, referrer_reward_state, referred_reward_state, void_reason).
-- [ ] 2.55 `reward_queue` (studio_id, coupon_id, reason, ref_id, apply_after, applied_at).
-- [ ] 2.56 `imports` (studio_id, source, status, file_count, gallery_count, photo_count, log jsonb, started_at, finished_at, created_by).
-- [ ] 2.57 `import_files` (import_id, blob_path, size_bytes, status, error).
+- [x] 2.54 `referrals` (referrer_studio_id, code, referred_studio_id, status, signed_up_at, rewarded_at, invoice_id, referrer_reward_state, referred_reward_state, void_reason).
+- [x] 2.55 `reward_queue` (studio_id, coupon_id, reason, ref_id, apply_after, applied_at).
+- [x] 2.56 `imports` (studio_id, source, status, file_count, gallery_count, photo_count, log jsonb, started_at, finished_at, created_by).
+- [x] 2.57 `import_files` (import_id, blob_path, size_bytes, status, error).
 - [ ] 2.58 `booking_settings` in `studios.settings.booking` (weekly hours, buffer, lead time, max per day, enabled).
-- [ ] 2.59 `booking_slots` (studio_id, starts_at, ends_at, package_id, client_id, order_id, status) with exclusion constraint on overlapping confirmed slots.
-- [ ] 2.60 `session_plans` (order_id unique, notes_md, shot_list jsonb, mood_asset_ids uuid[], client_visible bool, updated_at).
+- [x] 2.59 `booking_slots` (studio_id, starts_at, ends_at, package_id, client_id, order_id, status) with exclusion constraint on overlapping confirmed slots.
+- [x] 2.60 `session_plans` (order_id unique, notes_md, shot_list jsonb, mood_asset_ids uuid[], client_visible bool, updated_at).
 
 Indexes and constraints
 - [x] 2.61 Indexes on every `studio_id` and every foreign key used in lists.
-  - [ ] 2.61.1 clients (studio_id, stage), (studio_id, lower(email))
-  - [ ] 2.61.2 inquiries (studio_id, read_at)
-  - [ ] 2.61.3 orders (studio_id, status), (client_id)
-  - [ ] 2.61.4 payments (order_id), (stripe_checkout_session_id unique)
-  - [ ] 2.61.5 galleries (studio_id, status), (client_id), (parent_id), (studio_id, slug unique)
-  - [ ] 2.61.6 photos (gallery_id, sort_order), (sha256)
-  - [ ] 2.61.7 photo_comments (gallery_id, resolved_at)
-  - [ ] 2.61.8 photo_selections (gallery_id, kind)
-  - [ ] 2.61.9 assets (studio_id, kind), tags gin
-  - [ ] 2.61.10 email_log (studio_id, created_at)
-  - [ ] 2.61.11 audit_log (studio_id, created_at)
-  - [ ] 2.61.12 sessions (user_id), (expires_at) for cleanup
-- [ ] 2.62 Partial index `galleries (studio_id) where status='published'`.
-- [ ] 2.63 Index `orders (studio_id, scheduled_at)`, `payments (studio_id, paid_at)`, `email_log (studio_id, created_at desc)`, `client_events (client_id, created_at desc)`.
-- [ ] 2.64 Unique `referrals.code`; unique `studios.referral_code`.
-- [ ] 2.65 `updated_at` trigger function applied to tables with the column.
+  - [x] 2.61.1 clients (studio_id, stage), (studio_id, lower(email))
+  - [x] 2.61.2 inquiries (studio_id, read_at)
+  - [x] 2.61.3 orders (studio_id, status), (client_id)
+  - [x] 2.61.4 payments (order_id), (stripe_checkout_session_id unique)
+  - [x] 2.61.5 galleries (studio_id, status), (client_id), (parent_id), (studio_id, slug unique)
+  - [x] 2.61.6 photos (gallery_id, sort_order), (sha256)
+  - [x] 2.61.7 photo_comments (gallery_id, resolved_at)
+  - [x] 2.61.8 photo_selections (gallery_id, kind)
+  - [x] 2.61.9 assets (studio_id, kind), tags gin
+  - [x] 2.61.10 email_log (studio_id, created_at)
+  - [x] 2.61.11 audit_log (studio_id, created_at)
+  - [x] 2.61.12 sessions (user_id), (expires_at) for cleanup
+- [x] 2.62 Partial index `galleries (studio_id) where status='published'`.
+- [x] 2.63 Index `orders (studio_id, scheduled_at)`, `payments (studio_id, paid_at)`, `email_log (studio_id, created_at desc)`, `client_events (client_id, created_at desc)`.
+- [x] 2.64 Unique `referrals.code`; unique `studios.referral_code`.
+- [x] 2.65 `updated_at` trigger function applied to tables with the column.
 - [ ] 2.66 Cascade rules reviewed: deleting a studio soft-deletes; hard purge job removes rows and blobs 90 days later.
-- [ ] 2.67 Schema smoke test: `db-migrate` twice in a row produces no errors (idempotency).
-- [ ] 2.68 `docs/ARCHITECTURE.md` gets the table list with one line each.
+- [x] 2.67 Schema smoke test: `db-migrate` twice in a row produces no errors (idempotency).
+- [x] 2.68 `docs/ARCHITECTURE.md` gets the table list with one line each.
 
 ## Phase 3. Core libraries (`saas/src/lib`)
 

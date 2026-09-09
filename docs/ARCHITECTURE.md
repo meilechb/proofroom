@@ -39,4 +39,18 @@ Short descriptions of how the pieces fit. Sections marked "to write" are filled 
 
 ## Tables
 
-To write: one line per table once Phase 2 is complete (plan item 2.68).
+Identity and tenancy: `users` (people who log in), `studios` (the tenant, with billing, Stripe connection, referral code and the template website in `site`/`site_draft`), `memberships` (user to studio with role), `invitations`, `sessions` (login sessions, hashed token), `auth_tokens` (one-time, hashed), `rate_limits`, `audit_log`, `api_tokens` (Lightroom), `stripe_events` (webhook idempotency), `platform_settings`.
+
+CRM: `clients` (with `stage`, tags, unsubscribe, last activity), `inquiries` (contact form), `booking_requests`, `tasks`, `client_notes` (written by people), `client_events` (system timeline), `leads` (platform contact form).
+
+Sales: `packages`, `orders` (a session; numbered per studio; agreement signature fields), `payments` (mirrors of charges on the studio's Stripe account, with refund and dispute state), `documents`, `agreement_templates` (versioned per studio).
+
+Galleries: `galleries` (proof or final, team-day children via `parent_id`, access and download options), `photos` (originals private, previews public, soft delete, sha256), `photo_comments`, `photo_selections` (favorites), `gallery_visits`, `gallery_downloads`.
+
+Website, portfolio, assets: `assets` (every uploaded image, usage count), `portfolio_items`, `reviews`, `site_areas` (local landing pages), `analytics_daily`.
+
+Email: `email_templates`, `email_log` (with delivery events), `automation_sends` (one send per rule and target), `sending_domains` (the studio's Resend domain), `suppressions`, `broadcasts`.
+
+Referrals, imports, booking, planning: `referrals`, `reward_queue`, `imports`, `import_files`, `booking_slots` (exclusion constraint prevents overlaps), `session_plans`.
+
+All `updated_at` columns are maintained by the `set_updated_at` trigger.
