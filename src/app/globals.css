@@ -52,7 +52,8 @@ body {
 }
 
 /* Primitives shared by every surface. Components in src/components/ui wrap these. */
-.btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 h-10 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none; }
+/* Base primitives are @utility so other classes below can @apply them (Tailwind 4 cannot @apply plain CSS classes). */
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 h-10 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none; }
 .btn-primary { @apply btn bg-brand text-brand-ink hover:opacity-90; }
 .btn-secondary { @apply btn bg-surface text-ink border border-line-2 hover:bg-surface-2; }
 .btn-ghost { @apply btn text-ink-2 hover:bg-surface-2 hover:text-ink; }
@@ -60,7 +61,7 @@ body {
 .btn-sm { @apply h-8 px-3 text-[13px] rounded-md; }
 .btn-lg { @apply h-12 px-6 text-base rounded-xl; }
 
-.input { @apply w-full h-10 rounded-lg border border-line-2 bg-surface px-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent disabled:opacity-60; }
+@utility input { @apply w-full h-10 rounded-lg border border-line-2 bg-surface px-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent disabled:opacity-60; }
 .textarea { @apply input h-auto py-2 min-h-24 resize-y; }
 .select { @apply input pr-8; }
 .label { @apply block text-sm font-medium text-ink mb-1.5; }
@@ -70,7 +71,7 @@ body {
 .card { @apply bg-surface border border-line rounded-[var(--radius-card)] shadow-[var(--shadow-card)]; }
 .card-pad { @apply p-5 sm:p-6; }
 
-.badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border; }
+@utility badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border; }
 .badge-neutral { @apply badge bg-surface-2 text-ink-2 border-line; }
 .badge-success { @apply badge bg-success-bg text-success border-success/20; }
 .badge-warning { @apply badge bg-warning-bg text-warning border-warning/20; }

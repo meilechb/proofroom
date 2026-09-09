@@ -57,7 +57,7 @@ describe("db/schema.sql", () => {
   });
 
   it("every tenant table carries studio_id or hangs off one that does", () => {
-    const tenantless = ["studios", "users", "platform_settings", "rate_limits", "stripe_events", "leads", "gallery_visits", "gallery_downloads", "import_files", "memberships", "invitations", "sessions", "auth_tokens", "photo_selections", "photo_comments"];
+    const tenantless = ["studios", "users", "referrals", "platform_settings", "rate_limits", "stripe_events", "leads", "gallery_visits", "gallery_downloads", "import_files", "memberships", "invitations", "sessions", "auth_tokens", "photo_selections", "photo_comments"];
     for (const stmt of statements) {
       const m = stmt.match(/^create table if not exists (\w+)\s*\(([\s\S]*)\)$/i);
       if (!m) continue;

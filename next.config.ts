@@ -1,6 +1,10 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // This app lives in saas/ inside a repo that has its own lockfile at the root.
+  // Pin the Turbopack root so module and PostCSS resolution stay inside saas/.
+  turbopack: { root: path.join(__dirname) },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },
