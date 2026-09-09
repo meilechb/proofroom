@@ -86,8 +86,8 @@ export async function proxy(request: NextRequest) {
       url.pathname = "/studio-not-found";
       return finish(request, NextResponse.rewrite(url), true);
     }
-    if (pathname.startsWith("/api/photo") || pathname.startsWith("/api/gallery") || pathname.startsWith("/api/pay")) {
-      return finish(request, NextResponse.next(), true);
+    if (pathname.startsWith("/api/photo") || pathname.startsWith("/api/gallery") || pathname.startsWith("/api/pay") || pathname.startsWith("/api/track")) {
+      return finish(request, NextResponse.next({ request: { headers: withTenantHeaders(request, slug) } }), true);
     }
     if (ROOT_ONLY_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
       const proto = request.nextUrl.protocol;

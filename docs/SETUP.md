@@ -32,6 +32,17 @@ A runbook, followed top to bottom once. Each section is filled in as its phase i
 
 Follow Appendix A in `docs/BUILD-PLAN.md`: platform profile, Connect branding, OAuth client id and redirect URI (`STRIPE_CONNECT_CLIENT_ID`), the connected-accounts webhook (`STRIPE_CONNECT_WEBHOOK_SECRET`). We create direct charges on the studio's account with no application fee; refunds and disputes are the studio's, in their own Dashboard.
 
+### 4c. Testing webhooks locally
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+stripe listen --forward-connect-to localhost:3000/api/stripe/connect-webhook
+stripe trigger checkout.session.completed
+stripe trigger --stripe-account acct_xxx checkout.session.completed
+```
+
+`stripe listen` prints a signing secret; put it in `.env.local` as the matching `STRIPE_*_WEBHOOK_SECRET` while testing.
+
 ## 5. Resend (to write in full)
 
 - Verify the platform sending domain (a subdomain such as `mail.APP_DOMAIN`) and set `RESEND_API_KEY`, `EMAIL_FROM`.
