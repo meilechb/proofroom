@@ -42,3 +42,16 @@ export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 export function isUuid(v: unknown): v is string {
   return typeof v === "string" && UUID_RE.test(v);
 }
+
+/**
+ * Runs several statements in one non-interactive transaction over the HTTP
+ * driver (all or nothing). Build the statements with the `sql` tag passed in;
+ * results come back in the same order. For read-then-write logic that must be
+ * atomic, prefer a single statement with a CTE (see orders.ts) because the
+ * statements here cannot depend on each other's results.
+ */
+export async function withTx<T extends unknown[]>(build: (sql: NeonQueryFunction<false, false>) => [...{ [K in keyof T]: Promise<T[K]> }]) {
+  const sql = db();
+  // The driver's transaction() accepts the query promises created by its own tag.
+  return (await sql.transaction(build(sql) as never)) as unknown as T;
+}

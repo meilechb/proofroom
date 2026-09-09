@@ -89,6 +89,27 @@ export async function requireStudio(minRole: MembershipRole = "member"): Promise
   return ctx;
 }
 
+/**
+ * Mutations that create or change studio data: also rejects read-only studios
+ * (trial ended, subscription ended). Read access stays available so the studio
+ * can export, review and subscribe.
+ */
+export async function requireWritableStudio(minRole: MembershipRole = "member"): Promise<StudioContext> {
+  const ctx = await requireStudio(minRole);
+  if (!ctx.billing.canWrite) throw new ReadOnlyError(ctx.billing.status);
+  return ctx;
+}
+
+export class ReadOnlyError extends Error {
+  constructor(public status: string) {
+    super(
+      status === "locked"
+        ? "Your trial has ended and client galleries are locked. Subscribe in Billing to continue."
+        : "Your trial has ended and the studio is read-only. Subscribe in Billing to make changes."
+    );
+  }
+}
+
 export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
@@ -109,7 +130,13 @@ export async function requirePlatformAdmin(): Promise<CurrentUser> {
 }
 
 /** Ensures a row belongs to the studio; use before any mutation by id. */
-export async function assertOwned(table: "clients" | "orders" | "galleries" | "photos" | "packages" | "api_tokens", id: string, studioId: string) {
+export type OwnedTable =
+  | "clients" | "inquiries" | "orders" | "payments" | "galleries" | "photos" | "packages" | "api_tokens"
+  | "assets" | "portfolio_items" | "reviews" | "tasks" | "client_notes" | "documents" | "email_templates"
+  | "agreement_templates" | "site_areas" | "broadcasts" | "imports" | "booking_slots" | "session_plans" | "referrals";
+
+export async function assertOwned(table: OwnedTable, id: string, studioId: string) {
+  if (!/^[a-z_]+$/.test(table)) throw new Error("Bad table");
   const found = await db().query(`select 1 from ${table} where id = $1 and studio_id = $2 limit 1`, [id, studioId]);
   if (found.length === 0) throw new Error("Not found");
 }

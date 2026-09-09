@@ -32,3 +32,31 @@ export function clientIp(headers: Headers) {
   if (fwd) return fwd.split(",")[0].trim();
   return headers.get("x-real-ip") ?? "unknown";
 }
+
+/**
+ * Named limits so call sites do not invent numbers. Windows are seconds.
+ *   login: per ip+email      signup: per ip       password_reset: per ip
+ *   gallery_unlock: per gallery+ip   contact_form: per ip   api_token: per token
+ *   slug_check: per ip       verify_resend: per user   pay_checkout: per order+ip
+ */
+export const LIMITS = {
+  login: { max: 10, window: 15 * 60 },
+  signup: { max: 5, window: 60 * 60 },
+  password_reset: { max: 5, window: 60 * 60 },
+  verify_resend: { max: 3, window: 60 * 60 },
+  slug_check: { max: 60, window: 60 },
+  gallery_unlock: { max: 10, window: 15 * 60 },
+  contact_form: { max: 5, window: 60 * 60 },
+  api_token: { max: 600, window: 60 },
+  pay_checkout: { max: 10, window: 10 * 60 },
+  booking: { max: 10, window: 60 * 60 },
+  unsubscribe: { max: 20, window: 60 * 60 },
+} as const;
+
+export type LimitName = keyof typeof LIMITS;
+
+/** rateLimit() with a preset: await limited("login", `${ip}:${email}`) */
+export function limited(name: LimitName, subject: string) {
+  const { max, window } = LIMITS[name];
+  return rateLimit(`${name}:${subject}`, max, window);
+}
