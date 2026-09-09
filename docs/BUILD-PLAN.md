@@ -361,15 +361,15 @@ Email
 - [x] 3.83 `automations.ts`: rules registry (balance reminder, gallery expiring, unanswered notes, review request, thank you), `due(rule)`, `markSent()`.
 
 Referrals, imports, booking, planning
-- [ ] 3.84 `referrals.ts`: `generateCode()`, `captureAtSignup()`, `onFirstPaidInvoice()`, `applyReward(studio)`, `queueReward()`, `void()`.
-  - [ ] 3.84.1 generateCode() 8 chars, unambiguous alphabet, unique
-  - [ ] 3.84.2 captureAtSignup(studio, code)
-  - [ ] 3.84.3 onFirstPaidInvoice(studio, invoice)
-  - [ ] 3.84.4 applyReward(studio, couponId) or queue
-  - [ ] 3.84.5 queueReward(studio, reason, applyAfter)
-  - [ ] 3.84.6 voidReferral(id, reason)
-- [ ] 3.85 `referrals.ts` fraud checks: same user, same email, same payment method fingerprint (from Stripe customer default payment method), cap 12 per year.
-- [ ] 3.86 `referrals.ts` tests for each rule.
+- [x] 3.84 `referrals.ts`: `generateCode()`, `captureAtSignup()`, `onFirstPaidInvoice()`, `applyReward(studio)`, `queueReward()`, `void()`.
+  - [x] 3.84.1 generateCode() 8 chars, unambiguous alphabet, unique
+  - [x] 3.84.2 captureAtSignup(studio, code)
+  - [x] 3.84.3 onFirstPaidInvoice(studio, invoice)
+  - [x] 3.84.4 applyReward(studio, couponId) or queue
+  - [x] 3.84.5 queueReward(studio, reason, applyAfter)
+  - [x] 3.84.6 voidReferral(id, reason)
+- [x] 3.85 `referrals.ts` fraud checks: same user, same email, same payment method fingerprint (from Stripe customer default payment method), cap 12 per year.
+- [x] 3.86 `referrals.ts` tests for each rule.
 - [ ] 3.87 `imports.ts`: create import, accept zip uploads, scan entries, map folders to galleries, stream photos into storage, progress, finish, log.
   - [ ] 3.87.1 createImport(studio, source)
   - [ ] 3.87.2 registerFile(importId, blob)
@@ -378,19 +378,19 @@ Referrals, imports, booking, planning
   - [ ] 3.87.5 processChunk(importId, n) idempotent
   - [ ] 3.87.6 finishImport(importId) summary and email
 - [ ] 3.88 `imports/pixieset.ts`, `imports/pictime.ts`, `imports/shootproof.ts`: folder naming conventions and client CSV shapes (documented from their export formats; where a format cannot be verified, treat as plain zip).
-- [ ] 3.89 `booking.ts`: availability from weekly hours minus existing slots and buffers, slot generation per package duration, hold for 15 minutes, confirm, cancel.
-  - [ ] 3.89.1 weeklyHours → slots for a date
-  - [ ] 3.89.2 subtract existing slots and buffers
-  - [ ] 3.89.3 apply lead time and max per day
-  - [ ] 3.89.4 holdSlot(studio, start, package) 15 min
-  - [ ] 3.89.5 confirmSlot(holdId, order)
-  - [ ] 3.89.6 releaseExpiredHolds()
-- [ ] 3.90 `booking.ts` tests: overlaps, buffers, lead time, timezone edge at DST.
-- [ ] 3.91 `planning.ts`: session plan CRUD, shot list toggle, mood board asset add/remove, client-visible flag.
+- [x] 3.89 `booking.ts`: availability from weekly hours minus existing slots and buffers, slot generation per package duration, hold for 15 minutes, confirm, cancel.
+  - [x] 3.89.1 weeklyHours → slots for a date
+  - [x] 3.89.2 subtract existing slots and buffers
+  - [x] 3.89.3 apply lead time and max per day
+  - [x] 3.89.4 holdSlot(studio, start, package) 15 min
+  - [x] 3.89.5 confirmSlot(holdId, order)
+  - [x] 3.89.6 releaseExpiredHolds()
+- [x] 3.90 `booking.ts` tests: overlaps, buffers, lead time, timezone edge at DST.
+- [x] 3.91 `planning.ts`: session plan CRUD, shot list toggle, mood board asset add/remove, client-visible flag.
 
 Validation and types
 - [x] 3.92 `validation.ts`: zod v4 schemas for signup, login, client, package, order, gallery, template, settings.
-- [ ] 3.93 `validation.ts`: schemas for booking settings, sending domain, referral code, import mapping, session plan, broadcast filter.
+- [x] 3.93 `validation.ts`: schemas for booking settings, sending domain, referral code, import mapping, session plan, broadcast filter.
 - [x] 3.94 `types.ts`: row types and money helpers.
 - [ ] 3.95 `types.ts`: types for the new tables; `Money` helpers moved to `payments.ts`.
 - [ ] 3.96 Unit tests for every pure helper added in this phase (target 90% of `lib/`).
