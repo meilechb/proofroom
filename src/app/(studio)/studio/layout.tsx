@@ -32,7 +32,7 @@ export default async function StudioLayout({ children }: { children: React.React
         </div>
       </aside>
       <div className="flex-1 min-w-0">
-        <Banners user={ctx.user} studio={ctx.studio} entitlements={ctx.entitlements} />
+        <Banners user={ctx.user} studio={ctx.studio} billing={ctx.billing} />
         <main className="container-x py-6 lg:py-8">{children}</main>
       </div>
     </div>

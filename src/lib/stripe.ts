@@ -1,9 +1,8 @@
 import "server-only";
 
 import Stripe from "stripe";
-import { env } from "@/lib/env";
-import type { Interval, PlanId } from "@/lib/plans";
-import { priceEnvName } from "@/lib/plans";
+import { APP_NAME, appUrl, env } from "@/lib/env";
+import { PLAN } from "@/lib/plans";
 
 let client: Stripe | null = null;
 
@@ -12,31 +11,33 @@ export function stripe() {
   if (!client) {
     const key = env.stripeSecretKey();
     if (!key) throw new Error("STRIPE_SECRET_KEY is not set.");
-    client = new Stripe(key, { appInfo: { name: "Proofroom", url: "https://proofroom.com" } });
+    client = new Stripe(key, { appInfo: { name: APP_NAME, url: appUrl() } });
   }
   return client;
 }
 
-/** Options to run a call on a connected account (direct charges). */
+/**
+ * Options to run a call on a connected account. Used for every client payment:
+ * the charge is created on the studio's own Stripe account (a direct charge),
+ * with no application fee.
+ */
 export function onAccount(accountId: string): Stripe.RequestOptions {
   return { stripeAccount: accountId };
 }
 
-export function priceId(plan: PlanId, interval: Interval): string {
-  const name = priceEnvName(plan, interval);
-  const v = process.env[name]?.trim();
-  if (!v) throw new Error(`${name} is not set. Run: npm run stripe:setup`);
+/** The one subscription price. */
+export function subscriptionPriceId(): string {
+  const v = process.env[PLAN.priceEnvName]?.trim();
+  if (!v) throw new Error(`${PLAN.priceEnvName} is not set. Run: npm run stripe:setup`);
   return v;
 }
 
-/** Reverse lookup: which plan/interval does a Stripe price id belong to. */
-export function planFromPriceId(id: string): { plan: PlanId; interval: Interval } | null {
-  const plans: PlanId[] = ["starter", "pro", "studio"];
-  const intervals: Interval[] = ["month", "year"];
-  for (const plan of plans) {
-    for (const interval of intervals) {
-      if (process.env[priceEnvName(plan, interval)]?.trim() === id) return { plan, interval };
-    }
-  }
-  return null;
+/** Referral coupon (10% off for 12 months), created by stripe:setup. */
+export function referralCouponId(): string | null {
+  return env.referralCouponId() ?? null;
+}
+
+/** True when the platform keys are test keys; pay pages show a badge. */
+export function isTestMode() {
+  return (env.stripeSecretKey() ?? "").startsWith("sk_test_");
 }

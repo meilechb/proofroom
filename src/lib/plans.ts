@@ -1,160 +1,48 @@
 /**
- * Plan catalog. Prices are the public prices shown on /pricing and used by
- * scripts/stripe-setup.mjs to create Stripe products. Limits are enforced by
- * entitlements(). Keep this file dependency-free: it is imported by client
- * components, server code and the setup script.
+ * Plan catalog and billing state.
+ *
+ * There is exactly one plan: $40 per month, everything included, unlimited
+ * seats, 14-day trial without a card. No feature is gated by plan. This file
+ * keeps a `plan` string on the studio so tiers can be added later without a
+ * rewrite, but nothing reads limits or feature flags from it.
+ *
+ * Keep this file dependency-free: it is imported by client components, server
+ * code and scripts/stripe-setup.mjs mirrors PLAN.
  */
 
-export type PlanId = "free" | "starter" | "pro" | "studio";
-export type Interval = "month" | "year";
+export type PlanId = "studio";
 
-export type Plan = {
-  id: PlanId;
-  name: string;
-  tagline: string;
-  /** USD per month when billed monthly / yearly (per month equivalent). */
-  monthly: number;
-  yearlyPerMonth: number;
-  storageGb: number;
-  /** -1 = unlimited */
-  activeGalleries: number;
-  members: number;
-  features: {
-    customDomain: boolean;
-    removeBranding: boolean;
-    teamEvents: boolean;
-    contracts: boolean;
-    lightroomSync: boolean;
-    prioritySupport: boolean;
-    apiTokens: number;
-  };
-  highlights: string[];
+export const PLAN = {
+  id: "studio" as PlanId,
+  name: "Studio",
+  tagline: "Everything included. Unlimited seats. Cancel any time.",
+  /** USD cents per month. */
+  monthlyCents: 4000,
+  /** Stripe price lookup key, stable across environments. */
+  lookupKey: "studio_monthly",
+  priceEnvName: "STRIPE_PRICE_STUDIO_MONTHLY",
+  highlights: [
+    "Client galleries with favorites and per-photo notes",
+    "Two-way Lightroom Classic plugin",
+    "Deposits, balances and e-signed agreements paid into your own Stripe",
+    "0% commission, we never touch your money",
+    "Website from a template, on your own domain",
+    "CRM: inbox, clients, sessions, tasks, calendar",
+    "Email from your own domain, with automations",
+    "Team headshot days with per-person galleries",
+    "Booking page, import from other tools",
+    "Unlimited team members",
+  ],
 };
 
-const GB = 1024 ** 3;
-
-export const PLANS: Record<PlanId, Plan> = {
-  free: {
-    id: "free",
-    name: "Free",
-    tagline: "Try the whole workflow with a few clients.",
-    monthly: 0,
-    yearlyPerMonth: 0,
-    storageGb: 2,
-    activeGalleries: 3,
-    members: 1,
-    features: {
-      customDomain: false,
-      removeBranding: false,
-      teamEvents: false,
-      contracts: true,
-      lightroomSync: true,
-      prioritySupport: false,
-      apiTokens: 1,
-    },
-    highlights: [
-      "2 GB storage, 3 live galleries",
-      "Favorites and per-photo notes",
-      "Deposits, balances and e-signed agreements",
-      "Lightroom plugin with favorites and notes sync",
-      "0% commission on client payments",
-      `"Powered by" badge on galleries`,
-    ],
-  },
-  starter: {
-    id: "starter",
-    name: "Starter",
-    tagline: "For a working portrait or headshot photographer.",
-    monthly: 12,
-    yearlyPerMonth: 10,
-    storageGb: 50,
-    activeGalleries: -1,
-    members: 1,
-    features: {
-      customDomain: false,
-      removeBranding: true,
-      teamEvents: false,
-      contracts: true,
-      lightroomSync: true,
-      prioritySupport: false,
-      apiTokens: 3,
-    },
-    highlights: [
-      "50 GB storage, unlimited galleries",
-      "Your logo and colors, no badge",
-      "Client CRM with stages and next steps",
-      "Editable email templates",
-      "Everything in Free",
-    ],
-  },
-  pro: {
-    id: "pro",
-    name: "Pro",
-    tagline: "Custom domain, team headshot days and a second seat.",
-    monthly: 24,
-    yearlyPerMonth: 20,
-    storageGb: 250,
-    activeGalleries: -1,
-    members: 3,
-    features: {
-      customDomain: true,
-      removeBranding: true,
-      teamEvents: true,
-      contracts: true,
-      lightroomSync: true,
-      prioritySupport: false,
-      apiTokens: 10,
-    },
-    highlights: [
-      "250 GB storage",
-      "Custom domain for galleries",
-      "Team headshot events with per-person galleries",
-      "3 team members",
-      "Everything in Starter",
-    ],
-  },
-  studio: {
-    id: "studio",
-    name: "Studio",
-    tagline: "For multi-photographer studios and high volume.",
-    monthly: 49,
-    yearlyPerMonth: 40,
-    storageGb: 1024,
-    activeGalleries: -1,
-    members: -1,
-    features: {
-      customDomain: true,
-      removeBranding: true,
-      teamEvents: true,
-      contracts: true,
-      lightroomSync: true,
-      prioritySupport: true,
-      apiTokens: -1,
-    },
-    highlights: ["1 TB storage", "Unlimited team members", "Priority support", "Audit log export", "Everything in Pro"],
-  },
-};
-
-export const PAID_PLANS: PlanId[] = ["starter", "pro", "studio"];
-export const PLAN_ORDER: PlanId[] = ["free", "starter", "pro", "studio"];
 export const TRIAL_DAYS = 14;
-export const TRIAL_PLAN: PlanId = "pro";
+/** After the trial ends unpaid, galleries and the website stay live this long. */
+export const GRACE_DAYS = 30;
+/** After cancellation, data is kept this long before purge. */
+export const RETENTION_DAYS = 90;
 
-export function planRank(id: PlanId) {
-  return PLAN_ORDER.indexOf(id);
-}
-
-export function isPlanId(v: unknown): v is PlanId {
-  return typeof v === "string" && v in PLANS;
-}
-
-export function priceEnvName(plan: PlanId, interval: Interval) {
-  return `STRIPE_PRICE_${plan.toUpperCase()}_${interval === "month" ? "MONTHLY" : "YEARLY"}`;
-}
-
-/** Stripe lookup keys, stable across environments. */
-export function priceLookupKey(plan: PlanId, interval: Interval) {
-  return `proofroom_${plan}_${interval}`;
+export function formatPrice(cents: number, currency = "usd") {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: cents % 100 === 0 ? 0 : 2 }).format(cents / 100);
 }
 
 export type StudioBillingFields = {
@@ -162,50 +50,89 @@ export type StudioBillingFields = {
   trial_ends_at: string | null;
   subscription_status: string | null;
   current_period_end: string | null;
+  cancel_at_period_end?: boolean | null;
   suspended_at?: string | null;
+  read_only_since?: string | null;
+  grace_ends_at?: string | null;
+  plan_override?: string | null;
 };
 
-export type Entitlements = {
-  /** Plan whose limits currently apply (trial elevates a free studio to the trial plan). */
-  effectivePlan: PlanId;
-  /** Plan on record, regardless of trial. */
-  plan: PlanId;
+export type BillingStatus =
+  /** In the free trial, no subscription yet. */
+  | "trialing"
+  /** Paying (or comped by platform admin). */
+  | "active"
+  /** Subscription exists but the last payment failed. Writes still allowed for now. */
+  | "past_due"
+  /** Trial ended (or subscription ended) with no payment. Writes blocked, galleries live until grace ends. */
+  | "read_only"
+  /** Grace over: galleries locked, data kept until retention ends. */
+  | "locked";
+
+export type BillingState = {
+  status: BillingStatus;
   trialing: boolean;
   trialDaysLeft: number;
-  /** Subscription is past due or unpaid; keep read access, block new uploads. */
-  delinquent: boolean;
+  /** True when the studio is suspended by the platform (separate from billing). */
   suspended: boolean;
-  limits: {
-    storageBytes: number;
-    activeGalleries: number;
-    members: number;
-    apiTokens: number;
-  };
-  features: Plan["features"];
+  /** True when a Stripe subscription is set to end at the period end. */
+  cancelling: boolean;
+  /** When galleries lock if nothing is paid (only while read_only). */
+  graceEndsAt: Date | null;
+  /** Studio may create and edit things. */
+  canWrite: boolean;
+  /** Published galleries and the website are served to clients. */
+  publicLive: boolean;
 };
 
-export function entitlements(studio: StudioBillingFields, now = new Date()): Entitlements {
-  const plan: PlanId = isPlanId(studio.plan) ? studio.plan : "free";
+const ACTIVE_STATUSES = new Set(["active", "trialing"]);
+const PAST_DUE_STATUSES = new Set(["past_due", "unpaid", "incomplete"]);
+
+function daysBetween(later: Date, earlier: Date) {
+  return Math.max(0, Math.ceil((later.getTime() - earlier.getTime()) / 86400000));
+}
+
+/**
+ * Derives the studio's billing state from its stored columns. Pure, so it can
+ * be unit tested and used from client components.
+ */
+export function billingState(studio: StudioBillingFields, now = new Date()): BillingState {
+  const suspended = Boolean(studio.suspended_at);
+  const cancelling = Boolean(studio.cancel_at_period_end);
   const trialEnd = studio.trial_ends_at ? new Date(studio.trial_ends_at) : null;
-  const trialing = plan === "free" && Boolean(trialEnd && trialEnd > now);
-  const trialDaysLeft = trialing && trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / 86400000)) : 0;
-  const effectivePlan: PlanId = trialing ? TRIAL_PLAN : plan;
-  const p = PLANS[effectivePlan];
-  const delinquent = plan !== "free" && ["past_due", "unpaid", "incomplete_expired"].includes(studio.subscription_status ?? "");
+  const sub = studio.subscription_status ?? null;
+
+  if (studio.plan_override === "comped" || (sub && ACTIVE_STATUSES.has(sub))) {
+    return { status: "active", trialing: false, trialDaysLeft: 0, suspended, cancelling, graceEndsAt: null, canWrite: !suspended, publicLive: !suspended };
+  }
+  if (sub && PAST_DUE_STATUSES.has(sub)) {
+    return { status: "past_due", trialing: false, trialDaysLeft: 0, suspended, cancelling, graceEndsAt: null, canWrite: !suspended, publicLive: !suspended };
+  }
+  if (!sub && trialEnd && trialEnd > now) {
+    return {
+      status: "trialing",
+      trialing: true,
+      trialDaysLeft: daysBetween(trialEnd, now),
+      suspended,
+      cancelling: false,
+      graceEndsAt: null,
+      canWrite: !suspended,
+      publicLive: !suspended,
+    };
+  }
+  // No active subscription and no running trial: read-only, then locked.
+  const readOnlySince = studio.read_only_since ? new Date(studio.read_only_since) : trialEnd ?? now;
+  const graceEndsAt = studio.grace_ends_at ? new Date(studio.grace_ends_at) : new Date(readOnlySince.getTime() + GRACE_DAYS * 86400000);
+  const locked = graceEndsAt <= now;
   return {
-    effectivePlan,
-    plan,
-    trialing,
-    trialDaysLeft,
-    delinquent,
-    suspended: Boolean(studio.suspended_at),
-    limits: {
-      storageBytes: p.storageGb * GB,
-      activeGalleries: p.activeGalleries,
-      members: p.members,
-      apiTokens: p.features.apiTokens,
-    },
-    features: p.features,
+    status: locked ? "locked" : "read_only",
+    trialing: false,
+    trialDaysLeft: 0,
+    suspended,
+    cancelling,
+    graceEndsAt,
+    canWrite: false,
+    publicLive: !locked && !suspended,
   };
 }
 
@@ -219,9 +146,4 @@ export function formatBytes(bytes: number) {
     i++;
   }
   return `${v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2)} ${units[i]}`;
-}
-
-/** True when `limit` is unlimited (-1) or `used` is strictly below it. */
-export function withinLimit(used: number, limit: number) {
-  return limit < 0 || used < limit;
 }

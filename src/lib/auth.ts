@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { db, one, rows } from "@/lib/db";
 import { readSession, setSessionStudio } from "@/lib/session";
 import type { Membership, MembershipRole, Studio, User } from "@/lib/types";
-import { entitlements, type Entitlements } from "@/lib/plans";
+import { billingState, type BillingState } from "@/lib/plans";
 
 /**
  * Data Access Layer. Every page, server action and route handler that touches
@@ -39,7 +39,7 @@ export type StudioContext = {
   user: CurrentUser;
   studio: Studio;
   role: MembershipRole;
-  entitlements: Entitlements;
+  billing: BillingState;
 };
 
 const roleRank: Record<MembershipRole, number> = { member: 0, admin: 1, owner: 2 };
@@ -61,7 +61,7 @@ export const getStudioContext = cache(async (): Promise<StudioContext | null> =>
   let m = memberships.find((x) => x.studio_id === user.session_studio_id) ?? memberships[0];
   if (m.studio_id !== user.session_studio_id) await setSessionStudio(user.session_id, m.studio_id);
   m = { ...m, studio: normalizeStudio(m.studio) };
-  return { user, studio: m.studio, role: m.role, entitlements: entitlements(m.studio) };
+  return { user, studio: m.studio, role: m.role, billing: billingState(m.studio) };
 });
 
 function normalizeStudio(s: Studio): Studio {

@@ -75,7 +75,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/studio
         <Stat label="Live galleries" value={counts?.live ?? 0} />
         <Stat label="Notes to answer" value={counts?.notes ?? 0} hint={(counts?.notes ?? 0) > 0 ? "Clients are waiting on a reply" : undefined} />
         <Stat label="Unpaid sessions" value={counts?.unpaid ?? 0} />
-        <Stat label="Storage" value={formatBytes(usage.storageBytes)} hint={`of ${formatBytes(ctx.entitlements.limits.storageBytes)} on ${ctx.entitlements.effectivePlan}`} />
+        <Stat label="Storage" value={formatBytes(usage.storageBytes)} hint="Photos, assets and documents" />
       </div>
       <div className="grid gap-4 lg:grid-cols-3 mt-6">
         <Card>

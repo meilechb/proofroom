@@ -1,10 +1,10 @@
 import Link from "next/link";
-import type { Entitlements } from "@/lib/plans";
+import type { BillingState } from "@/lib/plans";
 import type { Studio } from "@/lib/types";
 import type { CurrentUser } from "@/lib/auth";
 import { ResendVerification } from "@/components/studio/resend-verification";
 
-export function Banners({ user, studio, entitlements }: { user: CurrentUser; studio: Studio; entitlements: Entitlements }) {
+export function Banners({ user, studio, billing }: { user: CurrentUser; studio: Studio; billing: BillingState }) {
   const items: React.ReactNode[] = [];
   if (!user.email_verified_at) {
     items.push(
@@ -13,17 +13,24 @@ export function Banners({ user, studio, entitlements }: { user: CurrentUser; stu
       </span>
     );
   }
-  if (entitlements.trialing) {
+  if (billing.status === "trialing") {
     items.push(
       <span key="trial">
-        Pro trial: {entitlements.trialDaysLeft} day{entitlements.trialDaysLeft === 1 ? "" : "s"} left. <Link href="/studio/billing" className="underline">Choose a plan</Link>
+        Free trial: {billing.trialDaysLeft} day{billing.trialDaysLeft === 1 ? "" : "s"} left. <Link href="/studio/billing" className="underline">Start your subscription</Link> to keep everything running.
       </span>
     );
   }
-  if (entitlements.delinquent) {
+  if (billing.status === "past_due") {
     items.push(
-      <span key="delinquent">
-        Your last subscription payment failed. <Link href="/studio/billing" className="underline">Update your card</Link> to keep uploading.
+      <span key="past-due">
+        Your last subscription payment failed. <Link href="/studio/billing" className="underline">Update your card</Link>.
+      </span>
+    );
+  }
+  if (billing.status === "read_only" || billing.status === "locked") {
+    items.push(
+      <span key="read-only">
+        Your trial has ended and the studio is read-only{billing.status === "locked" ? "; client galleries are locked" : ""}. <Link href="/studio/billing" className="underline">Subscribe</Link> to continue.
       </span>
     );
   }

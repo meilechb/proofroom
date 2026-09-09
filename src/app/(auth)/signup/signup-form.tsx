@@ -17,15 +17,10 @@ export function SignupForm() {
   const [check, setCheck] = useState<{ ok: boolean; message: string } | null>(null);
   const domain = appDomain();
 
+  // Debounced availability check. State resets happen in the change handlers,
+  // not here, so the effect only schedules the network call.
   useEffect(() => {
-    if (!slugTouched) setSlug(normalizeSlug(studioName));
-  }, [studioName, slugTouched]);
-
-  useEffect(() => {
-    if (slug.length < 3) {
-      setCheck(null);
-      return;
-    }
+    if (slug.length < 3) return;
     const t = setTimeout(async () => {
       try {
         const res = await fetch(`/api/slug-check?slug=${encodeURIComponent(slug)}`);
@@ -36,6 +31,20 @@ export function SignupForm() {
     }, 350);
     return () => clearTimeout(t);
   }, [slug]);
+
+  function onStudioNameChange(value: string) {
+    setStudioName(value);
+    if (!slugTouched) {
+      setSlug(normalizeSlug(value));
+      setCheck(null);
+    }
+  }
+
+  function onSlugChange(value: string) {
+    setSlugTouched(true);
+    setSlug(normalizeSlug(value));
+    setCheck(null);
+  }
 
   return (
     <form action={action} className="mt-6 space-y-4" noValidate>
@@ -50,7 +59,7 @@ export function SignupForm() {
         <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={10} />
       </Field>
       <Field label="Studio or business name" htmlFor="studioName" error={state.fields?.studioName}>
-        <Input id="studioName" name="studioName" required value={studioName} onChange={(e) => setStudioName(e.target.value)} />
+        <Input id="studioName" name="studioName" required value={studioName} onChange={(e) => onStudioNameChange(e.target.value)} />
       </Field>
       <Field
         label="Your address"
@@ -63,10 +72,7 @@ export function SignupForm() {
             id="slug"
             name="slug"
             value={slug}
-            onChange={(e) => {
-              setSlugTouched(true);
-              setSlug(normalizeSlug(e.target.value));
-            }}
+            onChange={(e) => onSlugChange(e.target.value)}
             className="flex-1"
             autoComplete="off"
             spellCheck={false}
