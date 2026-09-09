@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/check-env.mjs && next dev",
     "build": "node scripts/db-migrate.mjs --if-configured && next build",
     "start": "next start",
     "lint": "eslint",
@@ -13,7 +13,8 @@
     "db:migrate": "node scripts/db-migrate.mjs",
     "stripe:setup": "node scripts/stripe-setup.mjs",
     "plugin:zip": "node scripts/plugin-zip.mjs",
-    "platform:admin": "node scripts/make-platform-admin.mjs"
+    "platform:admin": "node scripts/make-platform-admin.mjs",
+    "env:check": "node scripts/check-env.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
