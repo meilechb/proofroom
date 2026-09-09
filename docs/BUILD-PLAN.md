@@ -342,23 +342,23 @@ Website
 
 Email
 - [x] 3.73 `email.ts`: Resend send, `emailLayout()`, dry-run when not configured.
-- [ ] 3.74 `email.ts`: `senderFor(studio)` picks verified sending domain or platform default; always sets reply-to.
-- [ ] 3.75 `email.ts`: `sendStudioEmail()` logs to `email_log` with related ids; `sendPlatformEmail()` never uses studio domains.
-- [ ] 3.76 `email.ts`: suppression check before send; unsubscribe header and footer link for broadcasts.
+- [x] 3.74 `email.ts`: `senderFor(studio)` picks verified sending domain or platform default; always sets reply-to.
+- [x] 3.75 `email.ts`: `sendStudioEmail()` logs to `email_log` with related ids; `sendPlatformEmail()` never uses studio domains.
+- [x] 3.76 `email.ts`: suppression check before send; unsubscribe header and footer link for broadcasts.
 - [x] 3.77 `email-templates.ts`: keys, defaults, variables, `renderTemplate`, `resolveTemplate`.
-- [ ] 3.78 `email-templates.ts`: add keys `booking_confirmed`, `booking_reminder`, `import_finished`, `session_plan_shared`.
+- [x] 3.78 `email-templates.ts`: add keys `booking_confirmed`, `booking_reminder`, `import_finished`, `session_plan_shared`.
 - [x] 3.79 `emails/account.ts` (verify, reset, invite) and `emails/studio.ts` (studio-originated).
-- [ ] 3.80 `emails/billing.ts`: trial ending, trial ended, payment failed, subscription cancelled, referral earned.
-- [ ] 3.81 `sending-domains.ts`: `createDomain(studio, domain)`, `getDomain()`, `verifyDomain()`, `deleteDomain()`, `mapStatus()`, `dnsRows()`, `dmarcSuggestion()`.
-  - [ ] 3.81.1 createDomain(studio, domain) → Resend POST /domains
-  - [ ] 3.81.2 getDomain(id) → records and status
-  - [ ] 3.81.3 verifyDomain(id) → Resend POST /domains/{id}/verify
-  - [ ] 3.81.4 deleteDomain(id)
-  - [ ] 3.81.5 mapStatus(resendStatus) → our enum
-  - [ ] 3.81.6 dnsRows(records) → host, type, value, ttl
-  - [ ] 3.81.7 dmarcSuggestion(domain)
-- [ ] 3.82 `sending-domains.ts` tests: status mapping, record formatting.
-- [ ] 3.83 `automations.ts`: rules registry (balance reminder, gallery expiring, unanswered notes, review request, thank you), `due(rule)`, `markSent()`.
+- [x] 3.80 `emails/billing.ts`: trial ending, trial ended, payment failed, subscription cancelled, referral earned.
+- [x] 3.81 `sending-domains.ts`: `createDomain(studio, domain)`, `getDomain()`, `verifyDomain()`, `deleteDomain()`, `mapStatus()`, `dnsRows()`, `dmarcSuggestion()`.
+  - [x] 3.81.1 createDomain(studio, domain) → Resend POST /domains
+  - [x] 3.81.2 getDomain(id) → records and status
+  - [x] 3.81.3 verifyDomain(id) → Resend POST /domains/{id}/verify
+  - [x] 3.81.4 deleteDomain(id)
+  - [x] 3.81.5 mapStatus(resendStatus) → our enum
+  - [x] 3.81.6 dnsRows(records) → host, type, value, ttl
+  - [x] 3.81.7 dmarcSuggestion(domain)
+- [x] 3.82 `sending-domains.ts` tests: status mapping, record formatting.
+- [x] 3.83 `automations.ts`: rules registry (balance reminder, gallery expiring, unanswered notes, review request, thank you), `due(rule)`, `markSent()`.
 
 Referrals, imports, booking, planning
 - [ ] 3.84 `referrals.ts`: `generateCode()`, `captureAtSignup()`, `onFirstPaidInvoice()`, `applyReward(studio)`, `queueReward()`, `void()`.
