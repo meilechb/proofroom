@@ -4,6 +4,8 @@ import { db, one } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { hashToken, randomToken } from "@/lib/tokens";
 import { TRIAL_DAYS } from "@/lib/plans";
+import { generateReferralCode } from "@/lib/referrals";
+import { DEFAULT_AGREEMENT_MD } from "@/lib/agreements";
 import type { Studio, User } from "@/lib/types";
 
 /** Account-level operations: users, studios, one-time tokens, lockout. */
@@ -71,7 +73,13 @@ export async function createStudioForUser(userId: string, input: { studioName: s
   return studio;
 }
 
-async function seedStudioDefaults(studioId: string) {
+/** Defaults every new studio gets: packages, a referral code, agreement v1. Safe to re-run. */
+export async function seedStudioDefaults(studioId: string) {
+  await ensureReferralCode(studioId);
+  await db()`
+    insert into agreement_templates (studio_id, version, body_md, is_active)
+    values (${studioId}, 1, ${DEFAULT_AGREEMENT_MD}, true)
+    on conflict (studio_id, version) do nothing`;
   let order = 0;
   for (const p of DEFAULT_PACKAGES) {
     await db()`
@@ -136,4 +144,20 @@ export async function markEmailVerified(userId: string) {
 
 export async function setPassword(userId: string, password: string) {
   await db()`update users set password_hash = ${hashPassword(password)}, failed_logins = 0, locked_until = null, updated_at = now() where id = ${userId}`;
+}
+
+/** Assigns a unique referral code if the studio does not have one yet. */
+export async function ensureReferralCode(studioId: string) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateReferralCode();
+    const updated = await db()`
+      update studios set referral_code = ${code}
+      where id = ${studioId} and referral_code is null
+        and not exists (select 1 from studios s2 where s2.referral_code = ${code})
+      returning referral_code`;
+    if (updated.length > 0) return (updated[0] as { referral_code: string }).referral_code;
+    const existing = one<{ referral_code: string | null }>(await db()`select referral_code from studios where id = ${studioId}`);
+    if (existing?.referral_code) return existing.referral_code;
+  }
+  throw new Error("Could not assign a referral code.");
 }
