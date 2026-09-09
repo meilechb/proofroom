@@ -242,20 +242,20 @@ Billing (platform subscription)
 - [x] 3.29 `billing.ts`: `setReadOnlyIfExpired(studio)` used by cron and by `requireWritableStudio`.
 
 Client payments (studio's Stripe account)
-- [ ] 3.30 `connect.ts`: `oauthAuthorizeUrl(studio, state)` with `client_id`, `scope=read_write`, `redirect_uri`, `stripe_user[email|business_name|url|country]`.
-- [ ] 3.31 `connect.ts`: `exchangeOauthCode(code)` → `stripe_user_id`; `deauthorize(accountId)`.
-- [ ] 3.32 `connect.ts`: `createStandardAccount(studio)` (no `type`, no controller overrides) and `createOnboardingLink(accountId, returnUrl, refreshUrl)`.
-- [ ] 3.33 `connect.ts`: `refreshAccountStatus(studio)` reads `charges_enabled`, `details_submitted`, `requirements.currently_due`.
-- [ ] 3.34 `connect.ts`: signed `state` (HMAC with `APP_SECRET`, studio id, expiry) for OAuth CSRF protection.
-- [ ] 3.35 `payments.ts`: `createOrderCheckout(order, kind: deposit|balance|full)` → Checkout Session on the studio's account, no application fee, metadata `order_id`, success and cancel URLs on the tenant host.
-  - [ ] 3.35.1 Deposit session: amount = deposit due, description 'Deposit for order #N'
-  - [ ] 3.35.2 Balance session: amount = remaining balance
-  - [ ] 3.35.3 Full session: amount = total when nothing paid
-  - [ ] 3.35.4 Metadata: order_id, studio_id, kind; client_reference_id = order id
-- [ ] 3.36 `payments.ts`: `recordCheckoutCompleted(event)` idempotent by session id; `recordRefund(event)`; `recordDispute(event)`.
-- [ ] 3.37 `payments.ts`: `orderMoney(order, payments)` (total, paid, refunded, balance, deposit due) with tests for partial payments and refunds.
-- [ ] 3.38 `payments.ts`: `manualPayment(order, amount, method, note)` and `undoManualPayment()`.
-- [ ] 3.39 `payments.ts` tests with fixture events (completed, async succeeded, async failed, refunded, disputed, deauthorized).
+- [x] 3.30 `connect.ts`: `oauthAuthorizeUrl(studio, state)` with `client_id`, `scope=read_write`, `redirect_uri`, `stripe_user[email|business_name|url|country]`.
+- [x] 3.31 `connect.ts`: `exchangeOauthCode(code)` → `stripe_user_id`; `deauthorize(accountId)`.
+- [x] 3.32 `connect.ts`: `createStandardAccount(studio)` (no `type`, no controller overrides) and `createOnboardingLink(accountId, returnUrl, refreshUrl)`.
+- [x] 3.33 `connect.ts`: `refreshAccountStatus(studio)` reads `charges_enabled`, `details_submitted`, `requirements.currently_due`.
+- [x] 3.34 `connect.ts`: signed `state` (HMAC with `APP_SECRET`, studio id, expiry) for OAuth CSRF protection.
+- [x] 3.35 `payments.ts`: `createOrderCheckout(order, kind: deposit|balance|full)` → Checkout Session on the studio's account, no application fee, metadata `order_id`, success and cancel URLs on the tenant host.
+  - [x] 3.35.1 Deposit session: amount = deposit due, description 'Deposit for order #N'
+  - [x] 3.35.2 Balance session: amount = remaining balance
+  - [x] 3.35.3 Full session: amount = total when nothing paid
+  - [x] 3.35.4 Metadata: order_id, studio_id, kind; client_reference_id = order id
+- [x] 3.36 `payments.ts`: `recordCheckoutCompleted(event)` idempotent by session id; `recordRefund(event)`; `recordDispute(event)`.
+- [x] 3.37 `payments.ts`: `orderMoney(order, payments)` (total, paid, refunded, balance, deposit due) with tests for partial payments and refunds.
+- [x] 3.38 `payments.ts`: `manualPayment(order, amount, method, note)` and `undoManualPayment()`.
+- [~] 3.39 `payments.ts` tests with fixture events (completed, async succeeded, async failed, refunded, disputed, deauthorized).
 
 Storage and images
 - [x] 3.40 `storage.ts`: two Blob stores, per-studio key prefixes, `put`, `del`, `signedGet`.
