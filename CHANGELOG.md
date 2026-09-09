@@ -4,6 +4,9 @@ Newest first. One line per meaningful change; phase numbers refer to docs/BUILD-
 
 ## Unreleased
 
+- Phase 3 complete except types/tests sweep: gallery, photo, CRM, email, sending-domain, automation, referral, booking, planning, import and site libraries.
+- Phase 4: tenant headers in proxy, loading skeleton, toast, dialog, drawer, tabs, menu, icons, fields, pagination, search, data table, stepper, uploader, lightbox, print styles, /dev/ui.
+
 - Fix: production build failed because Tailwind 4 cannot @apply plain classes; btn, input and badge are now @utility. Turbopack root pinned to saas/.
 - Phase 2: revision 4 schema: Stripe connection, referral and site columns; client stage; payment refund and dispute state; gallery access options; photo provenance; new tables for client events, agreements, gallery analytics, areas, sending domains, suppressions, broadcasts, referrals, imports, bookings, session plans; list indexes; updated_at triggers; schema idempotency test.
 - Phase 3: withTx, requireWritableStudio, rate-limit presets, tenant URL helpers, referral code generator, default agreement template, billing library (customer, subscription Checkout, portal, snapshot, read-only transition).

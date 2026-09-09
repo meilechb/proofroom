@@ -398,42 +398,42 @@ Validation and types
 ## Phase 4. Routing shell and design system
 
 - [x] 4.1 `proxy.ts`: host classification, tenant rewrite, custom-domain lookup with 60 s cache, noindex outside production and on tenant galleries, optimistic redirects for `/studio` and `/admin` without a session cookie.
-- [ ] 4.2 `proxy.ts`: pass `x-tenant-slug` and `x-tenant-host` headers to server components.
-- [ ] 4.3 `proxy.ts`: maintenance banner flag from `platform_settings` (cached) surfaced as a header.
+- [x] 4.2 `proxy.ts`: pass `x-tenant-slug` and `x-tenant-host` headers to server components.
+- [x] 4.3 `proxy.ts`: maintenance banner flag from `platform_settings` (cached) surfaced as a header.
 - [x] 4.4 Root `layout.tsx`, `globals.css` tokens (light app, dark gallery, tenant brand var).
 - [x] 4.5 `components/ui`: Button, ButtonLink, Input, Textarea, Select, Field, Card, Badge, PageHeader, EmptyState, Notice, Table, Stat, Meter, Logo, `cx`.
 - [x] 4.6 `components/forms`: SubmitButton, FormMessage, ConfirmButton, CopyButton.
 - [x] 4.7 `not-found.tsx`, `error.tsx`, `studio-not-found/page.tsx`.
-- [ ] 4.8 `loading.tsx` skeletons for `/studio`, `/t/[slug]/g/[slug]`, `/admin`.
-- [ ] 4.9 Toast provider and `useToast()`; Server Action results trigger toasts.
-- [ ] 4.10 Dialog component (focus trap, Escape, backdrop click, aria labels).
-- [ ] 4.11 Drawer component for side panels (photo notes, client quick view).
-- [ ] 4.12 Tabs component with URL sync.
-- [ ] 4.13 Dropdown menu component (keyboard navigable).
-- [ ] 4.14 Icon set as inline SVG components (24 icons used across the app).
+- [x] 4.8 `loading.tsx` skeletons for `/studio`, `/t/[slug]/g/[slug]`, `/admin`.
+- [x] 4.9 Toast provider and `useToast()`; Server Action results trigger toasts.
+- [x] 4.10 Dialog component (focus trap, Escape, backdrop click, aria labels).
+- [x] 4.11 Drawer component for side panels (photo notes, client quick view).
+- [x] 4.12 Tabs component with URL sync.
+- [x] 4.13 Dropdown menu component (keyboard navigable).
+- [x] 4.14 Icon set as inline SVG components (24 icons used across the app).
 - [ ] 4.15 `ImagePicker`: choose from asset library or upload; returns asset id; used by site editor, branding, portfolio, mood board.
-- [ ] 4.16 `ColorField`: hex input plus swatches plus contrast warning against white and black.
-- [ ] 4.17 `DateTimeField` honoring studio timezone.
-- [ ] 4.18 `MoneyField` in studio currency.
-- [ ] 4.19 `Pagination` component and `paginate()` helper (cursor by created_at, id).
-- [ ] 4.20 `SearchInput` with debounce and URL sync.
-- [ ] 4.21 `DataTable` wrapper: sortable headers, empty state, row actions.
-- [ ] 4.22 `Uploader` component: drag and drop, file list, progress bars, retries, cancel, direct-to-Blob.
-  - [ ] 4.22.1 Drop zone and file input with accept list
-  - [ ] 4.22.2 Queue with per-file status
-  - [ ] 4.22.3 Concurrency limit 4 uploads
-  - [ ] 4.22.4 Retry with backoff, max 3
-  - [ ] 4.22.5 Cancel single and cancel all
-- [ ] 4.23 `Lightbox` component: keyboard, swipe, zoom, captions, favorite and note buttons slot.
-  - [ ] 4.23.1 Open at index, close, next and previous
-  - [ ] 4.23.2 Keyboard: arrows, Escape, F for favorite
-  - [ ] 4.23.3 Touch swipe
-  - [ ] 4.23.4 Pinch and double-tap zoom
-  - [ ] 4.23.5 Slots for favorite, note, download buttons
-- [ ] 4.24 `Stepper` for onboarding and import wizards.
+- [x] 4.16 `ColorField`: hex input plus swatches plus contrast warning against white and black.
+- [x] 4.17 `DateTimeField` honoring studio timezone.
+- [x] 4.18 `MoneyField` in studio currency.
+- [x] 4.19 `Pagination` component and `paginate()` helper (cursor by created_at, id).
+- [x] 4.20 `SearchInput` with debounce and URL sync.
+- [x] 4.21 `DataTable` wrapper: sortable headers, empty state, row actions.
+- [x] 4.22 `Uploader` component: drag and drop, file list, progress bars, retries, cancel, direct-to-Blob.
+  - [x] 4.22.1 Drop zone and file input with accept list
+  - [x] 4.22.2 Queue with per-file status
+  - [x] 4.22.3 Concurrency limit 4 uploads
+  - [x] 4.22.4 Retry with backoff, max 3
+  - [x] 4.22.5 Cancel single and cancel all
+- [x] 4.23 `Lightbox` component: keyboard, swipe, zoom, captions, favorite and note buttons slot.
+  - [x] 4.23.1 Open at index, close, next and previous
+  - [x] 4.23.2 Keyboard: arrows, Escape, F for favorite
+  - [x] 4.23.3 Touch swipe
+  - [x] 4.23.4 Pinch and double-tap zoom
+  - [x] 4.23.5 Slots for favorite, note, download buttons
+- [x] 4.24 `Stepper` for onboarding and import wizards.
 - [ ] 4.25 Dark theme tokens verified for contrast on gallery pages.
-- [ ] 4.26 Print stylesheet for invoices, receipts and agreements.
-- [ ] 4.27 Storybook-free component gallery page at `/dev/ui` (only when `NODE_ENV !== production`).
+- [x] 4.26 Print stylesheet for invoices, receipts and agreements.
+- [x] 4.27 Storybook-free component gallery page at `/dev/ui` (only when `NODE_ENV !== production`).
 
 ## Phase 5. Authentication and accounts
 
