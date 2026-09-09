@@ -1,0 +1,139 @@
+import "server-only";
+
+import { db, one } from "@/lib/db";
+import { hashPassword, verifyPassword } from "@/lib/password";
+import { hashToken, randomToken } from "@/lib/tokens";
+import { TRIAL_DAYS } from "@/lib/plans";
+import type { Studio, User } from "@/lib/types";
+
+/** Account-level operations: users, studios, one-time tokens, lockout. */
+
+const MAX_FAILED_LOGINS = 10;
+const LOCK_MINUTES = 15;
+
+export async function findUserByEmail(email: string) {
+  return one<User & { password_hash: string | null; failed_logins: number; locked_until: string | null }>(
+    await db()`select * from users where lower(email) = lower(${email}) limit 1`
+  );
+}
+
+export async function slugAvailable(slug: string) {
+  const row = await db()`select 1 from studios where slug = ${slug} limit 1`;
+  return row.length === 0;
+}
+
+/** Default packages so a new studio has something to book against immediately. */
+const DEFAULT_PACKAGES = [
+  { slug: "individual", name: "Individual headshot", description: "One person, one look. 30 minutes in the studio.", price: 25000, deposit: 10000, included: 2, extra: 5000, includes: ["30-minute session", "Online proof gallery", "2 retouched images", "Web and print files"], turnaround: "2 to 3 business days", featured: true },
+  { slug: "professional", name: "Professional", description: "Two looks and more final images.", price: 40000, deposit: 15000, included: 5, extra: 4000, includes: ["60-minute session", "Two outfit changes", "5 retouched images", "Web and print files"], turnaround: "3 to 5 business days", featured: false },
+  { slug: "team", name: "Team session", description: "On-site headshots for a team. Priced per person.", price: 15000, deposit: 0, included: 1, extra: 5000, includes: ["On-site setup", "10 minutes per person", "1 retouched image per person", "Consistent background and lighting"], turnaround: "5 business days", featured: false },
+];
+
+export async function createUserWithStudio(input: {
+  name: string;
+  email: string;
+  password: string;
+  studioName: string;
+  slug: string;
+}): Promise<{ user: User; studio: Studio }> {
+  const passwordHash = hashPassword(input.password);
+  const trialEnds = new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString();
+  const user = one<User>(
+    await db()`
+      insert into users (email, name, password_hash)
+      values (${input.email}, ${input.name}, ${passwordHash})
+      returning id, email, name, email_verified_at, is_platform_admin, created_at`
+  );
+  if (!user) throw new Error("Could not create the account.");
+  const studio = one<Studio>(
+    await db()`
+      insert into studios (slug, name, legal_name, email, trial_ends_at, onboarding)
+      values (${input.slug}, ${input.studioName}, ${input.studioName}, ${input.email}, ${trialEnds}, '{}'::jsonb)
+      returning *`
+  );
+  if (!studio) throw new Error("Could not create the studio.");
+  await db()`insert into memberships (user_id, studio_id, role) values (${user.id}, ${studio.id}, 'owner')`;
+  await seedStudioDefaults(studio.id);
+  return { user, studio };
+}
+
+export async function createStudioForUser(userId: string, input: { studioName: string; slug: string; email: string }) {
+  const trialEnds = new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString();
+  const studio = one<Studio>(
+    await db()`
+      insert into studios (slug, name, legal_name, email, trial_ends_at)
+      values (${input.slug}, ${input.studioName}, ${input.studioName}, ${input.email}, ${trialEnds})
+      returning *`
+  );
+  if (!studio) throw new Error("Could not create the studio.");
+  await db()`insert into memberships (user_id, studio_id, role) values (${userId}, ${studio.id}, 'owner')`;
+  await seedStudioDefaults(studio.id);
+  return studio;
+}
+
+async function seedStudioDefaults(studioId: string) {
+  let order = 0;
+  for (const p of DEFAULT_PACKAGES) {
+    await db()`
+      insert into packages (studio_id, slug, name, description, price_cents, deposit_cents, included_finals, extra_final_cents, includes, turnaround, is_featured, sort_order)
+      values (${studioId}, ${p.slug}, ${p.name}, ${p.description}, ${p.price}, ${p.deposit}, ${p.included}, ${p.extra}, ${p.includes}, ${p.turnaround}, ${p.featured}, ${order++})
+      on conflict (studio_id, slug) do nothing`;
+  }
+}
+
+/** Returns the user on success, or a reason. Applies lockout after repeated failures. */
+export async function checkCredentials(email: string, password: string): Promise<{ user: User } | { error: "invalid" | "locked" }> {
+  const user = await findUserByEmail(email);
+  if (!user) {
+    // Burn similar time to a real check so timing does not reveal existence.
+    verifyPassword(password, "scrypt:32768:8:1:AAAAAAAAAAAAAAAAAAAAAA:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    return { error: "invalid" };
+  }
+  if (user.locked_until && new Date(user.locked_until) > new Date()) return { error: "locked" };
+  if (!verifyPassword(password, user.password_hash)) {
+    const failed = (user.failed_logins ?? 0) + 1;
+    const lock = failed >= MAX_FAILED_LOGINS;
+    await db()`
+      update users set failed_logins = ${lock ? 0 : failed},
+        locked_until = ${lock ? new Date(Date.now() + LOCK_MINUTES * 60000).toISOString() : null}
+      where id = ${user.id}`;
+    return { error: lock ? "locked" : "invalid" };
+  }
+  await db()`update users set failed_logins = 0, locked_until = null, last_login_at = now() where id = ${user.id}`;
+  const { password_hash: _ph, failed_logins: _fl, locked_until: _lu, ...safe } = user;
+  void _ph; void _fl; void _lu;
+  return { user: safe };
+}
+
+export type TokenKind = "verify_email" | "reset_password" | "magic_link";
+
+const TOKEN_TTL_MINUTES: Record<TokenKind, number> = { verify_email: 24 * 60, reset_password: 60, magic_link: 15 };
+
+/** Creates a single-use token, invalidating earlier unused tokens of the same kind. */
+export async function issueAuthToken(userId: string, kind: TokenKind) {
+  const token = randomToken(32);
+  const expires = new Date(Date.now() + TOKEN_TTL_MINUTES[kind] * 60000).toISOString();
+  await db()`update auth_tokens set used_at = now() where user_id = ${userId} and kind = ${kind} and used_at is null`;
+  await db()`insert into auth_tokens (kind, user_id, token_hash, expires_at) values (${kind}, ${userId}, ${hashToken(token)}, ${expires})`;
+  return token;
+}
+
+/** Consumes a token; returns the user id or null when invalid, expired or already used. */
+export async function consumeAuthToken(token: string, kind: TokenKind): Promise<string | null> {
+  if (!token || token.length > 200) return null;
+  const row = one<{ user_id: string }>(
+    await db()`
+      update auth_tokens set used_at = now()
+      where token_hash = ${hashToken(token)} and kind = ${kind} and used_at is null and expires_at > now()
+      returning user_id`
+  );
+  return row?.user_id ?? null;
+}
+
+export async function markEmailVerified(userId: string) {
+  await db()`update users set email_verified_at = coalesce(email_verified_at, now()), updated_at = now() where id = ${userId}`;
+}
+
+export async function setPassword(userId: string, password: string) {
+  await db()`update users set password_hash = ${hashPassword(password)}, failed_logins = 0, locked_until = null, updated_at = now() where id = ${userId}`;
+}
