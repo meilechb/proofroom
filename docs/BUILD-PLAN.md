@@ -56,14 +56,14 @@ Legend: `[ ]` not started, `[x]` done, `[~]` partly done, `[-]` removed by decis
 - [x] 1.6 `next.config.ts`: image remote patterns for Blob, Server Actions `allowedOrigins` for `APP_DOMAIN` and `*.APP_DOMAIN`, body size limit 2 MB.
 - [x] 1.7 `next.config.ts`: security headers (HSTS, nosniff, frame DENY, referrer policy, permissions policy).
 - [x] 1.8 `.env.example` with every variable and a one-line comment each.
-- [ ] 1.9 `.env.example`: remove `PLATFORM_FEE_BPS`, `STRIPE_PRICE_STARTER_*`, `STRIPE_PRICE_PRO_*`, `STRIPE_PRICE_STUDIO_YEARLY`.
-- [ ] 1.10 `.env.example`: add `STRIPE_PRICE_STUDIO_MONTHLY`, `STRIPE_CONNECT_CLIENT_ID`, `STRIPE_REFERRAL_COUPON_ID`, `RESEND_WEBHOOK_SECRET`, `CRON_SECRET`, `PLATFORM_ALERT_EMAIL`.
+- [x] 1.9 `.env.example`: remove `PLATFORM_FEE_BPS`, `STRIPE_PRICE_STARTER_*`, `STRIPE_PRICE_PRO_*`, `STRIPE_PRICE_STUDIO_YEARLY`.
+- [x] 1.10 `.env.example`: add `STRIPE_PRICE_STUDIO_MONTHLY`, `STRIPE_CONNECT_CLIENT_ID`, `STRIPE_REFERRAL_COUPON_ID`, `RESEND_WEBHOOK_SECRET`, `CRON_SECRET`, `PLATFORM_ALERT_EMAIL`.
 - [x] 1.11 `.gitignore` for `saas/` (node_modules, .next, .env*, coverage).
 - [x] 1.12 `scripts/db-migrate.mjs`: applies `db/schema.sql`, `--if-configured` skips when `DATABASE_URL` is absent.
 - [x] 1.13 `scripts/stripe-setup.mjs`: creates products and prices by lookup key, idempotent.
-- [ ] 1.14 `scripts/stripe-setup.mjs`: reduce to one product "Studio" and one price $40/month with lookup key `studio_monthly`; print the price id to paste into env.
-- [ ] 1.15 `scripts/stripe-setup.mjs`: create coupon `referral_10_12mo` (10% off, repeating, 12 months) if missing; print its id.
-- [ ] 1.16 `scripts/stripe-setup.mjs`: create the two webhook endpoints by API when `APP_URL` is set (account events → `/api/stripe/webhook`; connected-account events with `connect=true` → `/api/stripe/connect-webhook`) and print the signing secrets once.
+- [x] 1.14 `scripts/stripe-setup.mjs`: reduce to one product "Studio" and one price $40/month with lookup key `studio_monthly`; print the price id to paste into env.
+- [x] 1.15 `scripts/stripe-setup.mjs`: create coupon `referral_10_12mo` (10% off, repeating, 12 months) if missing; print its id.
+- [x] 1.16 `scripts/stripe-setup.mjs`: create the two webhook endpoints by API when `APP_URL` is set (account events → `/api/stripe/webhook`; connected-account events with `connect=true` → `/api/stripe/connect-webhook`) and print the signing secrets once.
 - [x] 1.17 `scripts/make-platform-admin.mjs <email>`.
 - [x] 1.18 `scripts/plugin-zip.mjs` stamps `__SITE_URL__` into the plugin config and zips it.
 - [ ] 1.19 `scripts/seed-demo.mjs`: creates a demo studio with clients, sessions, galleries (placeholder images), for local testing; refuses to run against a production URL.
@@ -101,7 +101,7 @@ Identity and tenancy
 - [x] 2.1 `users` (id, email unique lower, name, password_hash, email_verified_at, is_platform_admin, created_at, updated_at, last_login_at, failed_logins, locked_until).
 - [x] 2.2 `studios` core columns (id, slug unique, name, legal_name, email, phone, location, timezone, currency, branding jsonb, onboarding jsonb, settings jsonb, created_at, updated_at, suspended_at, deleted_at).
 - [x] 2.3 `studios` billing columns (plan, trial_ends_at, stripe_customer_id, stripe_subscription_id, subscription_status, current_period_end, cancel_at_period_end).
-- [ ] 2.4 `studios`: drop `billing_interval`; `plan` defaults to `studio`; add `read_only_since`, `grace_ends_at`.
+- [x] 2.4 `studios`: drop `billing_interval`; `plan` defaults to `studio`; add `read_only_since`, `grace_ends_at`.
 - [x] 2.5 `studios` Stripe connection columns (stripe_account_id, stripe_account_status).
 - [ ] 2.6 `studios`: add `stripe_connect_method` (`oauth` | `onboarding` | `manual` | `none`), `stripe_charges_enabled` bool, `stripe_details_submitted` bool, `stripe_connected_at`, `manual_payment_instructions` text, `manual_payment_link` text.
 - [x] 2.7 `studios` domain columns (custom_domain unique, custom_domain_verified_at).
@@ -202,7 +202,7 @@ Indexes and constraints
 
 Environment, database, logging
 - [x] 3.1 `env.ts`: typed getters, `isConfigured.stripe/blob/resend/db` flags, `appUrl()`, `appDomain()`.
-- [ ] 3.2 `env.ts`: add getters for the new variables in 1.10; remove plan price getters.
+- [x] 3.2 `env.ts`: add getters for the new variables in 1.10; remove plan price getters.
 - [x] 3.3 `db.ts`: neon `sql` tag, `one()`, `many()`, `maybe()` helpers.
 - [ ] 3.4 `db.ts`: `withTx()` using neon transactions for multi-statement writes (order + payment, import batches).
 - [x] 3.5 `logger.ts`: structured JSON, levels, redaction of emails and tokens.
@@ -228,12 +228,12 @@ Tenancy and URLs
 
 Billing (platform subscription)
 - [x] 3.21 `plans.ts`: catalog and `entitlements()`.
-- [ ] 3.22 `plans.ts`: single plan `{ id: "studio", name: "Studio", monthlyCents: 4000, lookupKey: "studio_monthly" }`; `TRIAL_DAYS = 14`.
-- [ ] 3.23 `plans.ts`: `billingState(studio)` returns `trialing | active | past_due | read_only | cancelled` with days left and grace end.
-- [ ] 3.24 `plans.ts`: remove limits and feature flags; keep `formatBytes`.
-- [ ] 3.25 `plans.ts` tests for each state transition and boundary (trial ends today, grace ends today).
+- [x] 3.22 `plans.ts`: single plan `{ id: "studio", name: "Studio", monthlyCents: 4000, lookupKey: "studio_monthly" }`; `TRIAL_DAYS = 14`.
+- [x] 3.23 `plans.ts`: `billingState(studio)` returns `trialing | active | past_due | read_only | cancelled` with days left and grace end.
+- [x] 3.24 `plans.ts`: remove limits and feature flags; keep `formatBytes`.
+- [x] 3.25 `plans.ts` tests for each state transition and boundary (trial ends today, grace ends today).
 - [x] 3.26 `stripe.ts`: `stripe()` client, `onAccount()` request options, `priceId()`.
-- [ ] 3.27 `stripe.ts`: remove fee helpers and multi-price mapping; add `referralCouponId()`.
+- [x] 3.27 `stripe.ts`: remove fee helpers and multi-price mapping; add `referralCouponId()`.
 - [ ] 3.28 `billing.ts`: `ensureCustomer(studio)`, `createSubscriptionCheckout(studio, returnUrl, coupon?)`, `createPortalSession(studio)`, `applySubscriptionEvent(event)`.
   - [ ] 3.28.1 ensureCustomer(studio) creates or reuses the Stripe customer with studio metadata
   - [ ] 3.28.2 createSubscriptionCheckout(studio, returnUrl, coupon?) with trial carry-over
@@ -266,7 +266,7 @@ Storage and images
 - [ ] 3.45 `images.ts`: EXIF orientation fix, strip metadata on previews, keep on originals.
 - [ ] 3.46 `images.ts`: `sha256(buffer)` for duplicate detection.
 - [ ] 3.47 `usage.ts`: `recomputeStorage(studio)`, `addBytes()`, `subtractBytes()`, `getUsage()`.
-- [ ] 3.48 `usage.ts`: remove `LimitError` and assert helpers (no caps).
+- [x] 3.48 `usage.ts`: remove `LimitError` and assert helpers (no caps).
 
 Galleries
 - [x] 3.49 `gallery-access.ts`: code and password checking, cookie grant per gallery, expiry check.
