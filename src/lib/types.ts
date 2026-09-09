@@ -26,8 +26,10 @@ export type Studio = {
   custom_domain: string | null;
   custom_domain_verified_at: string | null;
   plan: string;
-  billing_interval: "month" | "year" | null;
+  plan_override: "comped" | null;
   trial_ends_at: string | null;
+  read_only_since: string | null;
+  grace_ends_at: string | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   subscription_status: string | null;

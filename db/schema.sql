@@ -39,9 +39,13 @@ create table if not exists studios (
   currency text not null default 'usd',
   custom_domain text unique,
   custom_domain_verified_at timestamptz,
-  plan text not null default 'free' check (plan in ('free', 'starter', 'pro', 'studio')),
-  billing_interval text check (billing_interval in ('month', 'year')),
+  -- One plan. The column stays so tiers can be added later without a rewrite.
+  plan text not null default 'studio',
+  plan_override text check (plan_override in ('comped')),
   trial_ends_at timestamptz,
+  -- Set when the trial or subscription ends unpaid; galleries stay live until grace_ends_at.
+  read_only_since timestamptz,
+  grace_ends_at timestamptz,
   stripe_customer_id text unique,
   stripe_subscription_id text unique,
   subscription_status text,
@@ -60,6 +64,17 @@ create table if not exists studios (
 );
 
 create index if not exists studios_custom_domain_idx on studios (lower(custom_domain));
+
+-- Revision 4 (single plan): applied to databases created before it.
+alter table studios drop column if exists billing_interval;
+alter table studios drop constraint if exists studios_plan_check;
+update studios set plan = 'studio' where plan <> 'studio';
+alter table studios alter column plan set default 'studio';
+alter table studios add column if not exists plan_override text;
+alter table studios drop constraint if exists studios_plan_override_check;
+alter table studios add constraint studios_plan_override_check check (plan_override in ('comped'));
+alter table studios add column if not exists read_only_since timestamptz;
+alter table studios add column if not exists grace_ends_at timestamptz;
 
 create table if not exists memberships (
   user_id uuid not null references users (id) on delete cascade,
