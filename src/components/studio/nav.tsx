@@ -10,11 +10,16 @@ const items: Array<{ href: string; label: string; minRole?: MembershipRole; exac
   { href: "/studio/inbox", label: "Inbox" },
   { href: "/studio/clients", label: "Clients" },
   { href: "/studio/sessions", label: "Sessions" },
+  { href: "/studio/calendar", label: "Calendar" },
+  { href: "/studio/tasks", label: "Tasks" },
   { href: "/studio/galleries", label: "Galleries" },
   { href: "/studio/website", label: "Website" },
   { href: "/studio/portfolio", label: "Portfolio" },
   { href: "/studio/assets", label: "Assets" },
   { href: "/studio/emails", label: "Emails" },
+  { href: "/studio/bookings", label: "Bookings" },
+  { href: "/studio/referrals", label: "Referrals" },
+  { href: "/studio/billing", label: "Billing", minRole: "admin" },
   { href: "/studio/settings", label: "Settings", minRole: "admin" },
 ];
 
