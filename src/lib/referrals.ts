@@ -29,4 +29,6 @@ export function isReferralCodeShape(input: string) {
 
 /** Reward terms, kept in one place for copy and for the Stripe coupon. */
 export const REFERRAL_REWARD = { percentOff: 10, months: 12 } as const;
+/** Rewarded referrals per studio per calendar year (plan 3.85). */
+export const REFERRAL_CAP_PER_YEAR = 12;
 export const REFERRAL_REWARD_TEXT = `${REFERRAL_REWARD.percentOff}% off for ${REFERRAL_REWARD.months} months`;

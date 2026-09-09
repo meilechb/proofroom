@@ -892,3 +892,12 @@ create trigger platform_settings_set_updated_at before update on platform_settin
 alter table auth_tokens add column if not exists meta jsonb not null default '{}'::jsonb;
 alter table auth_tokens drop constraint if exists auth_tokens_kind_check;
 alter table auth_tokens add constraint auth_tokens_kind_check check (kind in ('verify_email', 'reset_password', 'magic_link', 'change_email'));
+
+-- Marketing site page views, aggregated per day and path (plan 8.21). No studio, no visitor identity.
+create table if not exists marketing_views_daily (
+  day date not null,
+  path text not null,
+  referrer text not null default '',
+  count integer not null default 0,
+  primary key (day, path, referrer)
+);

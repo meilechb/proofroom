@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   // This app lives in saas/ inside a repo that has its own lockfile at the root.
   // Pin the Turbopack root so module and PostCSS resolution stay inside saas/.
   turbopack: { root: path.join(__dirname) },
+  // /changelog reads CHANGELOG.md at build time; make sure tracing keeps the file.
+  outputFileTracingIncludes: { "/changelog": ["./CHANGELOG.md"] },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },

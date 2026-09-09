@@ -3,7 +3,7 @@ import "server-only";
 import type Stripe from "stripe";
 import { db, one, rows } from "@/lib/db";
 import { referralCouponId, stripe } from "@/lib/stripe";
-import { normalizeReferralCode } from "@/lib/referrals";
+import { normalizeReferralCode, REFERRAL_CAP_PER_YEAR } from "@/lib/referrals";
 import { sendReferralFriendJoinedEmail, sendReferralRewardEmail } from "@/lib/emails/billing";
 import { log } from "@/lib/logger";
 
@@ -15,7 +15,7 @@ import { log } from "@/lib/logger";
  * until that discount ends (or until the studio subscribes).
  */
 
-export const REFERRAL_CAP_PER_YEAR = 12;
+export { REFERRAL_CAP_PER_YEAR };
 export const REFERRAL_VOID_WINDOW_DAYS = 30;
 
 type StudioRow = { id: string; name: string; email: string; referral_code: string | null; stripe_customer_id: string | null; stripe_subscription_id: string | null; subscription_status: string | null; created_at: string };

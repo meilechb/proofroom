@@ -62,3 +62,23 @@ export async function recordDownload(galleryId: string, photoId: string | null, 
     console.error("download insert failed", error);
   }
 }
+
+/** Marketing site views per path per day; no studio, no visitor identity (plan 8.21). */
+export async function recordMarketingView(path: string, referrer: string | null) {
+  if (!dbConfigured()) return;
+  try {
+    await db()`
+      insert into marketing_views_daily (day, path, referrer, count)
+      values (current_date, ${path.slice(0, 200)}, ${referrer ?? ""}, 1)
+      on conflict (day, path, referrer) do update set count = marketing_views_daily.count + 1`;
+  } catch (error) {
+    console.error("marketing view upsert failed", error);
+  }
+}
+
+export async function marketingViews(days = 30) {
+  const result = await db()`
+    select path, sum(count)::int as count from marketing_views_daily
+    where day >= current_date - ${days}::int group by path order by count desc limit 50`;
+  return result as Array<{ path: string; count: number }>;
+}

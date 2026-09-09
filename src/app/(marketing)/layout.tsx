@@ -1,6 +1,8 @@
 import { APP_NAME } from "@/lib/env";
 import { MarketingHeader } from "@/components/marketing/header";
 import { MarketingFooter } from "@/components/marketing/footer";
+import { MarketingJsonLd } from "@/components/marketing/json-ld";
+import { PageViewBeacon } from "@/components/marketing/page-view-beacon";
 
 /**
  * Public marketing site on the root domain (plan 8.1). Every page inside gets
@@ -17,6 +19,8 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <MarketingFooter />
+      <MarketingJsonLd />
+      <PageViewBeacon />
     </div>
   );
 }
