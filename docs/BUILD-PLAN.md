@@ -204,7 +204,7 @@ Environment, database, logging
 - [x] 3.1 `env.ts`: typed getters, `isConfigured.stripe/blob/resend/db` flags, `appUrl()`, `appDomain()`.
 - [x] 3.2 `env.ts`: add getters for the new variables in 1.10; remove plan price getters.
 - [x] 3.3 `db.ts`: neon `sql` tag, `one()`, `many()`, `maybe()` helpers.
-- [ ] 3.4 `db.ts`: `withTx()` using neon transactions for multi-statement writes (order + payment, import batches).
+- [x] 3.4 `db.ts`: `withTx()` using neon transactions for multi-statement writes (order + payment, import batches).
 - [x] 3.5 `logger.ts`: structured JSON, levels, redaction of emails and tokens.
 - [x] 3.6 `action-state.ts`: `ok()`, `fail()`, `fieldErrors()` shape for Server Actions.
 
@@ -213,18 +213,18 @@ Auth and sessions
 - [x] 3.8 `tokens.ts`: random tokens, sha256 hashing, `generateApiToken()` with prefix.
 - [x] 3.9 `session.ts`: create, read (rolling), set active studio, delete, revoke all.
 - [x] 3.10 `auth.ts`: `getCurrentUser`, `listMemberships`, `getStudioContext`, `requireStudioPage`, `requireStudio`, `requireUser`, `requirePlatformAdminPage`, `requirePlatformAdmin`, `assertOwned`, `hasRole`.
-- [ ] 3.11 `auth.ts`: `requireWritableStudio()` that also rejects when the studio is read-only (trial expired) or suspended, returning a typed reason for the UI.
+- [x] 3.11 `auth.ts`: `requireWritableStudio()` that also rejects when the studio is read-only (trial expired) or suspended, returning a typed reason for the UI.
 - [x] 3.12 `rate-limit.ts`: fixed window in Postgres, keyed by purpose + ip or email.
-- [ ] 3.13 `rate-limit.ts`: presets (`login`, `signup`, `gallery_unlock`, `contact_form`, `api_token`, `password_reset`) with documented limits.
+- [x] 3.13 `rate-limit.ts`: presets (`login`, `signup`, `gallery_unlock`, `contact_form`, `api_token`, `password_reset`) with documented limits.
 - [x] 3.14 `audit.ts`: `audit(studioId, userId, action, target, meta)`.
 - [x] 3.15 `slug.ts`: `RESERVED_SLUGS`, `studioSlugProblem()`, `slugify()`.
 - [x] 3.16 `account.ts`: create user with studio, create studio for user, seed defaults, check credentials with lockout, issue and consume tokens, mark verified, set password, slug available, find by email.
-- [ ] 3.17 `account.ts`: on studio creation also generate `referral_code`, seed site defaults, seed agreement template.
+- [~] 3.17 `account.ts`: on studio creation also generate `referral_code` (done), seed agreement template v1 (done), seed site defaults (waits for 3.67).
 
 Tenancy and URLs
 - [x] 3.18 `tenant.ts`: `classifyHost()`, `studioBaseUrl()`, `galleryUrl()`, `payUrl()`, `tenantPath()`.
-- [ ] 3.19 `tenant.ts`: `bookingUrl()`, `clientHubUrl()`, `areaUrl()`.
-- [ ] 3.20 `tenant.ts` tests: root host, subdomain, custom domain, preview host, port suffix, uppercase host.
+- [x] 3.19 `tenant.ts`: `bookingUrl()`, `clientHubUrl()`, `areaUrl()`.
+- [x] 3.20 `tenant.ts` tests: root host, subdomain, custom domain, preview host, port suffix, uppercase host.
 
 Billing (platform subscription)
 - [x] 3.21 `plans.ts`: catalog and `entitlements()`.
@@ -234,12 +234,12 @@ Billing (platform subscription)
 - [x] 3.25 `plans.ts` tests for each state transition and boundary (trial ends today, grace ends today).
 - [x] 3.26 `stripe.ts`: `stripe()` client, `onAccount()` request options, `priceId()`.
 - [x] 3.27 `stripe.ts`: remove fee helpers and multi-price mapping; add `referralCouponId()`.
-- [ ] 3.28 `billing.ts`: `ensureCustomer(studio)`, `createSubscriptionCheckout(studio, returnUrl, coupon?)`, `createPortalSession(studio)`, `applySubscriptionEvent(event)`.
-  - [ ] 3.28.1 ensureCustomer(studio) creates or reuses the Stripe customer with studio metadata
-  - [ ] 3.28.2 createSubscriptionCheckout(studio, returnUrl, coupon?) with trial carry-over
-  - [ ] 3.28.3 createPortalSession(studio)
-  - [ ] 3.28.4 applySubscriptionEvent(event) mapping status, period end, cancel flag
-- [ ] 3.29 `billing.ts`: `setReadOnlyIfExpired(studio)` used by cron and by `requireWritableStudio`.
+- [x] 3.28 `billing.ts`: `ensureCustomer(studio)`, `createSubscriptionCheckout(studio, returnUrl, coupon?)`, `createPortalSession(studio)`, `applySubscriptionEvent(event)`.
+  - [x] 3.28.1 ensureCustomer(studio) creates or reuses the Stripe customer with studio metadata
+  - [x] 3.28.2 createSubscriptionCheckout(studio, returnUrl, coupon?) with trial carry-over
+  - [x] 3.28.3 createPortalSession(studio)
+  - [x] 3.28.4 applySubscriptionEvent(event) mapping status, period end, cancel flag
+- [x] 3.29 `billing.ts`: `setReadOnlyIfExpired(studio)` used by cron and by `requireWritableStudio`.
 
 Client payments (studio's Stripe account)
 - [ ] 3.30 `connect.ts`: `oauthAuthorizeUrl(studio, state)` with `client_id`, `scope=read_write`, `redirect_uri`, `stripe_user[email|business_name|url|country]`.
@@ -311,7 +311,7 @@ CRM and sales
   - [ ] 3.60.5 signAgreement(id, name, ip, version)
   - [ ] 3.60.6 orderSummary(id) for the session page
 - [ ] 3.61 `packages.ts`: CRUD and ordering.
-- [ ] 3.62 `agreements.ts`: render template with variables, versioning, `CONTRACT_VERSION` per studio template.
+- [x] 3.62 `agreements.ts`: render template with variables, versioning, `CONTRACT_VERSION` per studio template.
 - [ ] 3.63 `tasks.ts`: CRUD, due today, overdue.
 - [ ] 3.64 `csv.ts`: export clients and payments; parse client CSV with column mapping and validation report.
 - [ ] 3.65 `ical.ts`: studio sessions feed with token.
