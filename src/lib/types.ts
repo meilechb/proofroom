@@ -209,16 +209,19 @@ export type OrderMoney = {
   fully_paid: boolean;
 };
 
+/** Money math for a session. Refunds reduce what counts as paid; failed and disputed payments do not count. */
 export function orderMoney(
-  order: Pick<Order, "amount_cents" | "deposit_cents" | "included_finals" | "extra_final_cents">,
-  payments: Pick<Payment, "amount_cents" | "status">[],
+  order: Pick<Order, "amount_cents" | "deposit_cents" | "included_finals" | "extra_final_cents"> & { discount_cents?: number },
+  payments: (Pick<Payment, "amount_cents" | "status"> & { refunded_cents?: number })[],
   picks: number
 ): OrderMoney {
   const extra_picks =
     order.included_finals > 0 && order.extra_final_cents > 0 ? Math.max(0, picks - order.included_finals) : 0;
   const extras_cents = extra_picks * order.extra_final_cents;
-  const total_cents = order.amount_cents + extras_cents;
-  const paid_cents = payments.filter((p) => p.status === "paid").reduce((n, p) => n + p.amount_cents, 0);
+  const total_cents = Math.max(0, order.amount_cents + extras_cents - (order.discount_cents ?? 0));
+  const paid_cents = payments
+    .filter((p) => p.status === "paid" || p.status === "partially_refunded" || p.status === "refunded")
+    .reduce((n, p) => n + Math.max(0, p.amount_cents - (p.refunded_cents ?? 0)), 0);
   const due_cents = Math.max(0, total_cents - paid_cents);
   const deposit_cents = Math.min(order.deposit_cents, total_cents);
   return {
