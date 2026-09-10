@@ -622,6 +622,10 @@ alter table email_log add column if not exists opened_at timestamptz;
 alter table email_log add column if not exists clicked_at timestamptz;
 alter table email_log add column if not exists bounced_at timestamptz;
 alter table email_log add column if not exists complained_at timestamptz;
+alter table email_log add column if not exists delivered_at timestamptz;
+alter table email_log add column if not exists last_event text;
+alter table email_log add column if not exists body text;
+create index if not exists email_log_provider_idx on email_log (provider_id);
 
 -- ---------------------------------------------------------------------------
 -- Revision 4 new tables

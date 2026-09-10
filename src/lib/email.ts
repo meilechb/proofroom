@@ -158,8 +158,8 @@ async function logEmail(input: EmailInput, result: SendResult) {
   try {
     const to = Array.isArray(input.to) ? input.to.join(", ") : input.to;
     await db()`
-      insert into email_log (studio_id, kind, to_address, subject, status, error, provider_id, template_key, from_domain, related_type, related_id)
-      values (${input.studioId ?? null}, ${input.kind ?? null}, ${to}, ${input.subject},
+      insert into email_log (studio_id, kind, to_address, subject, body, status, error, provider_id, template_key, from_domain, related_type, related_id)
+      values (${input.studioId ?? null}, ${input.kind ?? null}, ${to}, ${input.subject}, ${input.text.slice(0, 20000)},
               ${result.ok ? "sent" : result.skipped ? "skipped" : "failed"},
               ${result.ok ? null : (result.error ?? null)}, ${result.id ?? null},
               ${input.templateKey ?? input.kind ?? null}, ${domainOf(input.fromAddress ?? platformFromAddress())},

@@ -931,9 +931,9 @@ Templates and sending
   - [x] 16.2.4 Test send to me
   - [x] 16.2.5 Reset to default
 - [x] 16.3 Sender identity settings: display name, from local part, reply-to, signature block.
-- [ ] 16.4 Email log `/studio/emails/log`: filters by status and template, search by recipient, detail with rendered body, resend.
-- [ ] 16.5 Resend webhook `POST /api/resend/webhook`: verify signature, map `email.delivered|opened|clicked|bounced|complained` to `email_log`, add suppressions on hard bounce and complaint, `domain.updated` to `sending_domains`.
-- [ ] 16.6 Suppression list page with manual add and remove.
+- [x] 16.4 Email log `/studio/emails/log`: filters by status and template, search by recipient, detail with rendered body, resend.
+- [x] 16.5 Resend webhook `POST /api/resend/webhook`: verify signature, map `email.delivered|opened|clicked|bounced|complained` to `email_log`, add suppressions on hard bounce and complaint, `domain.updated` to `sending_domains`.
+- [x] 16.6 Suppression list page with manual add and remove.
 
 Automations
 - [ ] 16.7 `/studio/emails/automations`: rules list with toggle and delay: balance reminder (N days before session, and N days after if unpaid), gallery expiring (7 and 1 days), unanswered client note (2 days), thank you (1 day after finals), review request (7 days after finals), session reminder (1 day before).
