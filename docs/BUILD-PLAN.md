@@ -862,7 +862,7 @@ Templates and sections
   - [x] 14.11.2 Templated copy with town name
   - [x] 14.11.3 Portfolio strip and packages
   - [x] 14.11.4 FAQ and CTA
-  - [~] 14.11.5 Sitemap entries and toggle
+  - [x] 14.11.5 Sitemap entries and toggle
 - [x] 14.12 Nav builder: pages enabled appear in header; order fixed (Home, Portfolio, Pricing, About, Book, Contact, Gallery).
 - [x] 14.13 Footer: contact details, social links, legal line, "Powered by".
 - [ ] 14.14 Theme: primary, accent, base (light or dark), font pairing (3 presets loaded from Google Fonts via `next/font`), logo, favicon.
@@ -896,11 +896,11 @@ Domains
 - [ ] 14.30 Remove domain.
 
 SEO and quality
-- [ ] 14.31 Per-tenant `sitemap.xml` and `robots.txt` (galleries and hub excluded).
-- [ ] 14.32 LocalBusiness JSON-LD from business details; Person JSON-LD on About.
-- [ ] 14.33 OG image generated per tenant (logo, name, colors).
-- [ ] 14.34 Redirect `www.` to apex for custom domains (or the reverse, per studio choice).
-- [ ] 14.35 Tests: section schema validation, publish validation, nav order, area slug generation.
+- [x] 14.31 Per-tenant `sitemap.xml` and `robots.txt` (galleries and hub excluded).
+- [x] 14.32 LocalBusiness JSON-LD from business details; Person JSON-LD on About.
+- [x] 14.33 OG image generated per tenant (logo, name, colors).
+- [x] 14.34 Redirect `www.` to apex for custom domains (or the reverse, per studio choice).
+- [x] 14.35 Tests: section schema validation, publish validation, nav order, area slug generation.
 - [ ] 14.36 Visual check of both templates at 375, 768, 1280 px recorded as screenshots in `docs/screenshots/`.
 
 ## Phase 15. Portfolio and asset library

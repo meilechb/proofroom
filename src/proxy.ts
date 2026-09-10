@@ -80,6 +80,10 @@ export async function proxy(request: NextRequest) {
 
   // Tenant hosts: rewrite everything except assets/API into the tenant tree.
   if (kind.kind !== "root") {
+    // Custom domains: send www. to the apex (plan 14.34).
+    if (kind.kind === "custom" && kind.host.startsWith("www.")) {
+      return NextResponse.redirect(`${request.nextUrl.protocol}//${kind.host.slice(4)}${pathname}${request.nextUrl.search}`, 308);
+    }
     const slug = kind.kind === "subdomain" ? kind.slug : await slugForCustomDomain(kind.host);
     if (!slug) {
       const url = request.nextUrl.clone();
@@ -93,6 +97,11 @@ export async function proxy(request: NextRequest) {
       const proto = request.nextUrl.protocol;
       const root = process.env.NEXT_PUBLIC_APP_DOMAIN ?? request.nextUrl.host;
       return NextResponse.redirect(`${proto}//${root}${pathname}${request.nextUrl.search}`);
+    }
+    if (pathname === "/sitemap.xml" || pathname === "/robots.txt") {
+      const tenantUrl = request.nextUrl.clone();
+      tenantUrl.pathname = `/t/${slug}${pathname === "/sitemap.xml" ? "/sitemap" : "/robots"}`;
+      return finish(request, NextResponse.rewrite(tenantUrl, { request: { headers: withTenantHeaders(request, slug) } }), true);
     }
     const url = request.nextUrl.clone();
     url.pathname = pathname.startsWith("/t/") ? pathname : `/t/${slug}${pathname === "/" ? "" : pathname}`;
@@ -118,5 +127,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|downloads/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|downloads/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

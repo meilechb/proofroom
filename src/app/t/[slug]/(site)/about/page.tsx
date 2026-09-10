@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { loadSiteData, assetUrl } from "@/lib/site/render";
 import { PageHero, Steps, Cta, Container } from "@/components/site/sections";
+import { PersonJsonLd } from "@/components/site/json-ld";
 
 export async function generateMetadata({ params }: PageProps<"/t/[slug]/about">): Promise<Metadata> {
   const { slug } = await params;
@@ -24,6 +25,7 @@ export default async function AboutPage({ params }: PageProps<"/t/[slug]/about">
   const portrait = assetUrl(data.assets, page.bio.portraitAssetId, "web");
   return (
     <>
+      <PersonJsonLd studio={studio} name={studio.name} />
       <PageHero heading={page.hero.heading || "About"} subheading={page.hero.subheading} res={assetUrl(data.assets, page.hero.imageAssetId, "full")} />
       {page.bio.enabled && (page.bio.body || portrait) ? (
         <Container className="py-14 grid gap-10 lg:grid-cols-2 lg:items-start">
