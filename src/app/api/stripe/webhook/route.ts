@@ -4,7 +4,7 @@ import { stripe } from "@/lib/stripe";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
 import { applySubscription, applySubscriptionDeleted, invoiceSubscriptionId, isFirstPaidInvoice, studioIdForCustomer } from "@/lib/billing";
-import { onFirstPaidInvoice, markQueuedRewardApplied, pendingRewardFor } from "@/lib/referrals-server";
+import { onFirstPaidInvoice, markQueuedRewardApplied, pendingRewardFor, voidForRefund } from "@/lib/referrals-server";
 import { sendPaymentFailedEmail, sendSubscriptionCancelledEmail } from "@/lib/emails/billing";
 import { log } from "@/lib/logger";
 
@@ -87,6 +87,25 @@ async function handle(event: Stripe.Event) {
       await db()`update studios set subscription_status = 'past_due' where id = ${studioId} and subscription_status in ('active', 'trialing')`;
       const owner = await ownerEmail(studioId);
       if (owner) await sendPaymentFailedEmail(owner.email, owner.name).catch(() => undefined);
+      return;
+    }
+    case "charge.refunded":
+    case "charge.dispute.created": {
+      // Void a referral reward if the referred studio's first invoice is refunded or disputed (plan 20.8).
+      let customer: string | null = null;
+      if (event.type === "charge.refunded") {
+        const charge = event.data.object;
+        customer = typeof charge.customer === "string" ? charge.customer : null;
+      } else {
+        const dispute = event.data.object;
+        const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+        if (chargeId) {
+          const charge = await stripe().charges.retrieve(chargeId);
+          customer = typeof charge.customer === "string" ? charge.customer : null;
+        }
+      }
+      const studioId = await studioIdForCustomer(customer);
+      if (studioId) await voidForRefund(studioId).catch((e) => log.warn("referral.void_failed", { studio: studioId, error: e instanceof Error ? e.message : String(e) }));
       return;
     }
     default:

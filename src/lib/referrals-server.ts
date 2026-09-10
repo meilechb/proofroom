@@ -3,7 +3,7 @@ import "server-only";
 import type Stripe from "stripe";
 import { db, one, rows } from "@/lib/db";
 import { referralCouponId, stripe } from "@/lib/stripe";
-import { normalizeReferralCode, REFERRAL_CAP_PER_YEAR } from "@/lib/referrals";
+import { normalizeReferralCode, generateReferralCode, REFERRAL_CAP_PER_YEAR } from "@/lib/referrals";
 import { sendReferralFriendJoinedEmail, sendReferralRewardEmail } from "@/lib/emails/billing";
 import { log } from "@/lib/logger";
 
@@ -202,6 +202,24 @@ export async function referralStats(studioId: string) {
 }
 
 /** "Invite by email": records an invited row so the studio sees who they asked (plan 20.2). */
+/** The studio's own referral code, generating and storing one on first use. */
+export async function ensureReferralCode(studioId: string): Promise<string> {
+  const existing = one<{ referral_code: string | null }>(await db()`select referral_code from studios where id = ${studioId}`);
+  if (existing?.referral_code) return existing.referral_code;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const code = generateReferralCode();
+    try {
+      await db()`update studios set referral_code = ${code} where id = ${studioId} and referral_code is null`;
+    } catch {
+      // unique collision: try another code
+      continue;
+    }
+    const row = one<{ referral_code: string | null }>(await db()`select referral_code from studios where id = ${studioId}`);
+    if (row?.referral_code) return row.referral_code;
+  }
+  throw new Error("Could not allocate a referral code.");
+}
+
 export async function recordInvite(studioId: string, code: string, email: string) {
   await db()`insert into referrals (referrer_studio_id, code, referred_email, status) values (${studioId}, ${code}, ${email.trim().toLowerCase()}, 'invited')`;
 }

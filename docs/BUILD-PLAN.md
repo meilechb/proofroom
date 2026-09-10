@@ -1048,18 +1048,18 @@ Plugin
 
 ## Phase 20. Referral program
 
-- [ ] 20.1 `/studio/referrals`: your link (`APP_URL/signup?ref=CODE`), copy button, prewritten email and text message, stats (invited, signed up, rewarded), list with status.
-- [ ] 20.2 "Invite by email" form: sends a referral email with the link from the studio's sender.
-- [ ] 20.3 Signup capture (5.4, 5.5).
-- [ ] 20.4 Reward on referred studio's first paid invoice: apply `referral_10_12mo` coupon to the referred subscription (or at their checkout if pending) and to the referrer's subscription.
-- [ ] 20.5 Queue when a discount is already active; cron applies from `reward_queue` when the current discount ends.
-- [ ] 20.6 Referrer on trial with no subscription: reward stored as pending and applied at their checkout.
-- [ ] 20.7 Fraud rules enforced (3.85) with reasons stored on void.
-- [ ] 20.8 Void on refund or dispute of the referred studio's first invoice within 30 days; remove discount going forward.
-- [ ] 20.9 Emails: "Your friend joined", "Your 10% for 12 months is on", "Your reward is queued".
-- [~] 20.10 `/referrals` public terms page; pricing page mention; onboarding checklist item.
-- [ ] 20.11 Platform admin views (19.8).
-- [ ] 20.12 Tests: reward path, queue path, void path, cap.
+- [x] 20.1 `/studio/referrals`: your link (`APP_URL/signup?ref=CODE`), copy button, prewritten email and text message, stats (invited, signed up, rewarded), list with status.
+- [x] 20.2 "Invite by email" form: sends a referral email with the link from the studio's sender.
+- [x] 20.3 Signup capture (5.4, 5.5).
+- [x] 20.4 Reward on referred studio's first paid invoice: apply `referral_10_12mo` coupon to the referred subscription (or at their checkout if pending) and to the referrer's subscription.
+- [x] 20.5 Queue when a discount is already active; cron applies from `reward_queue` when the current discount ends.
+- [x] 20.6 Referrer on trial with no subscription: reward stored as pending and applied at their checkout.
+- [x] 20.7 Fraud rules enforced (3.85) with reasons stored on void.
+- [x] 20.8 Void on refund or dispute of the referred studio's first invoice within 30 days; remove discount going forward.
+- [x] 20.9 Emails: "Your friend joined", "Your 10% for 12 months is on", "Your reward is queued".
+- [x] 20.10 `/referrals` public terms page; pricing page mention; onboarding checklist item.
+- [x] 20.11 Platform admin views (19.8).
+- [x] 20.12 Tests: reward path, queue path, void path, cap.
 
 ## Phase 21. Import, booking, session planning
 
