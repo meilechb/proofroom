@@ -613,6 +613,9 @@ alter table photos add column if not exists deleted_at timestamptz;
 alter table assets add column if not exists usage_count integer not null default 0;
 alter table assets add column if not exists deleted_at timestamptz;
 
+-- Per-user notification preferences, one set per membership (plan 17.5)
+alter table memberships add column if not exists notification_prefs jsonb;
+
 -- email_log: delivery events from Resend and what the email was about (plan 2.49)
 alter table email_log add column if not exists template_key text;
 alter table email_log add column if not exists from_domain text;

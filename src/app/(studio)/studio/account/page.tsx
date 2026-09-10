@@ -3,7 +3,9 @@ import { requireStudioPage } from "@/lib/auth";
 import { db, rows } from "@/lib/db";
 import { Card, PageHeader } from "@/components/ui";
 import { formatDate } from "@/lib/types";
+import { getNotificationPrefs } from "@/lib/notifications";
 import { AccountForms } from "./forms";
+import { NotificationsForm } from "./notifications-form";
 import { revokeOtherSessionsAction, revokeSessionAction } from "./actions";
 
 export const metadata: Metadata = { title: "Account" };
@@ -14,12 +16,18 @@ export default async function AccountPage({ searchParams }: PageProps<"/studio/a
   const ctx = await requireStudioPage();
   const sp = await searchParams;
   const sessions = rows<SessionRow>(await db()`select id, user_agent, ip, created_at, last_seen_at from sessions where user_id = ${ctx.user.id} and expires_at > now() order by last_seen_at desc`);
+  const notificationPrefs = await getNotificationPrefs(ctx.user.id, ctx.studio.id);
   return (
     <div className="max-w-2xl">
       <PageHeader title="Account" description="Your sign-in details. Studio settings live under Settings." />
       {sp.email === "changed" ? <p className="mb-4 rounded-lg border border-success/20 bg-success-bg px-4 py-3 text-sm text-success">Your email address was changed.</p> : null}
       {sp.email === "invalid" ? <p className="mb-4 rounded-lg border border-danger/20 bg-danger-bg px-4 py-3 text-sm text-danger">That confirmation link is invalid or has expired. Request the change again.</p> : null}
       <AccountForms user={{ name: ctx.user.name, email: ctx.user.email }} />
+      <Card className="mt-6">
+        <h2 className="font-medium mb-1">Notifications</h2>
+        <p className="text-sm text-ink-2 mb-3">Choose which emails you get for <strong>{ctx.studio.name}</strong>. These are just for you.</p>
+        <NotificationsForm prefs={notificationPrefs} />
+      </Card>
       <Card className="mt-6">
         <div className="flex items-center justify-between">
           <h2 className="font-medium">Signed-in devices</h2>

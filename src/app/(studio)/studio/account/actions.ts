@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { audit } from "@/lib/audit";
 import { applyEmailChange, checkCredentials, consumeAuthTokenWithMeta, findUserByEmail, issueAuthToken, setPassword, softDeleteUser, soleOwnedStudios, updateUserName } from "@/lib/account";
-import { requireUser } from "@/lib/auth";
+import { requireStudio, requireUser } from "@/lib/auth";
+import { NOTIFICATION_KEYS, saveNotificationPrefs, type NotificationKey } from "@/lib/notifications";
+import type { ActionState as NotifState } from "@/lib/action-state";
 import { db } from "@/lib/db";
 import { sendPlatformEmail } from "@/lib/email";
 import { APP_NAME, appUrl, supportEmail } from "@/lib/env";
@@ -114,4 +116,14 @@ export async function deleteAccountAction(_prev: ActionState, formData: FormData
   await softDeleteUser(user.id);
   await deleteSession();
   redirect("/login?deleted=1");
+}
+
+/** Per-user notification preferences for the active studio (plan 17.5). */
+export async function saveNotificationPrefsAction(_prev: NotifState, formData: FormData): Promise<NotifState> {
+  const { studio, user } = await requireStudio();
+  const prefs = {} as Record<NotificationKey, boolean>;
+  for (const { key } of NOTIFICATION_KEYS) prefs[key] = formData.get(`notify_${key}`) === "on";
+  await saveNotificationPrefs(user.id, studio.id, prefs);
+  revalidatePath("/studio/account");
+  return { ok: true, message: "Notification settings saved." };
 }
