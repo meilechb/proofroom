@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Creates (or finds) everything the platform needs in Stripe and prints the env
 // lines to paste into Vercel. Idempotent: safe to run again.
-//   - one product "Studio" with one recurring price, $40/month, lookup key studio_monthly
+//   - one product "Pro" with one recurring per-seat price, $18/seat/month, lookup key pro_seat_monthly
 //   - the referral coupon (10% off for 12 months), id referral_10_12mo
 //   - when NEXT_PUBLIC_APP_URL is set to a public https URL: the two webhook
 //     endpoints (account events and connected-account events)
@@ -18,39 +18,40 @@ const stripe = new Stripe(key);
 const appName = process.env.NEXT_PUBLIC_APP_NAME?.trim() || "Proofroom";
 const lines = [];
 
-// 1. Product and price (plan item 1.14). Mirrors src/lib/plans.ts.
-const PLAN = { id: "studio", name: `${appName} Studio`, monthlyCents: 4000, lookupKey: "studio_monthly" };
+// 1. Product and per-seat price. Mirrors src/lib/plans.ts PLANS.pro.
+// Stripe bills quantity * unit_amount, so quantity = seat count (see billing.ts).
+const PRO = { id: "pro", name: `${appName} Pro`, seatCents: 1800, lookupKey: "pro_seat_monthly" };
 
-let product = (await stripe.products.search({ query: `metadata['app_plan']:'${PLAN.id}'` })).data[0];
+let product = (await stripe.products.search({ query: `metadata['app_plan']:'${PRO.id}'` })).data[0];
 if (!product) {
   product = await stripe.products.create({
-    name: PLAN.name,
-    description: "Everything included. Unlimited seats. Cancel any time.",
-    metadata: { app_plan: PLAN.id },
+    name: PRO.name,
+    description: "Everything, for your whole team. Billed per seat. Cancel any time.",
+    metadata: { app_plan: PRO.id },
   });
-  console.log(`created product ${product.id} (${PLAN.name})`);
+  console.log(`created product ${product.id} (${PRO.name})`);
 } else {
   console.log(`found product ${product.id} (${product.name})`);
 }
 
-let price = (await stripe.prices.list({ lookup_keys: [PLAN.lookupKey], limit: 1 })).data[0];
+let price = (await stripe.prices.list({ lookup_keys: [PRO.lookupKey], limit: 1 })).data[0];
 if (!price) {
   price = await stripe.prices.create({
     product: product.id,
     currency: "usd",
-    unit_amount: PLAN.monthlyCents,
+    unit_amount: PRO.seatCents,
     recurring: { interval: "month" },
-    lookup_key: PLAN.lookupKey,
-    metadata: { app_plan: PLAN.id },
+    lookup_key: PRO.lookupKey,
+    metadata: { app_plan: PRO.id },
   });
-  console.log(`created price ${price.id} (${PLAN.lookupKey})`);
+  console.log(`created price ${price.id} (${PRO.lookupKey})`);
 } else {
-  console.log(`found price ${price.id} (${PLAN.lookupKey})`);
-  if (price.unit_amount !== PLAN.monthlyCents) {
-    console.warn(`  warning: existing price is ${price.unit_amount} cents, plans.ts says ${PLAN.monthlyCents}. Prices are immutable in Stripe; create a new one and move the lookup key if you meant to change it.`);
+  console.log(`found price ${price.id} (${PRO.lookupKey})`);
+  if (price.unit_amount !== PRO.seatCents) {
+    console.warn(`  warning: existing price is ${price.unit_amount} cents, plans.ts says ${PRO.seatCents}. Prices are immutable in Stripe; create a new one and move the lookup key if you meant to change it.`);
   }
 }
-lines.push(`STRIPE_PRICE_STUDIO_MONTHLY=${price.id}`);
+lines.push(`STRIPE_PRICE_PRO_SEAT_MONTHLY=${price.id}`);
 
 // 2. Referral coupon (plan item 1.15): 10% off, repeating for 12 months.
 const COUPON_ID = "referral_10_12mo";

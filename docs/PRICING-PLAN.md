@@ -87,17 +87,17 @@ Naming: keep `pro` / `free` as the `PlanId` values; Stripe per-seat price lookup
 
 ## Phase 5 — Stripe setup + env (`scripts/stripe-setup.mjs`, `.env.example`, `env.ts`)
 
-- [ ] 5.1 `.env.example`: add `STRIPE_PRICE_PRO_SEAT_MONTHLY` with a one-line comment.
-- [ ] 5.2 `.env.example`: mark `STRIPE_PRICE_STUDIO_MONTHLY` deprecated (kept for old data), or remove if unused after Phase 11.
-- [ ] 5.3 `env.ts`: add `stripeProSeatPriceId: () => read("STRIPE_PRICE_PRO_SEAT_MONTHLY")`.
-- [ ] 5.4 `env.ts`: keep `stripe` configured flag unchanged.
-- [ ] 5.5 `stripe-setup.mjs`: create/find a `pro` product (metadata `app_plan:'pro'`, name `${appName} Pro`).
-- [ ] 5.6 `stripe-setup.mjs`: create per-seat price `unit_amount: 1800, recurring:{interval:'month'}, lookup_key:'pro_seat_monthly'` if missing.
-- [ ] 5.7 `stripe-setup.mjs`: print `STRIPE_PRICE_PRO_SEAT_MONTHLY=<id>`.
-- [ ] 5.8 `stripe-setup.mjs`: keep the immutable old `studio_monthly` price untouched; drop it from active creation.
-- [ ] 5.9 `stripe-setup.mjs`: leave referral coupon block unchanged.
-- [ ] 5.10 Run `stripe-setup.mjs` against Stripe **test**; capture the printed price id.
-- [ ] 5.11 Set `STRIPE_PRICE_PRO_SEAT_MONTHLY` in the preview Vercel env (test price).
+- [x] 5.1 `.env.example`: add `STRIPE_PRICE_PRO_SEAT_MONTHLY` with a one-line comment.
+- [x] 5.2 `.env.example`: mark `STRIPE_PRICE_STUDIO_MONTHLY` deprecated (kept for old data), or remove if unused after Phase 11.
+- [x] 5.3 `env.ts`: add `stripeProSeatPriceId: () => read("STRIPE_PRICE_PRO_SEAT_MONTHLY")`.
+- [x] 5.4 `env.ts`: keep `stripe` configured flag unchanged.
+- [x] 5.5 `stripe-setup.mjs`: create/find a `pro` product (metadata `app_plan:'pro'`, name `${appName} Pro`).
+- [x] 5.6 `stripe-setup.mjs`: create per-seat price `unit_amount: 1800, recurring:{interval:'month'}, lookup_key:'pro_seat_monthly'` if missing.
+- [x] 5.7 `stripe-setup.mjs`: print `STRIPE_PRICE_PRO_SEAT_MONTHLY=<id>`.
+- [x] 5.8 `stripe-setup.mjs`: keep the immutable old `studio_monthly` price untouched; drop it from active creation.
+- [x] 5.9 `stripe-setup.mjs`: leave referral coupon block unchanged.
+- [ ] 5.10 Run `stripe-setup.mjs` against Stripe **test**; capture the printed price id. *(deferred — needs a Stripe test secret key.)*
+- [ ] 5.11 Set `STRIPE_PRICE_PRO_SEAT_MONTHLY` in the preview Vercel env (test price). *(deferred — after 5.10.)*
 
 ## Phase 6 — `billing.ts`: per-seat checkout + seat sync
 

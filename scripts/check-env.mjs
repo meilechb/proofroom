@@ -17,7 +17,7 @@ for (const file of [".env.local", ".env"]) {
 const GROUPS = [
   { name: "Core (app will not start correctly without these)", vars: ["NEXT_PUBLIC_APP_NAME", "NEXT_PUBLIC_APP_DOMAIN", "NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SUPPORT_EMAIL", "DATABASE_URL", "APP_SECRET"] },
   { name: "Storage (uploads, logos, documents)", vars: ["BLOB_READ_WRITE_TOKEN", "ASSETS_READ_WRITE_TOKEN"] },
-  { name: "Platform billing (the $40/month subscription)", vars: ["STRIPE_SECRET_KEY", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_PRICE_STUDIO_MONTHLY", "STRIPE_REFERRAL_COUPON_ID"] },
+  { name: "Platform billing (the $18/seat/month Pro subscription)", vars: ["STRIPE_SECRET_KEY", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_PRICE_PRO_SEAT_MONTHLY", "STRIPE_REFERRAL_COUPON_ID"] },
   { name: "Client payments (studios' own Stripe accounts)", vars: ["STRIPE_CONNECT_CLIENT_ID", "STRIPE_CONNECT_WEBHOOK_SECRET"] },
   { name: "Email", vars: ["RESEND_API_KEY", "EMAIL_FROM", "RESEND_WEBHOOK_SECRET"] },
   { name: "Scheduled jobs and alerts", vars: ["CRON_SECRET", "PLATFORM_ALERT_EMAIL"] },
