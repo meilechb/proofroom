@@ -27,49 +27,49 @@ Naming: keep `pro` / `free` as the `PlanId` values; Stripe per-seat price lookup
 
 ## Phase 1 — `plans.ts`: constants, catalog, entitlements
 
-- [ ] 1.1 Add `FREE_STORAGE_BYTES = 5 * 1024 ** 3` with a comment (tunable; D2).
-- [ ] 1.2 Add `PRO_SEAT_CENTS = 1800` constant.
-- [ ] 1.3 Change `export type PlanId = "studio"` → `export type PlanId = "free" | "pro"`.
-- [ ] 1.4 Define `type Plan = { id: PlanId; name: string; tagline: string; highlights: string[]; pricePerSeatCents?: number; lookupKey?: string; priceEnvName?: string }`.
-- [ ] 1.5 Build `PLANS: Record<PlanId, Plan>` with a `free` entry (no price fields).
-- [ ] 1.6 Add the `pro` entry: `pricePerSeatCents: PRO_SEAT_CENTS`, `lookupKey: "pro_seat_monthly"`, `priceEnvName: "STRIPE_PRICE_PRO_SEAT_MONTHLY"`.
-- [ ] 1.7 Write Free `highlights` (galleries, proofing, own-Stripe payments, Lightroom, subdomain site, CRM basics).
-- [ ] 1.8 Write Pro `highlights` (everything + team seats, custom domain, own email domain, automations, booking, import, session planning, no badge).
-- [ ] 1.9 Keep a back-compat `export const PLAN = PLANS.pro` alias only if any import still needs it; otherwise remove and fix imports (see Phase 11). Decide and note in the item.
-- [ ] 1.10 Define `export type Entitlements = { storageBytes: number | null; maxSeats: number | null; customDomain: boolean; sendingDomain: boolean; automations: boolean; booking: boolean; imports: boolean; sessionPlanning: boolean; removeBranding: boolean; referralReward: boolean; payments: boolean; lightroom: boolean }`.
-- [ ] 1.11 `export const FREE_ENTITLEMENTS: Entitlements` — `storageBytes: FREE_STORAGE_BYTES`, `maxSeats: 1`, `payments: true`, `lightroom: true`, all Pro-only flags `false`.
-- [ ] 1.12 `export const PRO_ENTITLEMENTS: Entitlements` — `storageBytes: null`, `maxSeats: null`, every flag `true`.
-- [ ] 1.13 `export function entitlements(plan: PlanId): Entitlements` returning the matching constant.
-- [ ] 1.14 JSDoc at top of file rewritten: two tiers, entitlements are the gate, `billingState` maps status → effectivePlan.
-- [ ] 1.15 Keep `formatPrice`, `formatBytes` unchanged; confirm no other file imported `PLAN.monthlyCents` (grep; fix in Phase 11).
+- [x] 1.1 Add `FREE_STORAGE_BYTES = 5 * 1024 ** 3` with a comment (tunable; D2).
+- [x] 1.2 Add `PRO_SEAT_CENTS = 1800` constant.
+- [x] 1.3 Change `export type PlanId = "studio"` → `export type PlanId = "free" | "pro"`.
+- [x] 1.4 Define `type Plan = { id: PlanId; name: string; tagline: string; highlights: string[]; pricePerSeatCents?: number; lookupKey?: string; priceEnvName?: string }`.
+- [x] 1.5 Build `PLANS: Record<PlanId, Plan>` with a `free` entry (no price fields).
+- [x] 1.6 Add the `pro` entry: `pricePerSeatCents: PRO_SEAT_CENTS`, `lookupKey: "pro_seat_monthly"`, `priceEnvName: "STRIPE_PRICE_PRO_SEAT_MONTHLY"`.
+- [x] 1.7 Write Free `highlights` (galleries, proofing, own-Stripe payments, Lightroom, subdomain site, CRM basics).
+- [x] 1.8 Write Pro `highlights` (everything + team seats, custom domain, own email domain, automations, booking, import, session planning, no badge).
+- [x] 1.9 Keep a back-compat `export const PLAN = PLANS.pro` alias only if any import still needs it; otherwise remove and fix imports (see Phase 11). Decide and note in the item.
+- [x] 1.10 Define `export type Entitlements = { storageBytes: number | null; maxSeats: number | null; customDomain: boolean; sendingDomain: boolean; automations: boolean; booking: boolean; imports: boolean; sessionPlanning: boolean; removeBranding: boolean; referralReward: boolean; payments: boolean; lightroom: boolean }`.
+- [x] 1.11 `export const FREE_ENTITLEMENTS: Entitlements` — `storageBytes: FREE_STORAGE_BYTES`, `maxSeats: 1`, `payments: true`, `lightroom: true`, all Pro-only flags `false`.
+- [x] 1.12 `export const PRO_ENTITLEMENTS: Entitlements` — `storageBytes: null`, `maxSeats: null`, every flag `true`.
+- [x] 1.13 `export function entitlements(plan: PlanId): Entitlements` returning the matching constant.
+- [x] 1.14 JSDoc at top of file rewritten: two tiers, entitlements are the gate, `billingState` maps status → effectivePlan.
+- [x] 1.15 Keep `formatPrice`, `formatBytes` unchanged; confirm no other file imported `PLAN.monthlyCents` (grep; fix in Phase 11).
 
 ## Phase 2 — `plans.ts`: billingState → plan + effectivePlan + free status
 
-- [ ] 2.1 Extend `BillingStatus` union: add `"free"`; keep `trialing|active|past_due`; drop `read_only`/`locked` from the trial path (retain the literals only if suspended path still needs them — see 2.9).
-- [ ] 2.2 Add to `BillingState`: `plan: PlanId` (the stored plan) and `effectivePlan: PlanId` (what entitlements resolve from).
-- [ ] 2.3 `effectivePlan = "pro"` when status ∈ {trialing, active, past_due}; else `"free"`.
-- [ ] 2.4 Comped branch: `plan_override === "comped"` → status `active`, `effectivePlan "pro"`, `canWrite: !suspended`.
-- [ ] 2.5 Active/trialing subscription branch → status `active`, `effectivePlan "pro"`.
-- [ ] 2.6 Past-due subscription branch → status `past_due`, `canWrite: !suspended` (dunning, still writable), `effectivePlan "pro"`.
-- [ ] 2.7 Live 14-day trial (no sub) → status `trialing`, `trialDaysLeft`, `effectivePlan "pro"`.
-- [ ] 2.8 Fallthrough (no sub, no live trial, not comped) → status `free`, `canWrite: !suspended`, `effectivePlan "free"`, `publicLive: !suspended`. **No read-only, no lock.**
-- [ ] 2.9 Suspended remains the only hard `canWrite:false, publicLive:false` override, applied across all branches.
-- [ ] 2.10 Set `plan` on the returned state from `studio.plan` (coerced to `PlanId`, default `"free"`).
-- [ ] 2.11 Remove `graceEndsAt` lock computation from the free path; keep the field typed `Date | null` (null on free) to avoid churn in consumers.
-- [ ] 2.12 Update `StudioBillingFields` doc comment; no field additions needed (uses existing columns).
+- [x] 2.1 Extend `BillingStatus` union: add `"free"`; keep `trialing|active|past_due`; drop `read_only`/`locked` from the trial path (retain the literals only if suspended path still needs them — see 2.9).
+- [x] 2.2 Add to `BillingState`: `plan: PlanId` (the stored plan) and `effectivePlan: PlanId` (what entitlements resolve from).
+- [x] 2.3 `effectivePlan = "pro"` when status ∈ {trialing, active, past_due}; else `"free"`.
+- [x] 2.4 Comped branch: `plan_override === "comped"` → status `active`, `effectivePlan "pro"`, `canWrite: !suspended`.
+- [x] 2.5 Active/trialing subscription branch → status `active`, `effectivePlan "pro"`.
+- [x] 2.6 Past-due subscription branch → status `past_due`, `canWrite: !suspended` (dunning, still writable), `effectivePlan "pro"`.
+- [x] 2.7 Live 14-day trial (no sub) → status `trialing`, `trialDaysLeft`, `effectivePlan "pro"`.
+- [x] 2.8 Fallthrough (no sub, no live trial, not comped) → status `free`, `canWrite: !suspended`, `effectivePlan "free"`, `publicLive: !suspended`. **No read-only, no lock.**
+- [x] 2.9 Suspended remains the only hard `canWrite:false, publicLive:false` override, applied across all branches.
+- [x] 2.10 Set `plan` on the returned state from `studio.plan` (coerced to `PlanId`, default `"free"`).
+- [x] 2.11 Remove `graceEndsAt` lock computation from the free path; keep the field typed `Date | null` (null on free) to avoid churn in consumers.
+- [x] 2.12 Update `StudioBillingFields` doc comment; no field additions needed (uses existing columns).
 
 ## Phase 3 — `plans.test.ts`: state + entitlements coverage
 
-- [ ] 3.1 Test `entitlements("free")` shape (cap set, maxSeats 1, payments+lightroom true, pro flags false).
-- [ ] 3.2 Test `entitlements("pro")` shape (uncapped, all true).
-- [ ] 3.3 Test billingState: live trial → `trialing`, effectivePlan `pro`, canWrite true.
-- [ ] 3.4 Test billingState: trial expired, no sub → `free`, effectivePlan `free`, canWrite true, publicLive true.
-- [ ] 3.5 Test billingState: active sub → `active`, effectivePlan `pro`.
-- [ ] 3.6 Test billingState: past_due → `past_due`, canWrite true.
-- [ ] 3.7 Test billingState: comped → `active`/pro regardless of trial.
-- [ ] 3.8 Test billingState: suspended forces canWrite false + publicLive false on each status.
-- [ ] 3.9 Test boundary: trial ends exactly now → `free`.
-- [ ] 3.10 Remove/replace old `read_only`/`locked` trial-path assertions.
+- [x] 3.1 Test `entitlements("free")` shape (cap set, maxSeats 1, payments+lightroom true, pro flags false).
+- [x] 3.2 Test `entitlements("pro")` shape (uncapped, all true).
+- [x] 3.3 Test billingState: live trial → `trialing`, effectivePlan `pro`, canWrite true.
+- [x] 3.4 Test billingState: trial expired, no sub → `free`, effectivePlan `free`, canWrite true, publicLive true.
+- [x] 3.5 Test billingState: active sub → `active`, effectivePlan `pro`.
+- [x] 3.6 Test billingState: past_due → `past_due`, canWrite true.
+- [x] 3.7 Test billingState: comped → `active`/pro regardless of trial.
+- [x] 3.8 Test billingState: suspended forces canWrite false + publicLive false on each status.
+- [x] 3.9 Test boundary: trial ends exactly now → `free`.
+- [x] 3.10 Remove/replace old `read_only`/`locked` trial-path assertions.
 
 ## Phase 4 — Schema (`db/schema.sql`)
 

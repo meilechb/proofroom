@@ -39,6 +39,7 @@ export default async function BillingPage({ searchParams }: PageProps<"/studio/b
     trialing: <Badge tone="brand">Free trial, {billing.trialDaysLeft} day{billing.trialDaysLeft === 1 ? "" : "s"} left</Badge>,
     active: <Badge tone="success">{billing.cancelling ? "Active, cancels at period end" : "Active"}</Badge>,
     past_due: <Badge tone="warning">Payment failed</Badge>,
+    free: <Badge tone="neutral">Free plan</Badge>,
     read_only: <Badge tone="danger">Read-only</Badge>,
     locked: <Badge tone="danger">Galleries locked</Badge>,
   }[billing.status];
@@ -58,8 +59,8 @@ export default async function BillingPage({ searchParams }: PageProps<"/studio/b
             <div className="mt-1">{statusBadge}</div>
           </div>
           <div className="flex gap-2">
-            {billing.status === "trialing" || billing.status === "read_only" || billing.status === "locked" ? (
-              <form action="/api/billing/checkout" method="post"><button className="btn-primary" disabled={!configured.stripe()}>Start your subscription</button></form>
+            {billing.status === "trialing" || billing.status === "free" || billing.status === "read_only" || billing.status === "locked" ? (
+              <form action="/api/billing/checkout" method="post"><button className="btn-primary" disabled={!configured.stripe()}>{billing.status === "trialing" ? "Start your subscription" : "Upgrade to Pro"}</button></form>
             ) : null}
             {studio.stripe_customer_id && (billing.status === "active" || billing.status === "past_due") ? (
               <form action="/api/billing/portal" method="post"><button className="btn-secondary">Manage billing</button></form>
