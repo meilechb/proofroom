@@ -948,16 +948,16 @@ Automations
 - [x] 16.10 Pause all automations switch (for vacations).
 
 Sending domains
-- [ ] 16.11 `/studio/settings/email-domain`: explain why a subdomain, input (`mail.` prefilled), "Add domain" → Resend create; stores id and records.
-  - [ ] 16.11.1 Explanation copy and subdomain input
-  - [ ] 16.11.2 Add domain action → Resend create
-  - [ ] 16.11.3 Records stored and shown
-- [ ] 16.12 DNS table: host, type, value, copy buttons, per-record status once Resend reports it.
-- [ ] 16.13 "Check now" → Resend verify; status badge (pending, verified, failed, temporary failure) with Resend's status text.
-- [ ] 16.14 Cron re-check of pending domains every 15 minutes for 72 hours, then daily; email owner on verified or failed.
-- [ ] 16.15 Verified switch: `senderFor(studio)` uses the domain; test send button.
-- [ ] 16.16 DMARC helper: suggested `v=DMARC1; p=none; rua=mailto:...` with explanation; marked optional.
-- [ ] 16.17 Remove domain: delete in Resend, fall back to platform sender.
+- [x] 16.11 `/studio/settings/email-domain`: explain why a subdomain, input (`mail.` prefilled), "Add domain" → Resend create; stores id and records.
+  - [x] 16.11.1 Explanation copy and subdomain input
+  - [x] 16.11.2 Add domain action → Resend create
+  - [x] 16.11.3 Records stored and shown
+- [x] 16.12 DNS table: host, type, value, copy buttons, per-record status once Resend reports it.
+- [x] 16.13 "Check now" → Resend verify; status badge (pending, verified, failed, temporary failure) with Resend's status text.
+- [x] 16.14 Cron re-check of pending domains every 15 minutes for 72 hours, then daily; email owner on verified or failed.
+- [x] 16.15 Verified switch: `senderFor(studio)` uses the domain; test send button.
+- [x] 16.16 DMARC helper: suggested `v=DMARC1; p=none; rua=mailto:...` with explanation; marked optional.
+- [x] 16.17 Remove domain: delete in Resend, fall back to platform sender.
 - [ ] 16.18 Platform admin: domains used vs Resend plan limit with a warning at 80%.
 - [ ] 16.19 Tests: status mapping, sender selection, suppression enforcement, automation idempotency.
 - [ ] 16.20 `docs/SETUP.md`: Resend account, API key, platform domain verification, webhook, plan size guidance.

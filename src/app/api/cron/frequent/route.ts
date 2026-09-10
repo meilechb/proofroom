@@ -3,6 +3,7 @@ import { cronAuthorized, runJobs } from "@/lib/cron";
 import { releaseExpiredHolds } from "@/lib/booking";
 import { advanceRunningImports } from "@/lib/imports";
 import { recheckPendingCustomDomains } from "@/lib/domains";
+import { recheckPendingDomains } from "@/lib/sending-domains";
 
 export const maxDuration = 300;
 
@@ -13,6 +14,7 @@ export async function GET(request: NextRequest) {
     releaseExpiredBookingHolds: releaseExpiredHolds,
     advanceImports: advanceRunningImports,
     recheckCustomDomains: recheckPendingCustomDomains,
+    recheckSendingDomains: recheckPendingDomains,
   });
   return NextResponse.json(results);
 }
