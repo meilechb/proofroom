@@ -967,13 +967,13 @@ Sending domains
 - [x] 17.1 `/studio/settings` hub with tabs: Profile, Branding, Website, Domain, Payments, Email domain, Emails, Agreement, Bookings, Team, Lightroom, Referrals, Billing, Data.
 - [x] 17.2 Profile: studio name, legal name, email, phone, address, timezone, currency, business hours.
 - [x] 17.3 Branding: logo (asset), brand color, favicon; used by app emails and tenant pages.
-- [ ] 17.4 Team: members with role and last login; invite by email with role; change role; remove; pending invites with resend and revoke; owner transfer.
-  - [ ] 17.4.1 Members list with role and last login
-  - [ ] 17.4.2 Invite by email with role
-  - [ ] 17.4.3 Change role
-  - [ ] 17.4.4 Remove member
-  - [ ] 17.4.5 Pending invites: resend, revoke
-  - [ ] 17.4.6 Owner transfer
+- [x] 17.4 Team: members with role and last login; invite by email with role; change role; remove; pending invites with resend and revoke; owner transfer.
+  - [x] 17.4.1 Members list with role and last login
+  - [x] 17.4.2 Invite by email with role
+  - [x] 17.4.3 Change role
+  - [x] 17.4.4 Remove member
+  - [x] 17.4.5 Pending invites: resend, revoke
+  - [x] 17.4.6 Owner transfer
 - [ ] 17.5 Per-user notification settings: new inquiry, new note, payment received, booking made, daily digest.
 - [ ] 17.6 Lightroom tab: tokens list (name, created, last used), create (shown once), revoke, plugin download, install guide.
 - [ ] 17.7 Data tab: export everything (JSON + CSV zip, emailed when ready), import (link to Phase 21), delete studio (type name to confirm; cancels subscription, disconnects Stripe, schedules purge).
