@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { APP_NAME } from "@/lib/env";
-import { PLAN, TRIAL_DAYS, formatPrice } from "@/lib/plans";
-import { REFERRAL_REWARD_TEXT } from "@/lib/referrals";
+import { PRO_SEAT_CENTS, FREE_STORAGE_BYTES, TRIAL_DAYS, formatPrice, formatBytes } from "@/lib/plans";
 import { Icon } from "@/components/ui/icons";
 import { StartFreeLink } from "@/components/marketing/header";
-import { Check, Faq, FeatureCard, FinalCta, Heading, Lead, PriceLine, Screenshot, Section, SectionHeader } from "@/components/marketing/sections";
+import { Check, Faq, FeatureCard, FinalCta, Heading, Lead, PricingCards, Screenshot, Section, SectionHeader } from "@/components/marketing/sections";
 
 export const metadata: Metadata = {
   title: `${APP_NAME}: client galleries, Lightroom plugin and payments in your own Stripe`,
-  description: `Cull in Lightroom, deliver in one click, get paid in your own Stripe. Galleries, website, CRM and email for photographers. One plan, ${formatPrice(PLAN.monthlyCents)} a month, 0% commission.`,
+  description: `Cull in Lightroom, deliver in one click, get paid in your own Stripe — and keep 100% of what you charge. Galleries, website, CRM and email for photographers. Free to start; Pro is ${formatPrice(PRO_SEAT_CENTS)} per seat.`,
   alternates: { canonical: "/" },
 };
+
+const trust = ["0% commission", "Paid into your own Stripe", "Your own domain", "Free forever plan", "Cancel anytime"];
 
 const steps = [
   { n: "1", title: "Shoot", body: "Book the session from your website or booking page. The client, package and deposit are already in your CRM before you pick up a camera." },
@@ -31,20 +32,20 @@ const features = [
 ];
 
 const faq = [
+  { q: "Is it really free?", a: `Yes. The Free plan is free forever: 1 user, ${formatBytes(FREE_STORAGE_BYTES)} of galleries, client proofing, e-signed agreements, payments into your own Stripe and the Lightroom plugin. Upgrade to Pro when you want your team, a custom domain, automations, booking and more.` },
   { q: "Do you take a cut of my sales?", a: "No. Clients pay on your own Stripe account and the money settles there. We charge the subscription and nothing else. Stripe's own card fees still apply, as they would with any processor." },
+  { q: "How does team pricing work?", a: `Pro is ${formatPrice(PRO_SEAT_CENTS)} per seat, per month. A solo photographer on Pro pays ${formatPrice(PRO_SEAT_CENTS)}; add a second shooter or an editor and it's ${formatPrice(PRO_SEAT_CENTS * 2)}. You only pay for the people on your account, and Free is always 1 seat at no cost.` },
+  { q: "What happens when the trial ends, or if I cancel?", a: "Your studio moves to the Free plan — it never goes read-only. Your galleries and website stay live and all your data is kept; the Pro features simply switch off until you upgrade again. Nothing is deleted." },
   { q: "Do I need a Stripe account?", a: "For card payments, yes. You connect an existing account or create one in a few minutes during setup. You can also record cash, check or bank payments by hand." },
-  { q: "Which Lightroom does the plugin support?", a: "Lightroom Classic on macOS and Windows. The plugin publishes galleries and pulls favorites and notes back as flags and keywords. Lightroom (cloud) is not supported by Adobe's plugin SDK." },
-  { q: "Is there really only one plan?", a: `Yes. ${formatPrice(PLAN.monthlyCents)} a month includes every feature and unlimited team members. There are no storage tiers to outgrow.` },
-  { q: "What happens to my galleries if I cancel?", a: "Galleries and your website stay online for 30 days after a missed payment, and your data is kept for 90 days after cancellation so you can export it." },
-  { q: "Can I use my own domain?", a: "Yes, for the website, the galleries and the emails you send. Setup walks you through the DNS records." },
-  { q: "Can my team log in?", a: "Yes. Invite as many people as you like as admins or members. Seats are unlimited on the one plan." },
-  { q: "Is there a free trial?", a: `${TRIAL_DAYS} days, no card needed. Import your clients, publish a gallery from Lightroom and get paid before you decide.` },
+  { q: "Which Lightroom does the plugin support?", a: "Lightroom Classic on macOS and Windows, on both Free and Pro. The plugin publishes galleries and pulls favorites and notes back as flags and keywords. Lightroom (cloud) is not supported by Adobe's plugin SDK." },
+  { q: "Can I use my own domain?", a: "On Pro, yes — for the website, the galleries and the emails you send. Setup walks you through the DNS records. Free studios get a clean subdomain." },
+  { q: "Is there a free trial of Pro?", a: `Every new studio gets ${TRIAL_DAYS} days of Pro with no card. Import your clients, publish a gallery from Lightroom and get paid before you decide. After that you stay on Free or upgrade — nothing is deleted either way.` },
 ];
 
 export default function HomePage() {
   return (
     <>
-      {/* Hero (plan 8.3) */}
+      {/* Hero */}
       <Section className="pt-14 sm:pt-20 pb-10 sm:pb-16">
         <div className="grid gap-12 lg:grid-cols-[1.05fr_1fr] lg:items-center">
           <div>
@@ -55,19 +56,27 @@ export default function HomePage() {
               Cull in Lightroom.<br />Deliver in one click.<br />Get paid in your own Stripe.
             </Heading>
             <Lead>
-              {APP_NAME} is the gallery, website, CRM and email tool for working photographers. Favorites and notes sync back into Lightroom Classic. Clients pay you directly, and we take 0%.
+              {APP_NAME} is the gallery, website, CRM and email tool for working photographers. Favorites and notes sync back into Lightroom Classic, clients pay you directly, and you keep 100% of what you charge.
             </Lead>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <StartFreeLink className="btn-primary btn-lg">Start free for {TRIAL_DAYS} days</StartFreeLink>
+              <StartFreeLink className="btn-primary btn-lg">Start free</StartFreeLink>
               <Link href="/lightroom" className="btn-secondary btn-lg">See the Lightroom plugin</Link>
             </div>
-            <p className="mt-4 text-sm text-muted">No card needed. {formatPrice(PLAN.monthlyCents)} a month after the trial. Everything included.</p>
+            <p className="mt-4 text-sm text-muted">Free forever for solo photographers, no card. Every new studio also gets {TRIAL_DAYS} days of Pro.</p>
           </div>
           <Screenshot label="Client gallery with favorites and notes" />
         </div>
+        <ul className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-ink-2">
+          {trust.map((t) => (
+            <li key={t} className="inline-flex items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" className="text-success" aria-hidden><path d="m5 12 5 5L20 7" /></svg>
+              {t}
+            </li>
+          ))}
+        </ul>
       </Section>
 
-      {/* Three steps (plan 8.4) */}
+      {/* Three steps */}
       <Section tone="surface">
         <SectionHeader eyebrow="How it works" title="Three steps from shoot to paid" lead="The whole job runs in the tools you already use: your camera, Lightroom, and Stripe." />
         <ol className="mt-12 grid gap-6 md:grid-cols-3">
@@ -81,26 +90,16 @@ export default function HomePage() {
         </ol>
       </Section>
 
-      {/* Feature grid (plan 8.5) */}
-      <Section>
-        <SectionHeader eyebrow="Everything included" title="One tool for the business side of photography" lead="Every feature is on the one plan. Nothing to upgrade to, nothing to outgrow." />
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((f) => (
-            <FeatureCard key={f.title} icon={f.icon} title={f.title} href={f.href}>{f.body}</FeatureCard>
-          ))}
-        </div>
-      </Section>
-
-      {/* Your money is yours (plan 8.6) */}
-      <Section tone="surface" id="money">
+      {/* Your money is yours */}
+      <Section id="money">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <SectionHeader eyebrow="0% commission" title="Your money is yours" lead="Most gallery tools sit between you and your client's card and keep a percentage of what you sell. We do not." />
+            <SectionHeader eyebrow="0% commission" title="Keep every dollar you charge" lead="Most gallery tools and marketplaces sit between you and your client's card and take a percentage of what you sell. We never do." />
             <ul className="mt-8 space-y-3">
               <Check>Clients pay on <strong>your</strong> Stripe account. Funds land in your Stripe balance and pay out to your bank on Stripe&apos;s normal schedule.</Check>
               <Check>We never hold, route or touch the money, and we never add a platform fee. Only Stripe&apos;s standard card fee applies.</Check>
               <Check>Refunds and disputes are handled in your own Stripe dashboard, with full history.</Check>
-              <Check>Already have Stripe? Connect it in one click. New to Stripe? Create an account during setup.</Check>
+              <Check>0% commission on <strong>both</strong> Free and Pro — taking payments is not something we charge extra for.</Check>
             </ul>
             <Link href="/features/payments" className="mt-8 inline-block font-medium underline">How payments work</Link>
           </div>
@@ -116,12 +115,22 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* Lightroom plugin (plan 8.7) */}
+      {/* Feature grid */}
+      <Section tone="surface">
+        <SectionHeader eyebrow="One tool, not five" title="Everything the business side of photography needs" lead="Website, galleries, CRM, payments and email in one place — so your client's whole experience is yours, start to finish." />
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((f) => (
+            <FeatureCard key={f.title} icon={f.icon} title={f.title} href={f.href}>{f.body}</FeatureCard>
+          ))}
+        </div>
+      </Section>
+
+      {/* Lightroom plugin */}
       <Section>
         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <Screenshot label="Lightroom Classic: Publish Services with favorites synced" ratio="4/3" className="lg:order-2" />
           <div className="lg:order-1">
-            <SectionHeader eyebrow="Two-way Lightroom Classic plugin" title="Publish from Lightroom. Get favorites and notes back." lead="The plugin adds a Publish Service. Drag photos in, hit Publish, and the gallery is live. When the client picks, their favorites become a flag and their notes become keywords in your catalog." />
+            <SectionHeader eyebrow="Two-way Lightroom Classic plugin" title="Publish from Lightroom. Get favorites and notes back." lead="The plugin adds a Publish Service. Drag photos in, hit Publish, and the gallery is live. When the client picks, their favorites become a flag and their notes become keywords in your catalog — on Free and Pro alike." />
             <ul className="mt-8 space-y-3">
               <Check>Republish edits in place. Clients see the new version at the same link.</Check>
               <Check>Selection limits and &ldquo;N included, extras cost $X&rdquo; are set per package and enforced in the gallery.</Check>
@@ -132,22 +141,14 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* Pricing teaser (plan 8.8) */}
+      {/* Pricing */}
       <Section tone="surface" id="pricing">
-        <div className="card card-pad max-w-3xl mx-auto md:flex md:items-center md:justify-between md:gap-10">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">One plan</p>
-            <PriceLine className="mt-2" />
-            <p className="mt-2 text-sm text-ink-2">{PLAN.tagline} {TRIAL_DAYS}-day free trial, no card needed. Refer a studio and you both get {REFERRAL_REWARD_TEXT}.</p>
-          </div>
-          <div className="mt-6 md:mt-0 flex flex-col gap-2 shrink-0">
-            <StartFreeLink className="btn-primary btn-lg">Start free</StartFreeLink>
-            <Link href="/pricing" className="btn-ghost">What is included</Link>
-          </div>
-        </div>
+        <SectionHeader center eyebrow="Pricing" title="Start free. Upgrade when your studio grows." lead="No commission, no storage tiers to game, no charge for taking payments. Pay for seats only when you add a team." />
+        <PricingCards className="mt-12" />
+        <p className="mt-8 text-center text-sm text-ink-2">Refer another studio and you both get a discount. <Link href="/pricing" className="underline">See the full comparison</Link>.</p>
       </Section>
 
-      {/* FAQ and final CTA (plan 8.9) */}
+      {/* FAQ and final CTA */}
       <Section>
         <Faq items={faq} />
       </Section>

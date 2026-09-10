@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { cx } from "@/components/ui";
 import { StartFreeLink } from "@/components/marketing/header";
-import { PLAN, TRIAL_DAYS, formatPrice } from "@/lib/plans";
+import { PLANS, PRO_SEAT_CENTS, TRIAL_DAYS, formatPrice } from "@/lib/plans";
 
 /** Building blocks shared by every marketing page (plan 8.3 to 8.15). */
 
@@ -112,9 +112,48 @@ export function Faq({ items, title = "Questions" }: { items: Array<{ q: string; 
 export function PriceLine({ className }: { className?: string }) {
   return (
     <p className={cx("flex items-baseline gap-2", className)}>
-      <span className="text-5xl font-semibold tracking-tight">{formatPrice(PLAN.monthlyCents)}</span>
-      <span className="text-ink-2">per studio, per month</span>
+      <span className="text-5xl font-semibold tracking-tight">{formatPrice(PRO_SEAT_CENTS)}</span>
+      <span className="text-ink-2">per seat, per month</span>
     </p>
+  );
+}
+
+/**
+ * The two-tier pricing block (Free vs Pro), used on the home teaser and the
+ * pricing page. Both CTAs start the same signup; every new studio gets a
+ * 14-day Pro trial, then stays on Free unless it subscribes.
+ */
+export function PricingCards({ className }: { className?: string }) {
+  return (
+    <div className={cx("grid gap-6 md:grid-cols-2 max-w-4xl mx-auto items-start", className)}>
+      <div className="card card-pad flex flex-col">
+        <h3 className="text-xl font-semibold">Free</h3>
+        <p className="mt-1 text-sm text-ink-2">For solo photographers getting started.</p>
+        <p className="mt-6 flex items-baseline gap-1.5">
+          <span className="text-4xl font-semibold tracking-tight">$0</span>
+          <span className="text-ink-2">forever</span>
+        </p>
+        <StartFreeLink className="btn-secondary btn-lg mt-6 w-full justify-center">Start free</StartFreeLink>
+        <p className="mt-2 text-center text-xs text-muted">No card needed.</p>
+        <ul className="mt-8 space-y-3">
+          {PLANS.free.highlights.map((h) => <Check key={h}>{h}</Check>)}
+        </ul>
+      </div>
+      <div className="card card-pad relative flex flex-col ring-2 ring-ink">
+        <span className="absolute -top-3 left-6 rounded-full bg-ink px-3 py-1 text-xs font-medium text-paper">Most popular</span>
+        <h3 className="text-xl font-semibold">Pro</h3>
+        <p className="mt-1 text-sm text-ink-2">Everything, for your whole team.</p>
+        <p className="mt-6 flex items-baseline gap-1.5">
+          <span className="text-4xl font-semibold tracking-tight">{formatPrice(PRO_SEAT_CENTS)}</span>
+          <span className="text-ink-2">per seat / month</span>
+        </p>
+        <StartFreeLink className="btn-primary btn-lg mt-6 w-full justify-center">Start free</StartFreeLink>
+        <p className="mt-2 text-center text-xs text-muted">Every new studio gets {TRIAL_DAYS} days of Pro, free. No card.</p>
+        <ul className="mt-8 space-y-3">
+          {PLANS.pro.highlights.map((h) => <Check key={h}>{h}</Check>)}
+        </ul>
+      </div>
+    </div>
   );
 }
 
@@ -124,7 +163,7 @@ export function FinalCta({ title = "Start your free trial", lead }: { title?: st
       <div className="max-w-2xl mx-auto text-center">
         <Heading>{title}</Heading>
         <p className="mt-4 text-lg text-paper/80">
-          {lead ?? `${TRIAL_DAYS} days free, no card needed. ${formatPrice(PLAN.monthlyCents)} a month after that, everything included, unlimited seats.`}
+          {lead ?? `Start free, no card needed. Every new studio gets ${TRIAL_DAYS} days of Pro, then stays on Free or upgrades for ${formatPrice(PRO_SEAT_CENTS)} per seat.`}
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
           <StartFreeLink className="btn-lg inline-flex items-center justify-center rounded-xl bg-paper text-ink px-6 h-12 text-base font-medium hover:opacity-90">Start free</StartFreeLink>

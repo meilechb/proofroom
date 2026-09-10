@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { APP_NAME, appDomain, supportEmail } from "@/lib/env";
-import { GRACE_DAYS, PLAN, RETENTION_DAYS, TRIAL_DAYS, formatPrice } from "@/lib/plans";
+import { PRO_SEAT_CENTS, FREE_STORAGE_BYTES, RETENTION_DAYS, TRIAL_DAYS, formatPrice, formatBytes } from "@/lib/plans";
 import { REFERRAL_CAP_PER_YEAR, REFERRAL_REWARD_TEXT } from "@/lib/referrals";
 
 /**
@@ -51,12 +51,12 @@ export const LEGAL_DOCS: LegalDoc[] = [
         ]} />
         <H>3. Subscription, trial and cancellation</H>
         <Ul items={[
-          <>The plan is {formatPrice(PLAN.monthlyCents)} per studio per month, billed monthly in advance through Stripe. Every feature and unlimited seats are included.</>,
-          <>New studios get a {TRIAL_DAYS}-day trial without a card. When it ends, you subscribe or the studio becomes read-only.</>,
-          <>A read-only studio keeps its galleries and website online for {GRACE_DAYS} days so your clients are not cut off; you can still export.</>,
-          <>You can cancel at any time from the billing page. Service continues to the end of the paid period. Fees already paid are not refunded except where the law requires it.</>,
-          <>After cancellation or {GRACE_DAYS} days of non-payment, we keep your data for {RETENTION_DAYS} days so you can export it, then delete it.</>,
-          "We may change the price with at least 60 days' notice by email. The new price applies from your next renewal after that period.",
+          <>{APP_NAME} has a Free plan (1 user, {formatBytes(FREE_STORAGE_BYTES)} of storage) and a Pro plan at {formatPrice(PRO_SEAT_CENTS)} per seat per month, billed monthly in advance through Stripe on the number of team members on your studio.</>,
+          <>New studios get a {TRIAL_DAYS}-day trial of Pro without a card. When it ends, you subscribe to Pro or the studio moves to the Free plan.</>,
+          <>Cancelling Pro, or a failed payment, moves the studio to the Free plan at the end of the paid period. Your galleries, website and data are kept and the Pro-only features stop until you upgrade again. A studio is never made read-only for non-payment.</>,
+          <>You can cancel at any time from the billing page. Fees already paid are not refunded except where the law requires it.</>,
+          <>If you delete your account, we keep your data for {RETENTION_DAYS} days so you can export it, then delete it.</>,
+          "We may change prices with at least 60 days' notice by email. The new price applies from your next renewal after that period.",
         ]} />
         <H>4. Your content</H>
         <P>You own the photos, text and data you upload. You grant us a licence to store, process, resize and serve that content only as needed to run the service for you. We do not use your photos or your clients&apos; data to train models, for advertising, or for any purpose other than providing the service. You are responsible for having the rights to what you upload and for your agreements with the people you photograph.</P>
@@ -109,7 +109,7 @@ export const LEGAL_DOCS: LegalDoc[] = [
         <H>Cookies</H>
         <P>We use a small number of cookies needed to run the service and none for advertising. The <Link href="/cookies" className="underline">cookie page</Link> lists each one.</P>
         <H>Retention</H>
-        <P>Account and studio data is kept while the studio is active, for {GRACE_DAYS} days of read-only after non-payment, and for {RETENTION_DAYS} days after cancellation, then deleted. Server logs are kept 30 days. Billing records are kept as long as tax law requires.</P>
+        <P>Account and studio data is kept while the studio is active, including after it moves to the Free plan, and for {RETENTION_DAYS} days after you delete your account, then deleted. Server logs are kept 30 days. Billing records are kept as long as tax law requires.</P>
         <H>Your rights</H>
         <P>You can export your data from the app at any time and delete your account from account settings. You may ask us to access, correct or delete personal data by emailing {support()}. If you are a client of a studio, contact the studio first; we will help them respond. Residents of the EU, UK, California and other places with privacy laws have additional rights under those laws, which we honor.</P>
         <H>Children</H>

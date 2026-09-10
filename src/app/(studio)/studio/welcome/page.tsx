@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { requireStudioPage } from "@/lib/auth";
 import { listPackages } from "@/lib/packages";
 import { APP_NAME } from "@/lib/env";
-import { PLAN, TRIAL_DAYS, formatPrice } from "@/lib/plans";
+import { PRO_SEAT_CENTS, TRIAL_DAYS, formatPrice } from "@/lib/plans";
 import { Stepper } from "@/components/ui/stepper";
 import { STEP_LABELS, WIZARD_STEPS, clampStep } from "./steps";
 import { finishWizardAction, goToStepAction, saveTemplateAction } from "./actions";
@@ -156,7 +156,7 @@ export default async function WelcomePage({ searchParams }: PageProps<"/studio/w
           <section aria-labelledby="step-h" className="text-center">
             <div className="mx-auto h-12 w-12 rounded-full bg-success text-white flex items-center justify-center text-2xl" aria-hidden>✓</div>
             <h2 id="step-h" className="mt-4 text-lg font-semibold">You are set up</h2>
-            <p className="mt-1 text-sm text-ink-2 max-w-md mx-auto">Your studio is ready. Your trial runs for {TRIAL_DAYS} days, then it is {formatPrice(PLAN.monthlyCents)} a month with everything included. The dashboard has a checklist for anything you skipped.</p>
+            <p className="mt-1 text-sm text-ink-2 max-w-md mx-auto">Your studio is ready. You have {TRIAL_DAYS} days of Pro to try everything; after that you stay on the Free plan or upgrade for {formatPrice(PRO_SEAT_CENTS)} per seat. The dashboard has a checklist for anything you skipped.</p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <form action={finishWizardAction}>
                 <button type="submit" className="btn-primary btn-lg">Go to the dashboard</button>

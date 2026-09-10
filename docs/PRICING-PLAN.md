@@ -207,18 +207,18 @@ Branding
 
 ## Phase 12 — Marketing copy (two tiers)
 
-- [ ] 12.1 `pricing/page.tsx`: replace "One plan" H1 with a two-tier headline.
-- [ ] 12.2 Pricing: Free card (feature list, "Start free").
-- [ ] 12.3 Pricing: Pro card ($18/seat/mo, feature list, "Start 14-day Pro trial").
-- [ ] 12.4 Pricing: per-seat explainer ("pay only for the people on your team").
-- [ ] 12.5 `sections.tsx` `PriceLine`: change "per studio, per month" to "$18 / seat / month" (or a two-tier component).
-- [ ] 12.6 Home `page.tsx` pricing teaser: Free + Pro summary; update metadata description.
-- [ ] 12.7 Home + pricing FAQ: rewrite the "How many people can log in / one price" answers for per-seat + Free.
-- [ ] 12.8 `json-ld.tsx`: Offer(s) — Free (price 0) and Pro (price 18, unit per seat/month).
-- [ ] 12.9 `legal-content.tsx` Terms §3: rewrite the pricing clause (Free + $18/seat, trial→Free).
-- [ ] 12.10 `CompareTable`: add a Free column / adjust "Seats: Unlimited" to the new model.
-- [ ] 12.11 `FinalCta` default lead copy: "Start free" primary.
-- [ ] 12.12 Any `$40`/`monthlyCents` literal in marketing copy removed (grep).
+- [x] 12.1 `pricing/page.tsx`: replace "One plan" H1 with a two-tier headline.
+- [x] 12.2 Pricing: Free card (feature list, "Start free").
+- [x] 12.3 Pricing: Pro card ($18/seat/mo, feature list, "Start 14-day Pro trial").
+- [x] 12.4 Pricing: per-seat explainer ("pay only for the people on your team").
+- [x] 12.5 `sections.tsx` `PriceLine`: change "per studio, per month" to "$18 / seat / month" (or a two-tier component).
+- [x] 12.6 Home `page.tsx` pricing teaser: Free + Pro summary; update metadata description.
+- [x] 12.7 Home + pricing FAQ: rewrite the "How many people can log in / one price" answers for per-seat + Free.
+- [x] 12.8 `json-ld.tsx`: Offer(s) — Free (price 0) and Pro (price 18, unit per seat/month).
+- [x] 12.9 `legal-content.tsx` Terms §3: rewrite the pricing clause (Free + $18/seat, trial→Free).
+- [x] 12.10 `CompareTable`: add a Free column / adjust "Seats: Unlimited" to the new model.
+- [x] 12.11 `FinalCta` default lead copy: "Start free" primary.
+- [x] 12.12 Any `$40`/`monthlyCents` literal in marketing copy removed (grep).
 
 ## Phase 13 — Banners & notices
 
