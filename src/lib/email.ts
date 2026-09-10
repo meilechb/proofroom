@@ -97,8 +97,13 @@ async function suppressed(studioId: string, to: string | string[]) {
 /** Resolves the sender for a studio: its verified domain when present, else the platform domain (plan 3.74). */
 export async function senderFor(studio: { id: string; name: string; email: string }) {
   if (!dbConfigured()) return { fromName: studio.name, fromAddress: null as string | null, replyTo: studio.email };
-  const row = (await db()`select domain, from_local_part from sending_domains where studio_id = ${studio.id} and status = 'verified' limit 1`)[0] as { domain: string; from_local_part: string } | undefined;
-  return { fromName: studio.name, fromAddress: row ? `${row.from_local_part}@${row.domain}` : null, replyTo: studio.email };
+  const [domainRow, nameRow] = await Promise.all([
+    db()`select domain, from_local_part from sending_domains where studio_id = ${studio.id} and status = 'verified' limit 1`,
+    db()`select settings->>'email_from_name' as from_name from studios where id = ${studio.id}`,
+  ]);
+  const row = domainRow[0] as { domain: string; from_local_part: string } | undefined;
+  const fromName = ((nameRow[0] as { from_name: string | null } | undefined)?.from_name ?? "").trim() || studio.name;
+  return { fromName, fromAddress: row ? `${row.from_local_part}@${row.domain}` : null, replyTo: studio.email };
 }
 
 /** Studio-originated mail: correct sender, always a reply-to, logged with what it relates to (plan 3.75). */

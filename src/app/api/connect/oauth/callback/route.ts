@@ -1,13 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser, hasRole, listMemberships } from "@/lib/auth";
 import { completeOauth, verifyConnectState } from "@/lib/connect";
+import { clearConnectNext, connectReturnUrl } from "@/lib/connect-next";
 import { audit } from "@/lib/audit";
 import { appUrl } from "@/lib/env";
 import { log } from "@/lib/logger";
 
 /** Stripe redirects here with ?code&state, or ?error=access_denied (plan 7.4, 7.5). */
 export async function GET(request: NextRequest) {
-  const back = (q: string) => NextResponse.redirect(`${appUrl()}/studio/settings/payments?${q}`, { status: 303 });
+  const back = (q: string) => clearConnectNext(NextResponse.redirect(connectReturnUrl(request, q), { status: 303 }));
   const params = request.nextUrl.searchParams;
   if (params.get("error")) return back(`error=${encodeURIComponent(params.get("error") ?? "stripe")}`);
   const state = verifyConnectState(params.get("state"));

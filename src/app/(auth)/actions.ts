@@ -81,7 +81,7 @@ export async function signupAction(_prev: ActionState, formData: FormData): Prom
   await createSession(user.id, studio.id);
   await audit({ studioId: studio.id, actorUserId: user.id, action: "studio.created", targetType: "studio", targetId: studio.id, ip });
   log.info("signup", { studio: studio.slug, referred: Boolean(refCode) });
-  redirect("/studio?welcome=1");
+  redirect("/studio/welcome");
 }
 
 export async function loginAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -217,7 +217,7 @@ export async function createAdditionalStudioAction(_prev: ActionState, formData:
   const studio = await createStudioForUser(user.id, { studioName, slug, email: user.email });
   await setSessionStudio(user.session_id, studio.id);
   await audit({ studioId: studio.id, actorUserId: user.id, action: "studio.created" });
-  redirect("/studio?welcome=1");
+  redirect("/studio/welcome");
 }
 
 /** GET /api/slug-check?slug= uses this. */
