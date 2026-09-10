@@ -39,8 +39,9 @@ create table if not exists studios (
   currency text not null default 'usd',
   custom_domain text unique,
   custom_domain_verified_at timestamptz,
-  -- One plan. The column stays so tiers can be added later without a rewrite.
-  plan text not null default 'studio',
+  -- Two tiers: 'free' (1 seat, storage-capped, gated) and 'pro' ($18/seat/mo).
+  plan text not null default 'free',
+  -- 'comped' = a platform-admin comp of Pro; overrides billing state.
   plan_override text check (plan_override in ('comped')),
   trial_ends_at timestamptz,
   -- Set when the trial or subscription ends unpaid; galleries stay live until grace_ends_at.
@@ -68,13 +69,21 @@ create index if not exists studios_custom_domain_idx on studios (lower(custom_do
 -- Revision 4 (single plan): applied to databases created before it.
 alter table studios drop column if exists billing_interval;
 alter table studios drop constraint if exists studios_plan_check;
-update studios set plan = 'studio' where plan <> 'studio';
-alter table studios alter column plan set default 'studio';
 alter table studios add column if not exists plan_override text;
 alter table studios drop constraint if exists studios_plan_override_check;
 alter table studios add constraint studios_plan_override_check check (plan_override in ('comped'));
 alter table studios add column if not exists read_only_since timestamptz;
 alter table studios add column if not exists grace_ends_at timestamptz;
+
+-- Revision 5 (Free + Pro per-seat): supersedes the single 'studio' plan.
+-- read_only_since/grace_ends_at stay for platform suspension; the trial path
+-- no longer sets them (a lapsed trial downgrades to Free, see downgradeExpiredTrials).
+update studios set plan = 'pro'
+  where subscription_status in ('active', 'trialing', 'past_due') or plan_override = 'comped';
+update studios set plan = 'free' where plan not in ('free', 'pro');
+alter table studios alter column plan set default 'free';
+alter table studios drop constraint if exists studios_plan_check;
+alter table studios add constraint studios_plan_check check (plan in ('free', 'pro'));
 
 create table if not exists memberships (
   user_id uuid not null references users (id) on delete cascade,

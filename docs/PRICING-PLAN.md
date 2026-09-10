@@ -73,17 +73,17 @@ Naming: keep `pro` / `free` as the `PlanId` values; Stripe per-seat price lookup
 
 ## Phase 4 — Schema (`db/schema.sql`)
 
-- [ ] 4.1 Add idempotent migration block header "Revision 5 — Free + Pro per-seat".
-- [ ] 4.2 Drop the old `plan` default (`'studio'`).
-- [ ] 4.3 Drop any existing `plan` check constraint.
-- [ ] 4.4 `update studios set plan='pro' where subscription_status in ('active','trialing','past_due') or plan_override='comped'`.
-- [ ] 4.5 `update studios set plan='free' where plan not in ('free','pro')` (maps legacy `'studio'`).
-- [ ] 4.6 Set `plan` default `'free'`.
-- [ ] 4.7 Add check constraint `plan in ('free','pro')`.
-- [ ] 4.8 Confirm `storage_bytes` column exists (used by cap checks) — it does (`usage.refreshStorage`); no change.
-- [ ] 4.9 Leave `read_only_since`/`grace_ends_at` columns in place (still used by suspension); add a comment that the trial path no longer sets them.
-- [ ] 4.10 Run `npm run db:migrate` twice against the preview Neon branch; confirm idempotent (no errors).
-- [ ] 4.11 Note the schema change in `db/schema.sql` top comment / ARCHITECTURE table list (Phase 12).
+- [x] 4.1 Add idempotent migration block header "Revision 5 — Free + Pro per-seat".
+- [x] 4.2 Drop the old `plan` default (`'studio'`).
+- [x] 4.3 Drop any existing `plan` check constraint.
+- [x] 4.4 `update studios set plan='pro' where subscription_status in ('active','trialing','past_due') or plan_override='comped'`.
+- [x] 4.5 `update studios set plan='free' where plan not in ('free','pro')` (maps legacy `'studio'`).
+- [x] 4.6 Set `plan` default `'free'`.
+- [x] 4.7 Add check constraint `plan in ('free','pro')`.
+- [x] 4.8 Confirm `storage_bytes` column exists (used by cap checks) — it does (`usage.refreshStorage`); no change.
+- [x] 4.9 Leave `read_only_since`/`grace_ends_at` columns in place (still used by suspension); add a comment that the trial path no longer sets them.
+- [ ] 4.10 Run `npm run db:migrate` twice against the preview Neon branch; confirm idempotent (no errors). *(deferred to Phase 16 verification — no local DATABASE_URL; shape validated by schema.test.)*
+- [ ] 4.11 Note the schema change in `db/schema.sql` top comment / ARCHITECTURE table list (Phase 15).
 
 ## Phase 5 — Stripe setup + env (`scripts/stripe-setup.mjs`, `.env.example`, `env.ts`)
 
