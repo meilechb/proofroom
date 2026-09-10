@@ -964,9 +964,9 @@ Sending domains
 
 ## Phase 17. Settings, team, data
 
-- [~] 17.1 `/studio/settings` hub with tabs: Profile, Branding, Website, Domain, Payments, Email domain, Emails, Agreement, Bookings, Team, Lightroom, Referrals, Billing, Data.
-- [ ] 17.2 Profile: studio name, legal name, email, phone, address, timezone, currency, business hours.
-- [ ] 17.3 Branding: logo (asset), brand color, favicon; used by app emails and tenant pages.
+- [x] 17.1 `/studio/settings` hub with tabs: Profile, Branding, Website, Domain, Payments, Email domain, Emails, Agreement, Bookings, Team, Lightroom, Referrals, Billing, Data.
+- [x] 17.2 Profile: studio name, legal name, email, phone, address, timezone, currency, business hours.
+- [x] 17.3 Branding: logo (asset), brand color, favicon; used by app emails and tenant pages.
 - [ ] 17.4 Team: members with role and last login; invite by email with role; change role; remove; pending invites with resend and revoke; owner transfer.
   - [ ] 17.4.1 Members list with role and last login
   - [ ] 17.4.2 Invite by email with role
