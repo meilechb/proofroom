@@ -29,7 +29,7 @@ async function timed(configured: boolean, run: () => Promise<unknown>): Promise<
 async function build(): Promise<Report> {
   const [database, storage, stripeCheck, email] = await Promise.all([
     timed(dbConfigured(), () => db()`select 1`),
-    timed(Boolean(blobToken("galleries")), async () => {
+    timed(Boolean(env.blobToken()), async () => {
       const { list } = await import("@vercel/blob");
       await list({ token: blobToken("galleries"), limit: 1 });
     }),
