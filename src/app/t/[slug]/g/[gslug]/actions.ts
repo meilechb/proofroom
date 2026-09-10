@@ -51,3 +51,23 @@ export async function addNoteAction(galleryId: string, photoId: string, body: st
   await recordClientEvent(gallery.studio_id, gallery.client_id, "gallery.note", "gallery", galleryId, `Note on a photo: ${text.slice(0, 100)}`).catch(() => {});
   return { ok: true, author };
 }
+
+/** Client-side upload when the studio enabled it (plan 13.13). Guarded by the access cookie. */
+export async function clientBeginUploadAction(galleryId: string, meta: { filename: string; size: number; contentType: string; sha256: string | null }) {
+  const { beginUpload } = await import("@/lib/photos");
+  const gallery = one<{ id: string; studio_id: string; allow_client_upload: boolean; status: string }>(await db()`select id, studio_id, allow_client_upload, status from galleries where id = ${galleryId}`);
+  if (!gallery || gallery.status !== "published" || !gallery.allow_client_upload) throw new Error("Uploads are not open for this gallery.");
+  const { hasGalleryAccess, unlockMethod } = await import("@/lib/gallery-access");
+  const full = one<{ access_code: string | null; password_hash: string | null }>(await db()`select access_code, password_hash from galleries where id = ${galleryId}`);
+  const open = full && unlockMethod(full) === "open";
+  if (!open && !(await hasGalleryAccess(galleryId))) throw new Error("Open the gallery first.");
+  const ticket = await beginUpload(gallery.studio_id, { id: galleryId }, { ...meta, uploadedBy: "client" });
+  return { id: ticket.photoId, pathname: ticket.pathname, token: ticket.token, duplicateOf: ticket.duplicateOf };
+}
+
+export async function clientCompleteUploadAction(galleryId: string, photoId: string, url: string) {
+  const { completeUpload } = await import("@/lib/photos");
+  const gallery = one<{ studio_id: string; allow_client_upload: boolean; status: string }>(await db()`select studio_id, allow_client_upload, status from galleries where id = ${galleryId}`);
+  if (!gallery || gallery.status !== "published" || !gallery.allow_client_upload) throw new Error("Uploads are not open.");
+  await completeUpload(gallery.studio_id, photoId, url, null);
+}

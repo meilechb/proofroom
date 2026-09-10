@@ -4,6 +4,7 @@ Newest first. One line per meaningful change; phase numbers refer to docs/BUILD-
 
 ## Unreleased
 
+- Phase 13 (extras): client photo uploads to a gallery when enabled (stored as uploaded_by=client); team manager overview at /team/[eventSlug] behind the event's manager code, showing each person's opened/photos/picked status.
 - Phase 13 (client hub): signed magic-link client portal (/my/[token]) listing galleries, sessions with pay/invoice links, payments with receipts, documents and upcoming bookings, with a re-request form when the link expires; printable invoice and receipt pages; unsubscribe/resubscribe page that also updates the suppression list.
 - Phase 13 (downloads): streamed gallery zip with access, PIN and pay-gate checks; single-photo download with PIN on full size; download bar and per-photo download in the client gallery; native share or copy-link; view and download tracking beacon.
 - Phase 13 (pay): client pay page with order summary, e-signed agreement (checkbox and typed name), deposit/balance/full options to Checkout on the studio's Stripe account, manual-payment instructions when cards are off, cancelled/paid/already-paid states, and a payment-received success page.

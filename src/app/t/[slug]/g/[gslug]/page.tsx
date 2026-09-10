@@ -9,6 +9,7 @@ import { listPayments } from "@/lib/payments";
 import { orderMoney } from "@/lib/types";
 import { payUrl, galleryUrl } from "@/lib/tenant";
 import { GalleryView, type ClientPhoto } from "./gallery-view";
+import { ClientUploader } from "./client-uploader";
 import { UnlockForm } from "./unlock-form";
 
 export const metadata = { robots: { index: false, follow: false } };
@@ -70,8 +71,10 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
         </div>
       ) : null}
 
+      {gallery.allow_client_upload ? <div className="mb-6"><ClientUploader galleryId={gallery.id} /></div> : null}
+
       {clientPhotos.length === 0 ? (
-        <p className="text-[var(--site-ink-2)]">Photos are being prepared. Please check back shortly.</p>
+        <p className="text-[var(--site-ink-2)]">{gallery.allow_client_upload ? "No photos yet. Add yours above." : "Photos are being prepared. Please check back shortly."}</p>
       ) : (
         <GalleryView
           galleryId={gallery.id}

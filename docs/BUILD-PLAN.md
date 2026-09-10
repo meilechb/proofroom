@@ -783,7 +783,7 @@ Quality
 - [x] 13.10 Expired and closed states with studio contact.
 - [x] 13.11 Slideshow mode (full screen, keyboard, autoplay, exit).
 - [~] 13.12 Share sheet (copy link, email) when sharing is allowed; watermarked share image.
-- [ ] 13.13 Client upload area when enabled (drag and drop, limits, appears in studio as `uploaded_by=client`).
+- [x] 13.13 Client upload area when enabled (drag and drop, limits, appears in studio as `uploaded_by=client`).
 - [~] 13.14 Mobile layout: bottom action bar (favorites, download, notes), swipe in lightbox.
 - [x] 13.15 `/pay/[orderId]`: order summary, agreement text with checkbox and typed name, choose deposit, balance or full, "Pay with card" → Checkout on the studio's account; manual mode shows instructions.
   - [x] 13.15.1 Order summary (package, date, total, paid)
@@ -793,7 +793,7 @@ Quality
   - [x] 13.15.5 Manual mode instructions
   - [x] 13.15.6 Error states (order cancelled, already paid)
 - [x] 13.16 `/pay/[orderId]/success` and `/cancel`.
-- [ ] 13.17 `/team/[eventSlug]`: manager overview (people, status, picks) behind a manager code.
+- [x] 13.17 `/team/[eventSlug]`: manager overview (people, status, picks) behind a manager code.
 - [x] 13.18 `/my/[token]` client hub: galleries, sessions, payments, documents, bookings; magic link expires in 7 days, re-request form.
   - [x] 13.18.1 Galleries list with status
   - [x] 13.18.2 Sessions with dates
