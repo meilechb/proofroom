@@ -32,11 +32,15 @@ export function PackageDialog({ pkg, trigger }: { pkg?: Package; trigger: "add" 
             <Field label="Photos included" htmlFor="p-incl" error={state.fields?.includedFinals}><Input id="p-incl" name="included" type="number" min={0} defaultValue={pkg?.included_finals ?? 0} /></Field>
             <MoneyField name="extra" label="Each extra photo" defaultCents={pkg?.extra_final_cents ?? 0} />
           </div>
-          <Field label="Turnaround" htmlFor="p-turn" hint="e.g. 3 to 5 business days."><Input id="p-turn" name="turnaround" defaultValue={pkg?.turnaround ?? ""} /></Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Turnaround" htmlFor="p-turn" hint="e.g. 3 to 5 business days."><Input id="p-turn" name="turnaround" defaultValue={pkg?.turnaround ?? ""} /></Field>
+            <Field label="Session length" htmlFor="p-duration" hint="Minutes. Used to offer times on your booking page."><Input id="p-duration" name="duration" type="number" min={0} max={1440} step={5} defaultValue={pkg?.duration_minutes ?? ""} placeholder="60" /></Field>
+          </div>
           <Field label="What's included" htmlFor="p-includes" hint="One line per item."><Textarea id="p-includes" name="includes" rows={3} defaultValue={(pkg?.includes ?? []).join("\n")} /></Field>
           <div className="flex flex-wrap gap-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="active" defaultChecked={pkg?.is_active ?? true} className="h-4 w-4" /> Active</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="featured" defaultChecked={pkg?.is_featured ?? false} className="h-4 w-4" /> Featured on site</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="bookable" defaultChecked={pkg?.bookable ?? true} className="h-4 w-4" /> Offer on booking page</label>
           </div>
           <div className="flex justify-end gap-2 pt-1">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

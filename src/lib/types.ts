@@ -120,6 +120,8 @@ export type Package = {
   is_featured: boolean;
   is_active: boolean;
   sort_order: number;
+  duration_minutes: number | null;
+  bookable: boolean;
   created_at: string;
 };
 

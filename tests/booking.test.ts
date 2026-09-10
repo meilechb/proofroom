@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_BOOKING, localDateISO, slotsForDate, tzOffsetMinutes, zonedTime } from "@/lib/booking";
+import { DEFAULT_BOOKING, addDaysISO, localDateISO, openWeekdays, slotsForDate, tzOffsetMinutes, weekdayOfISO, zonedTime } from "@/lib/booking";
 
 const tz = "America/New_York";
 const settings = { ...DEFAULT_BOOKING, enabled: true, leadTimeHours: 0, bufferMinutes: 15, slotStepMinutes: 30, maxPerDay: 6 };
@@ -38,5 +38,21 @@ describe("slotsForDate", () => {
     expect(slotsForDate("2026-09-09", tz, { ...settings, leadTimeHours: 2 }, 60, [], soon)[0].toISOString()).toBe("2026-09-09T14:00:00.000Z");
     const full = Array.from({ length: 6 }, (_, i) => ({ starts_at: `2026-09-09T${13 + i}:00:00Z`, ends_at: `2026-09-09T${13 + i}:30:00Z` }));
     expect(slotsForDate("2026-09-09", tz, settings, 60, full, now)).toHaveLength(0);
+  });
+});
+
+describe("calendar helpers", () => {
+  it("lists the weekdays that have open hours", () => {
+    expect(openWeekdays({ ...DEFAULT_BOOKING })).toEqual([1, 2, 3, 4, 5]); // Mon-Fri by default
+    expect(openWeekdays({ ...DEFAULT_BOOKING, weekly: { ...DEFAULT_BOOKING.weekly, "6": [{ start: "10:00", end: "14:00" }] } })).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+  it("adds days across month boundaries without timezone drift", () => {
+    expect(addDaysISO("2026-01-31", 1)).toBe("2026-02-01");
+    expect(addDaysISO("2026-03-01", -1)).toBe("2026-02-28");
+    expect(addDaysISO("2026-12-25", 60)).toBe("2027-02-23");
+  });
+  it("reads the weekday of a date string the same way slot math does", () => {
+    expect(weekdayOfISO("2026-09-13")).toBe(0); // Sunday
+    expect(weekdayOfISO("2026-09-09")).toBe(3); // Wednesday
   });
 });

@@ -37,6 +37,29 @@ export function bookingSettings(settings: Record<string, unknown> | null | undef
 
 export const HOLD_MINUTES = 15;
 
+/** Session length used when a package has no explicit duration set. */
+export const DEFAULT_SESSION_MINUTES = 60;
+
+/** How far ahead the booking calendar lets clients pick. */
+export const BOOKING_HORIZON_DAYS = 60;
+
+/** Weekdays (0 = Sunday) that have at least one open window. */
+export function openWeekdays(settings: BookingSettings): number[] {
+  return [0, 1, 2, 3, 4, 5, 6].filter((d) => (settings.weekly[String(d) as keyof WeeklyHours] ?? []).length > 0);
+}
+
+/** Adds whole days to a "YYYY-MM-DD" string without timezone drift. */
+export function addDaysISO(dateISO: string, days: number): string {
+  const [y, m, d] = dateISO.split("-").map(Number);
+  const at = new Date(Date.UTC(y, m - 1, d + days));
+  return `${at.getUTCFullYear()}-${String(at.getUTCMonth() + 1).padStart(2, "0")}-${String(at.getUTCDate()).padStart(2, "0")}`;
+}
+
+/** Weekday (0 = Sunday) for a "YYYY-MM-DD" string, matching slotsForDate. */
+export function weekdayOfISO(dateISO: string): number {
+  return new Date(`${dateISO}T12:00:00Z`).getUTCDay();
+}
+
 /** Local wall time in a timezone → instant. Handles DST by asking Intl the offset at that moment. */
 export function zonedTime(dateISO: string, hhmm: string, timeZone: string): Date {
   const [y, m, d] = dateISO.split("-").map(Number);

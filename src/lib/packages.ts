@@ -4,7 +4,7 @@ import { db, one, rows } from "@/lib/db";
 import { normalizeSlug } from "@/lib/slug";
 import type { Package } from "@/lib/types";
 
-export type PackageInput = { name: string; description?: string | null; priceCents: number; depositCents: number; includedFinals: number; extraFinalCents: number; includes?: string[]; turnaround?: string | null; isFeatured?: boolean; isActive?: boolean; showOnSite?: boolean; durationMinutes?: number | null };
+export type PackageInput = { name: string; description?: string | null; priceCents: number; depositCents: number; includedFinals: number; extraFinalCents: number; includes?: string[]; turnaround?: string | null; isFeatured?: boolean; isActive?: boolean; showOnSite?: boolean; durationMinutes?: number | null; bookable?: boolean };
 
 export async function listPackages(studioId: string, onlyActive = false) {
   return rows<Package>(
@@ -21,8 +21,8 @@ export async function createPackage(studioId: string, input: PackageInput) {
   const next = one<{ n: number }>(await db()`select coalesce(max(sort_order), 0) + 1 as n from packages where studio_id = ${studioId}`);
   return one<Package>(
     await db()`
-      insert into packages (studio_id, slug, name, description, price_cents, deposit_cents, included_finals, extra_final_cents, includes, turnaround, is_featured, is_active, sort_order)
-      values (${studioId}, ${slug}, ${input.name.trim()}, ${input.description ?? null}, ${input.priceCents}, ${input.depositCents}, ${input.includedFinals}, ${input.extraFinalCents}, ${input.includes ?? []}, ${input.turnaround ?? null}, ${input.isFeatured ?? false}, ${input.isActive ?? true}, ${next?.n ?? 1})
+      insert into packages (studio_id, slug, name, description, price_cents, deposit_cents, included_finals, extra_final_cents, includes, turnaround, is_featured, is_active, sort_order, duration_minutes, bookable)
+      values (${studioId}, ${slug}, ${input.name.trim()}, ${input.description ?? null}, ${input.priceCents}, ${input.depositCents}, ${input.includedFinals}, ${input.extraFinalCents}, ${input.includes ?? []}, ${input.turnaround ?? null}, ${input.isFeatured ?? false}, ${input.isActive ?? true}, ${next?.n ?? 1}, ${input.durationMinutes ?? null}, ${input.bookable ?? true})
       returning *`
   );
 }
@@ -42,7 +42,9 @@ export async function updatePackage(studioId: string, id: string, input: Partial
         includes = ${input.includes ?? current.includes},
         turnaround = ${input.turnaround === undefined ? current.turnaround : input.turnaround},
         is_featured = ${input.isFeatured ?? current.is_featured},
-        is_active = ${input.isActive ?? current.is_active}
+        is_active = ${input.isActive ?? current.is_active},
+        duration_minutes = ${input.durationMinutes === undefined ? current.duration_minutes : input.durationMinutes},
+        bookable = ${input.bookable ?? current.bookable}
       where id = ${id} and studio_id = ${studioId}
       returning *`
   );

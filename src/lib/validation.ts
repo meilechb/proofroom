@@ -59,6 +59,8 @@ export const packageSchema = z.object({
   turnaround: z.string().trim().max(120).optional().or(z.literal("")),
   isFeatured: z.coerce.boolean().optional(),
   isActive: z.coerce.boolean().optional(),
+  durationMinutes: z.coerce.number().int().min(0).max(1440).optional(),
+  bookable: z.coerce.boolean().optional(),
 });
 
 export const orderSchema = z.object({

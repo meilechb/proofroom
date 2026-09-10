@@ -17,6 +17,8 @@ function readPackage(formData: FormData) {
     turnaround: str(formData, "turnaround", 120),
     isActive: formData.get("active") === "on",
     isFeatured: formData.get("featured") === "on",
+    durationMinutes: int(formData, "duration"),
+    bookable: formData.get("bookable") === "on",
   });
 }
 
@@ -26,7 +28,7 @@ export async function savePackageAction(_prev: ActionState, formData: FormData):
   if (!parsed.success) return { error: "Please fix the highlighted fields.", fields: fieldErrors(parsed.error) };
   if (parsed.data.depositCents > parsed.data.priceCents) return { error: "The deposit cannot be more than the price.", fields: { deposit: "Not more than the price." } };
   const id = str(formData, "id", 64);
-  const input = { ...parsed.data, description: parsed.data.description || null, turnaround: parsed.data.turnaround || null, includes: str(formData, "includes", 1000).split("\n").map((l) => l.trim()).filter(Boolean).slice(0, 20) };
+  const input = { ...parsed.data, description: parsed.data.description || null, turnaround: parsed.data.turnaround || null, durationMinutes: parsed.data.durationMinutes || null, includes: str(formData, "includes", 1000).split("\n").map((l) => l.trim()).filter(Boolean).slice(0, 20) };
   if (id) await updatePackage(studio.id, id, input);
   else await createPackage(studio.id, input);
   revalidatePath("/studio/packages");

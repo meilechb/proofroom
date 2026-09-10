@@ -856,7 +856,7 @@ Templates and sections
 - [x] 14.7 About page: page hero, bio with portrait, process steps, CTA.
 - [x] 14.8 Contact page: page hero, form (name, email, phone, message, preferred date), contact details, map link; submission → inquiry + booking request; rate limit; honeypot; thank-you state.
 - [x] 14.9 Open-your-gallery page in template styling (reuses 13.3).
-- [ ] 14.10 Book page (Phase 21) styled by template.
+- [x] 14.10 Book page (Phase 21) styled by template.
 - [x] 14.11 Local area pages `/headshots/[town]`: templated copy with town name, portfolio strip, packages, CTA, FAQ; toggle per town; sitemap entries.
   - [x] 14.11.1 Route and slug per town
   - [x] 14.11.2 Templated copy with town name
@@ -1085,16 +1085,16 @@ Booking
   - [x] 21.9.4 Max per day
   - [x] 21.9.5 Bookable packages and deposit rule
   - [x] 21.9.6 Cancellation policy text
-- [ ] 21.10 Tenant `/book`: pick package, pick date (calendar with available days), pick time, enter details, agree to policy, hold slot, pay deposit (Checkout on the studio's account) or confirm without payment when not required.
-  - [ ] 21.10.1 Pick package
-  - [ ] 21.10.2 Calendar with available days
-  - [ ] 21.10.3 Time slots for the day
-  - [ ] 21.10.4 Details form
-  - [ ] 21.10.5 Policy agreement
-  - [ ] 21.10.6 Hold slot
-  - [ ] 21.10.7 Deposit Checkout or confirm
-- [ ] 21.11 Hold expiry (15 minutes) and release.
-- [ ] 21.12 Confirmation creates client (or links), order, booking slot, session; emails `booking_confirmed` to client and notice to studio; calendar shows it.
+- [x] 21.10 Tenant `/book`: pick package, pick date (calendar with available days), pick time, enter details, agree to policy, hold slot, pay deposit (Checkout on the studio's account) or confirm without payment when not required.
+  - [x] 21.10.1 Pick package
+  - [x] 21.10.2 Calendar with available days
+  - [x] 21.10.3 Time slots for the day
+  - [x] 21.10.4 Details form
+  - [x] 21.10.5 Policy agreement
+  - [x] 21.10.6 Hold slot
+  - [x] 21.10.7 Deposit Checkout or confirm
+- [x] 21.11 Hold expiry (15 minutes) and release.
+- [x] 21.12 Confirmation creates client (or links), order, booking slot, session; emails `booking_confirmed` to client and notice to studio; calendar shows it.
 - [ ] 21.13 Reschedule and cancel links in the client hub within policy; studio can override.
 - [ ] 21.14 Booking reminders (automation) and no-show marking.
 - [ ] 21.15 Blocked dates (holidays) and one-off overrides.

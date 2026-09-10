@@ -577,6 +577,10 @@ alter table orders add column if not exists discount_cents integer not null defa
 alter table orders add column if not exists cancelled_at timestamptz;
 alter table orders add column if not exists cancel_reason text;
 
+-- packages: session length and whether the package is offered on the booking page (plan 21.10)
+alter table packages add column if not exists duration_minutes integer;
+alter table packages add column if not exists bookable boolean not null default true;
+
 -- payments: refunds and disputes mirrored from the studio's Stripe account (plan 2.29)
 alter table payments add column if not exists stripe_charge_id text;
 alter table payments add column if not exists refunded_cents integer not null default 0;

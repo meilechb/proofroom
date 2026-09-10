@@ -9,7 +9,7 @@ import { HOLD_MINUTES, type Busy } from "@/lib/booking-shared";
  */
 
 export type { WeeklyHours, BookingSettings, Busy } from "@/lib/booking-shared";
-export { DEFAULT_BOOKING, HOLD_MINUTES, bookingSettings, zonedTime, tzOffsetMinutes, localDateISO, slotsForDate } from "@/lib/booking-shared";
+export { DEFAULT_BOOKING, HOLD_MINUTES, DEFAULT_SESSION_MINUTES, BOOKING_HORIZON_DAYS, bookingSettings, zonedTime, tzOffsetMinutes, localDateISO, slotsForDate, openWeekdays, addDaysISO, weekdayOfISO } from "@/lib/booking-shared";
 
 export async function busyRanges(studioId: string, from: Date, to: Date): Promise<Busy[]> {
   return rows<Busy>(
