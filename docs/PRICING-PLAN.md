@@ -192,18 +192,18 @@ Branding
 
 ## Phase 11 — Studio billing page + upgrade flow
 
-- [ ] 11.1 Fix all `PLAN` imports broken by Phase 1 (grep `from "@/lib/plans"`); switch to `PLANS`/`entitlements` as appropriate.
-- [ ] 11.2 Billing page: show current plan name + status badge (Trial N days / Pro active / Payment failed / Free).
-- [ ] 11.3 Free state: "Upgrade to Pro" CTA with a live `seats × $18 = $X/mo` preview.
-- [ ] 11.4 Trial state: "N days left of Pro, then Free" + Upgrade CTA.
-- [ ] 11.5 Pro state: seats, `seats × $18` monthly total, next invoice date, card on file, Manage/Cancel.
-- [ ] 11.6 Cancel copy: "Cancelling moves you to Free at period end. Your data stays." (D1).
-- [ ] 11.7 Usage panel: storage shown as `used / 5 GB` on Free (meter), "fair use" on Pro.
-- [ ] 11.8 Team members stat: shows seat count and, on Pro, the per-seat cost.
-- [ ] 11.9 `/api/billing/checkout`: unchanged entry, now yields per-seat quantity via 6.3.
-- [ ] 11.10 Upgrade CTA target: reuse `/api/billing/checkout` (owner/admin only) — no new route unless needed.
-- [ ] 11.11 Billing "what's included" switches to the effective plan's `highlights`.
-- [ ] 11.12 Success/return page copy: "You're on Pro" with seat count.
+- [x] 11.1 Fix all `PLAN` imports broken by Phase 1 (grep `from "@/lib/plans"`); switch to `PLANS`/`entitlements` as appropriate.
+- [x] 11.2 Billing page: show current plan name + status badge (Trial N days / Pro active / Payment failed / Free).
+- [x] 11.3 Free state: "Upgrade to Pro" CTA with a live `seats × $18 = $X/mo` preview.
+- [x] 11.4 Trial state: "N days left of Pro, then Free" + Upgrade CTA.
+- [x] 11.5 Pro state: seats, `seats × $18` monthly total, next invoice date, card on file, Manage/Cancel.
+- [x] 11.6 Cancel copy: "Cancelling moves you to Free at period end. Your data stays." (D1).
+- [x] 11.7 Usage panel: storage shown as `used / 5 GB` on Free (meter), "fair use" on Pro.
+- [x] 11.8 Team members stat: shows seat count and, on Pro, the per-seat cost.
+- [x] 11.9 `/api/billing/checkout`: unchanged entry, now yields per-seat quantity via 6.3.
+- [x] 11.10 Upgrade CTA target: reuse `/api/billing/checkout` (owner/admin only) — no new route unless needed.
+- [x] 11.11 Billing "what's included" switches to the effective plan's `highlights`.
+- [x] 11.12 Success/return page copy: "You're on Pro" with seat count.
 
 ## Phase 12 — Marketing copy (two tiers)
 

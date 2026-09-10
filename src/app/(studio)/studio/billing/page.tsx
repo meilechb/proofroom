@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { requireStudioPage } from "@/lib/auth";
-import { formatPrice, GRACE_DAYS, PLAN, RETENTION_DAYS } from "@/lib/plans";
+import { formatPrice, formatBytes, PLANS, PRO_SEAT_CENTS, entitlements } from "@/lib/plans";
 import { stripe } from "@/lib/stripe";
 import { configured } from "@/lib/env";
 import { getUsage } from "@/lib/usage";
-import { formatBytes } from "@/lib/plans";
 import { formatDate } from "@/lib/types";
 import { Badge, Card, Notice, PageHeader, Stat } from "@/components/ui";
 import { pendingRewardFor } from "@/lib/referrals-server";
@@ -35,18 +34,32 @@ export default async function BillingPage({ searchParams }: PageProps<"/studio/b
       invoices = [];
     }
   }
+
+  const ent = entitlements(billing.effectivePlan);
+  const onPro = billing.effectivePlan === "pro";
+  const seats = Math.max(1, usage.members);
+  const perSeat = formatPrice(PRO_SEAT_CENTS);
+  const monthlyTotal = formatPrice(seats * PRO_SEAT_CENTS);
+  const planName = PLANS[billing.effectivePlan].name;
+  const storageValue = ent.storageBytes === null ? formatBytes(usage.storageBytes) : `${formatBytes(usage.storageBytes)} / ${formatBytes(ent.storageBytes)}`;
+  const storageHint = ent.storageBytes === null ? "No cap. Fair use." : "Free plan limit";
+
   const statusBadge = {
-    trialing: <Badge tone="brand">Free trial, {billing.trialDaysLeft} day{billing.trialDaysLeft === 1 ? "" : "s"} left</Badge>,
-    active: <Badge tone="success">{billing.cancelling ? "Active, cancels at period end" : "Active"}</Badge>,
+    trialing: <Badge tone="brand">Pro trial, {billing.trialDaysLeft} day{billing.trialDaysLeft === 1 ? "" : "s"} left</Badge>,
+    active: <Badge tone="success">{billing.cancelling ? "Pro, cancels at period end" : "Pro, active"}</Badge>,
     past_due: <Badge tone="warning">Payment failed</Badge>,
     free: <Badge tone="neutral">Free plan</Badge>,
     read_only: <Badge tone="danger">Read-only</Badge>,
     locked: <Badge tone="danger">Galleries locked</Badge>,
   }[billing.status];
 
+  const headerDescription = onPro
+    ? `Pro — ${perSeat} per seat, per month. Cancel any time.`
+    : `You're on the Free plan. Upgrade to Pro (${perSeat} per seat) for your whole team, a custom domain, your own email domain, automations, booking and more.`;
+
   return (
     <div className="max-w-3xl">
-      <PageHeader title="Billing" description={`${PLAN.name}: ${formatPrice(PLAN.monthlyCents)} a month. Everything included, unlimited team members, cancel any time.`} />
+      <PageHeader title="Billing" description={headerDescription} />
       {sp.error === "checkout" ? <Notice tone="danger" className="mb-4">We could not start checkout. Try again, or contact support if it keeps happening.</Notice> : null}
       {sp.error === "portal" ? <Notice tone="danger" className="mb-4">We could not open the billing portal. Try again in a moment.</Notice> : null}
       {sp.cancelled === "1" ? <Notice className="mb-4">Checkout was cancelled. Nothing changed.</Notice> : null}
@@ -59,8 +72,8 @@ export default async function BillingPage({ searchParams }: PageProps<"/studio/b
             <div className="mt-1">{statusBadge}</div>
           </div>
           <div className="flex gap-2">
-            {billing.status === "trialing" || billing.status === "free" || billing.status === "read_only" || billing.status === "locked" ? (
-              <form action="/api/billing/checkout" method="post"><button className="btn-primary" disabled={!configured.stripe()}>{billing.status === "trialing" ? "Start your subscription" : "Upgrade to Pro"}</button></form>
+            {billing.status === "trialing" || billing.status === "free" ? (
+              <form action="/api/billing/checkout" method="post"><button className="btn-primary" disabled={!configured.stripe()}>{billing.status === "trialing" ? "Start Pro subscription" : "Upgrade to Pro"}</button></form>
             ) : null}
             {studio.stripe_customer_id && (billing.status === "active" || billing.status === "past_due") ? (
               <form action="/api/billing/portal" method="post"><button className="btn-secondary">Manage billing</button></form>
@@ -68,26 +81,31 @@ export default async function BillingPage({ searchParams }: PageProps<"/studio/b
           </div>
         </div>
         <dl className="mt-4 grid gap-3 sm:grid-cols-3 text-sm">
-          <div><dt className="text-muted">Plan</dt><dd className="font-medium">{PLAN.name}, {formatPrice(PLAN.monthlyCents)}/month</dd></div>
-          <div><dt className="text-muted">{billing.status === "trialing" ? "Trial ends" : billing.cancelling ? "Access ends" : "Next invoice"}</dt><dd className="font-medium">{billing.status === "trialing" ? formatDate(studio.trial_ends_at) : formatDate(studio.current_period_end) || "—"}</dd></div>
-          <div><dt className="text-muted">Card</dt><dd className="font-medium">{card ?? "None on file"}</dd></div>
+          <div><dt className="text-muted">Plan</dt><dd className="font-medium">{planName}{onPro ? `, ${perSeat}/seat` : ""}</dd></div>
+          {onPro ? (
+            <div><dt className="text-muted">Seats</dt><dd className="font-medium">{seats} × {perSeat} = {monthlyTotal}/mo</dd></div>
+          ) : (
+            <div><dt className="text-muted">Your team on Pro</dt><dd className="font-medium">{seats} seat{seats === 1 ? "" : "s"} = {monthlyTotal}/mo</dd></div>
+          )}
+          <div><dt className="text-muted">{billing.status === "trialing" ? "Trial ends" : billing.cancelling ? "Ends" : onPro ? "Next invoice" : "Card"}</dt><dd className="font-medium">{billing.status === "trialing" ? formatDate(studio.trial_ends_at) : onPro ? (formatDate(studio.current_period_end) || "—") : (card ?? "None on file")}</dd></div>
         </dl>
-        {pendingReward ? <Notice tone="success" className="mt-4">A referral reward is waiting: {REFERRAL_REWARD_TEXT} is applied when you subscribe.</Notice> : null}
-        {billing.status === "read_only" ? <Notice tone="warning" className="mt-4">Your trial has ended. The studio is read-only; client galleries and your website stay live until {formatDate(billing.graceEndsAt?.toISOString() ?? null)} ({GRACE_DAYS} days after the trial). Subscribe to continue.</Notice> : null}
-        {billing.status === "locked" ? <Notice tone="danger" className="mt-4">Client galleries are locked. Your data is kept for {RETENTION_DAYS} days after cancellation. Subscribe to unlock everything.</Notice> : null}
-        {billing.status === "past_due" ? <Notice tone="warning" className="mt-4">The last payment failed. Stripe retries over a few days; update the card in Manage billing to avoid interruption.</Notice> : null}
+        {pendingReward ? <Notice tone="success" className="mt-4">A referral reward is waiting: {REFERRAL_REWARD_TEXT} is applied when you upgrade to Pro.</Notice> : null}
+        {billing.status === "trialing" ? <Notice className="mt-4">Your Pro trial has all features. When it ends, your studio moves to the Free plan (1 seat, {formatBytes(entitlements("free").storageBytes ?? 0)} storage) unless you subscribe — your galleries and website stay live either way.</Notice> : null}
+        {billing.status === "free" ? <Notice className="mt-4">Free includes client galleries, proofing, payments into your own Stripe and the Lightroom plugin, with a {formatBytes(entitlements("free").storageBytes ?? 0)} storage limit and 1 seat. Upgrade to Pro to add your team and unlock the rest.</Notice> : null}
+        {billing.status === "past_due" ? <Notice tone="warning" className="mt-4">The last payment failed. Stripe retries over a few days; update the card in Manage billing to avoid moving to the Free plan.</Notice> : null}
+        {onPro && billing.cancelling ? <Notice tone="warning" className="mt-4">Your subscription cancels at the period end. You&apos;ll move to the Free plan then — your data stays. Resume any time in Manage billing.</Notice> : null}
       </Card>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <Stat label="Storage used" value={formatBytes(usage.storageBytes)} hint="No cap. Fair use." />
+        <Stat label="Storage used" value={storageValue} hint={storageHint} />
         <Stat label="Live galleries" value={usage.activeGalleries} />
-        <Stat label="Team members" value={usage.members} hint="Unlimited" />
+        <Stat label="Team members" value={seats} hint={onPro ? `${perSeat} each / month` : "1 on Free"} />
       </div>
 
       <Card className="mt-6">
-        <h2 className="font-medium">What is included</h2>
+        <h2 className="font-medium">What is included in {planName}</h2>
         <ul className="mt-2 grid gap-1 sm:grid-cols-2 text-sm text-ink-2">
-          {PLAN.highlights.map((h) => <li key={h}>· {h}</li>)}
+          {PLANS[billing.effectivePlan].highlights.map((h) => <li key={h}>· {h}</li>)}
         </ul>
       </Card>
 
