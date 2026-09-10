@@ -144,21 +144,21 @@ Naming: keep `pro` / `free` as the `PlanId` values; Stripe per-seat price lookup
 ## Phase 9 — Gating enforcement (one sub-phase per feature)
 
 Seats
-- [ ] 9.1 `team.inviteMember`: reject when `entitlements.maxSeats` is 1 and a second seat would result → typed "Upgrade to Pro to add teammates."
-- [ ] 9.2 `acceptInviteAction`: after insert, call `syncSeatQuantity(studio)`.
-- [ ] 9.3 `team.removeMember`: after delete, call `syncSeatQuantity(studio)`.
-- [ ] 9.4 `team.transferOwnership`: seat count unchanged, but call `syncSeatQuantity` if roles affect count (no-op guard).
+- [x] 9.1 `team.inviteMember`: reject when `entitlements.maxSeats` is 1 and a second seat would result → typed "Upgrade to Pro to add teammates."
+- [x] 9.2 `acceptInviteAction`: after insert, call `syncSeatQuantity(studio)`.
+- [x] 9.3 `team.removeMember`: after delete, call `syncSeatQuantity(studio)`.
+- [x] 9.4 `team.transferOwnership`: seat count unchanged, but call `syncSeatQuantity` if roles affect count (no-op guard).
 - [ ] 9.5 Team settings UI: hide/disable invite form on Free with an inline "Upgrade to Pro" prompt.
 - [ ] 9.6 Free downgrade with extra members (D4): non-owner members' `requireWritableStudio` returns a "studio on Free — ask owner to upgrade" reason for that studio; owner unaffected.
 - [ ] 9.7 Team list shows "seat" badges and, on Pro, "each seat $18/mo".
 
 Storage cap
-- [ ] 9.8 `photos.beginUpload`: read `getUsage().storageBytes` (or cached `storage_bytes`) and reject when `>= entitlements.storageBytes` (Free) with a clear message (D3).
-- [ ] 9.9 `storage.clientUploadToken`: same cap check before minting a client upload token.
+- [x] 9.8 `photos.beginUpload`: read `getUsage().storageBytes` (or cached `storage_bytes`) and reject when `>= entitlements.storageBytes` (Free) with a clear message (D3).
+- [x] 9.9 `storage.clientUploadToken`: same cap check before minting a client upload token.
 - [ ] 9.10 Import path (Phase 21 feature) also respects the cap (belt-and-suspenders; import itself is Pro-gated in 9.16).
-- [ ] 9.11 Cap check helper `overStorageCap(studioId, entitlements)` in `usage.ts` (single source).
+- [x] 9.11 Cap check helper `overStorageCap(studioId, entitlements)` in `usage.ts` (single source).
 - [ ] 9.12 Uploader UI surfaces the cap message from the server (no client-only guess).
-- [ ] 9.13 Existing content stays served when over cap (no read gate) — verify gallery/asset reads are untouched.
+- [x] 9.13 Existing content stays served when over cap (no read gate) — verify gallery/asset reads are untouched.
 
 Custom domain
 - [ ] 9.14 `settings/domain` add/verify actions: `requireEntitlement(customDomain)`.

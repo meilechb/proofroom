@@ -16,6 +16,7 @@ import {
   slugAvailable,
 } from "@/lib/account";
 import { getCurrentUser } from "@/lib/auth";
+import { syncSeatQuantity } from "@/lib/billing";
 import { db, one } from "@/lib/db";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/emails/account";
 import { passwordProblem } from "@/lib/password";
@@ -190,6 +191,11 @@ export async function acceptInviteAction(_prev: ActionState, formData: FormData)
   await db()`insert into memberships (user_id, studio_id, role) values (${userId}, ${invite.studio_id}, ${invite.role}) on conflict (user_id, studio_id) do update set role = excluded.role`;
   await db()`update invitations set accepted_at = now() where id = ${invite.id}`;
   await audit({ studioId: invite.studio_id, actorUserId: userId, action: "member.joined", metadata: { role: invite.role } });
+  // A new seat: push the updated quantity to Stripe if the studio is on a paid subscription.
+  const seatStudio = one<{ id: string; stripe_subscription_id: string | null; subscription_status: string | null }>(
+    await db()`select id, stripe_subscription_id, subscription_status from studios where id = ${invite.studio_id}`
+  );
+  if (seatStudio) await syncSeatQuantity(seatStudio);
   if (!current) await createSession(userId, invite.studio_id);
   else await setSessionStudio(current.session_id, invite.studio_id);
   redirect("/studio");

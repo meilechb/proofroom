@@ -3,7 +3,7 @@ import "server-only";
 import { db, one, rows } from "@/lib/db";
 import { assetPath, clientUploadToken, deleteBlobs, safeFilename } from "@/lib/storage";
 import { downloadBlob, makeWebVersion, putJpeg, sha256, PREVIEW_MAX_EDGE, THUMB_MAX_EDGE, MAX_UPLOAD_BYTES, ALLOWED_IMAGE_TYPES } from "@/lib/images";
-import { addBytes } from "@/lib/usage";
+import { addBytes, assertUnderStorageCap } from "@/lib/usage";
 import { isAssetFolder, jsonReferencesAssetId, assetIsInUse, reprocessBytesDelta, type Asset, type AssetSort } from "@/lib/assets-shared";
 
 /**
@@ -47,6 +47,7 @@ export type AssetUploadMeta = { filename: string; size: number; contentType: str
 export async function beginAssetUpload(studioId: string, userId: string | null, meta: AssetUploadMeta, folder?: string) {
   if (meta.size <= 0 || meta.size > MAX_UPLOAD_BYTES) throw new Error(`Files must be under ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.`);
   if (!ALLOWED_IMAGE_TYPES.includes(meta.contentType)) throw new Error("Only JPEG, PNG, WebP, TIFF and HEIC files are accepted.");
+  await assertUnderStorageCap(studioId);
   const filename = safeFilename(meta.filename, "image.jpg");
   const pathname = assetPath(studioId, `${Date.now()}-${filename}`);
   const cleanFolder = folder && isAssetFolder(folder) ? folder : null;
