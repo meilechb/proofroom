@@ -185,10 +185,10 @@ Branding
 
 - [ ] 10.1 Studio sidebar: mark Bookings, (Automations under Emails), Import as Pro; show a small "Pro" tag on Free.
 - [ ] 10.2 Clicking a Pro-gated nav item on Free routes to the upgrade CTA (not a dead page).
-- [ ] 10.3 Website settings: custom-domain field shows a "Pro" lock on Free.
-- [ ] 10.4 Emails settings: sending-domain section shows a "Pro" lock on Free.
+- [x] 10.3 Website settings: custom-domain field shows a "Pro" lock on Free.
+- [x] 10.4 Emails settings: sending-domain section shows a "Pro" lock on Free.
 - [ ] 10.5 Session page: session-planning panel shows a "Pro" lock on Free.
-- [ ] 10.6 Reusable `<UpgradeLock feature=... />` component (message + upgrade button) used by 10.3–10.5 and 9.5.
+- [x] 10.6 Reusable `<UpgradeLock feature=... />` component (message + upgrade button) used by 10.3–10.5 and 9.5.
 
 ## Phase 11 — Studio billing page + upgrade flow
 

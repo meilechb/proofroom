@@ -6,6 +6,7 @@ import { Badge, Card, Notice, Table, Th, Td } from "@/components/ui";
 import { CopyButton } from "@/components/forms/copy-button";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { SubmitButton } from "@/components/forms/submit-button";
+import { UpgradeLock } from "@/components/studio/upgrade-lock";
 import { DomainForm } from "./domain-form";
 import { checkDomainAction, removeDomainAction } from "./actions";
 
@@ -14,9 +15,16 @@ export const metadata: Metadata = { title: "Domain" };
 /** A studio's own domain for its public site (plan 14.28-14.30). */
 export default async function DomainSettingsPage() {
   const ctx = await requireStudioPage("admin");
+  const subdomain = `${ctx.studio.slug}.${appDomain()}`;
+  if (!ctx.entitlements.customDomain) {
+    return (
+      <div className="max-w-3xl space-y-6">
+        <UpgradeLock title="Custom domain">Your site is always live at <span className="font-mono text-xs">{subdomain}</span>. Pro serves it from a domain you own, with HTTPS set up for you.</UpgradeLock>
+      </div>
+    );
+  }
   const status = await checkCustomDomain(ctx.studio.id);
   const managed = domainsManaged();
-  const subdomain = `${ctx.studio.slug}.${appDomain()}`;
 
   return (
     <div className="max-w-3xl space-y-6">
