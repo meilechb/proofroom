@@ -936,16 +936,16 @@ Templates and sending
 - [x] 16.6 Suppression list page with manual add and remove.
 
 Automations
-- [ ] 16.7 `/studio/emails/automations`: rules list with toggle and delay: balance reminder (N days before session, and N days after if unpaid), gallery expiring (7 and 1 days), unanswered client note (2 days), thank you (1 day after finals), review request (7 days after finals), session reminder (1 day before).
-  - [ ] 16.7.1 Balance reminder rule
-  - [ ] 16.7.2 Gallery expiring rule
-  - [ ] 16.7.3 Unanswered note rule
-  - [ ] 16.7.4 Thank you rule
-  - [ ] 16.7.5 Review request rule
-  - [ ] 16.7.6 Session reminder rule
-- [ ] 16.8 Cron `daily` runs automations idempotently via `automation_sends`.
+- [x] 16.7 `/studio/emails/automations`: rules list with toggle and delay: balance reminder (N days before session, and N days after if unpaid), gallery expiring (7 and 1 days), unanswered client note (2 days), thank you (1 day after finals), review request (7 days after finals), session reminder (1 day before).
+  - [x] 16.7.1 Balance reminder rule
+  - [x] 16.7.2 Gallery expiring rule
+  - [x] 16.7.3 Unanswered note rule
+  - [x] 16.7.4 Thank you rule
+  - [x] 16.7.5 Review request rule
+  - [x] 16.7.6 Session reminder rule
+- [x] 16.8 Cron `daily` runs automations idempotently via `automation_sends`.
 - [ ] 16.9 Automation log visible per client in the timeline.
-- [ ] 16.10 Pause all automations switch (for vacations).
+- [x] 16.10 Pause all automations switch (for vacations).
 
 Sending domains
 - [ ] 16.11 `/studio/settings/email-domain`: explain why a subdomain, input (`mail.` prefilled), "Add domain" → Resend create; stores id and records.

@@ -1,43 +1,22 @@
 import "server-only";
 
-import { db } from "@/lib/db";
-import type { TemplateKey } from "@/lib/email-templates";
+import { db, one } from "@/lib/db";
+import { renderTemplate } from "@/lib/email-templates";
+import { getTemplate } from "@/lib/email-templates-server";
+import { sendStudioEmail } from "@/lib/email";
+import { studioBaseUrl, galleryUrl } from "@/lib/tenant";
+import { formatMoney, type Studio } from "@/lib/types";
+import { log } from "@/lib/logger";
+import { AUTOMATION_RULES, automationSettings, automationsPaused, type AutomationRule, type RuleDef } from "@/lib/automations-shared";
 
 /**
- * Automation rules (plan 3.83). Each rule names a template, a default delay
- * and a query that returns the targets due now. Sends are recorded in
- * automation_sends so a rule fires at most once per target. Settings live in
- * studios.settings.automations = { [rule]: { enabled: boolean, days: number } }.
+ * Automation runner (plan 3.83, 16.8). The rule definitions and settings helpers
+ * live in automations-shared (client-safe); this module adds the due-target
+ * queries and the sender, which touch the database and email service.
  */
 
-export type AutomationRule = "balance_reminder" | "gallery_expiring" | "unanswered_note" | "thank_you" | "review_request" | "session_reminder";
-
-export type RuleDef = { rule: AutomationRule; template: TemplateKey; label: string; defaultDays: number; defaultEnabled: boolean; description: string };
-
-export const AUTOMATION_RULES: RuleDef[] = [
-  { rule: "balance_reminder", template: "balance_reminder", label: "Remind about an unpaid balance", defaultDays: 3, defaultEnabled: true, description: "Days after finals are delivered while the balance is still unpaid." },
-  { rule: "gallery_expiring", template: "gallery_expiring", label: "Warn before a gallery closes", defaultDays: 7, defaultEnabled: true, description: "Days before a gallery's expiry date." },
-  { rule: "unanswered_note", template: "inquiry_reply", label: "Nudge you about unanswered client notes", defaultDays: 2, defaultEnabled: true, description: "Days a client note has waited without a reply (sent to you, not the client)." },
-  { rule: "thank_you", template: "thank_you", label: "Send a thank-you note", defaultDays: 2, defaultEnabled: false, description: "Days after the final gallery is delivered and paid." },
-  { rule: "review_request", template: "review_request", label: "Ask for a review", defaultDays: 7, defaultEnabled: false, description: "Days after delivery." },
-  { rule: "session_reminder", template: "booking_reminder", label: "Remind clients the day before", defaultDays: 1, defaultEnabled: true, description: "Days before the session." },
-];
-
-export type AutomationSettings = Record<AutomationRule, { enabled: boolean; days: number }>;
-
-export function automationSettings(settings: Record<string, unknown> | null | undefined): AutomationSettings {
-  const raw = (settings?.automations ?? {}) as Partial<Record<AutomationRule, { enabled?: boolean; days?: number }>>;
-  const out = {} as AutomationSettings;
-  for (const def of AUTOMATION_RULES) {
-    const v = raw[def.rule] ?? {};
-    out[def.rule] = { enabled: v.enabled ?? def.defaultEnabled, days: Math.min(60, Math.max(0, Math.round(v.days ?? def.defaultDays))) };
-  }
-  return out;
-}
-
-export function automationsPaused(settings: Record<string, unknown> | null | undefined) {
-  return Boolean((settings as { automations_paused?: boolean } | null | undefined)?.automations_paused);
-}
+export type { AutomationRule, RuleDef, AutomationSettings } from "@/lib/automations-shared";
+export { AUTOMATION_RULES, automationSettings, automationsPaused } from "@/lib/automations-shared";
 
 /** Records a send; returns false when this rule already fired for the target. */
 export async function markSent(studioId: string, rule: AutomationRule, target: string) {
@@ -89,4 +68,118 @@ export async function dueTargets(rule: AutomationRule): Promise<DueTarget[]> {
           and o.scheduled_at between now() and now() + ((coalesce((s.settings->'automations'->'session_reminder'->>'days')::int, 1)) || ' days')::interval
           and not exists (select 1 from automation_sends a where a.studio_id = o.studio_id and a.rule = 'session_reminder' and a.target = o.id::text)`) as DueTarget[];
   }
+}
+
+// ---- Runner (plan 16.8) ----------------------------------------------------
+
+type StudioRow = Pick<Studio, "id" | "name" | "email" | "slug" | "custom_domain" | "custom_domain_verified_at" | "settings">;
+
+/**
+ * Sends the due automation emails. Idempotent: each target is claimed in
+ * automation_sends before sending, so a second run (or a crash mid-send) never
+ * double-sends. Rules disabled or paused for a studio are skipped. Run daily.
+ */
+export async function runAutomations() {
+  const studios = new Map<string, StudioRow | null>();
+  const getStudio = async (id: string) => {
+    if (!studios.has(id)) studios.set(id, one<StudioRow>(await db()`select id, name, email, slug, custom_domain, custom_domain_verified_at, settings from studios where id = ${id} and deleted_at is null`));
+    return studios.get(id) ?? null;
+  };
+
+  const counts: Record<string, number> = {};
+  for (const def of AUTOMATION_RULES) {
+    let sent = 0;
+    const targets = await dueTargets(def.rule);
+    for (const t of targets) {
+      const studio = await getStudio(t.studio_id);
+      if (!studio) continue;
+      const settings = automationSettings(studio.settings);
+      if (automationsPaused(studio.settings) || !settings[def.rule].enabled) continue;
+      // Claim the target first so nothing double-sends.
+      if (!(await markSent(t.studio_id, def.rule, t.target))) continue;
+      try {
+        const done = await sendAutomation(def, studio, t);
+        if (done) sent++;
+      } catch (error) {
+        log.warn("automation.send_failed", { rule: def.rule, target: t.target, error: error instanceof Error ? error.message : String(error) });
+      }
+    }
+    counts[def.rule] = sent;
+  }
+  return counts;
+}
+
+async function sendAutomation(def: RuleDef, studio: StudioRow, target: DueTarget): Promise<boolean> {
+  const base = studioBaseUrl(studio);
+  const globals = { studio_name: studio.name, studio_email: studio.email };
+
+  // The one internal rule: nudge the studio, not the client.
+  if (def.rule === "unanswered_note") {
+    const res = await sendStudioEmail(studio, {
+      to: studio.email,
+      subject: "A client note is waiting for a reply",
+      text: `A client left a note on a gallery ${settingsDays(studio, def)} or more days ago and it is still open.\n\nOpen the gallery to reply: ${base}/g\n\n${studio.name}`,
+      kind: "automation_unanswered_note",
+    });
+    return res.ok;
+  }
+
+  const tmpl = await getTemplate(studio.id, def.template);
+  let vars: Record<string, string> = { ...globals };
+  let to: string | null = null;
+  let ctaUrl: string | null = null;
+
+  if (def.rule === "gallery_expiring") {
+    const g = one<{ slug: string; expires_at: string | null; name: string; email: string }>(
+      await db()`select g.slug, g.expires_at::text, c.name, c.email from galleries g join clients c on c.id = g.client_id where g.id = ${target.target} and g.studio_id = ${studio.id}`
+    );
+    if (!g?.email || !g.expires_at) return false;
+    to = g.email;
+    ctaUrl = galleryUrl(studio, g.slug);
+    const daysLeft = Math.max(0, Math.ceil((new Date(g.expires_at).getTime() - Date.now()) / 86400000));
+    vars = { ...vars, client_name: g.name, gallery_url: ctaUrl, days_left: String(daysLeft), expires_on: new Date(g.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) };
+  } else if (def.rule === "balance_reminder") {
+    const o = one<{ id: string; title: string; amount_cents: number; currency: string; name: string; email: string }>(
+      await db()`select o.id, o.title, o.amount_cents, o.currency, c.name, c.email from orders o join clients c on c.id = o.client_id where o.id = ${target.target} and o.studio_id = ${studio.id}`
+    );
+    if (!o?.email) return false;
+    to = o.email;
+    ctaUrl = `${base}/pay/${o.id}`;
+    vars = { ...vars, client_name: o.name, amount: formatMoney(o.amount_cents, o.currency), pay_url: ctaUrl };
+  } else if (def.rule === "session_reminder") {
+    const o = one<{ title: string; scheduled_at: string | null; location: string | null; name: string; email: string }>(
+      await db()`select o.title, o.scheduled_at::text, o.location, c.name, c.email from orders o join clients c on c.id = o.client_id where o.id = ${target.target} and o.studio_id = ${studio.id}`
+    );
+    if (!o?.email || !o.scheduled_at) return false;
+    to = o.email;
+    const when = new Date(o.scheduled_at);
+    vars = { ...vars, client_name: o.name, session_title: o.title, session_date: when.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }), session_time: when.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), location: o.location ?? "" };
+  } else if (def.rule === "thank_you" || def.rule === "review_request") {
+    const o = one<{ name: string; email: string }>(
+      await db()`select c.name, c.email from orders o join clients c on c.id = o.client_id where o.id = ${target.target} and o.studio_id = ${studio.id}`
+    );
+    if (!o?.email) return false;
+    to = o.email;
+    const reviewUrl = (typeof studio.settings.review_url === "string" && studio.settings.review_url) || `${base}/`;
+    ctaUrl = def.rule === "review_request" ? reviewUrl : null;
+    vars = { ...vars, client_name: o.name, review_url: reviewUrl };
+  }
+
+  if (!to) return false;
+  const subject = renderTemplate(tmpl.values.subject, vars);
+  const body = renderTemplate(tmpl.values.body, vars);
+  const res = await sendStudioEmail(studio, {
+    to,
+    subject,
+    text: body,
+    cta: tmpl.values.cta_label && ctaUrl ? { label: tmpl.values.cta_label, url: ctaUrl } : undefined,
+    kind: `automation_${def.rule}`,
+    templateKey: def.template,
+    related: { type: "order", id: target.ref_id },
+  });
+  return res.ok;
+}
+
+function settingsDays(studio: StudioRow, def: RuleDef) {
+  return automationSettings(studio.settings)[def.rule].days;
 }
