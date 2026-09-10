@@ -38,6 +38,7 @@ export const env = {
   stripePublishableKey: () => read("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
   stripeWebhookSecret: () => read("STRIPE_WEBHOOK_SECRET"),
   stripeConnectWebhookSecret: () => read("STRIPE_CONNECT_WEBHOOK_SECRET"),
+  stripeProSeatPriceId: () => read("STRIPE_PRICE_PRO_SEAT_MONTHLY"),
   stripeConnectClientId: () => read("STRIPE_CONNECT_CLIENT_ID"),
   referralCouponId: () => read("STRIPE_REFERRAL_COUPON_ID"),
   resendApiKey: () => read("RESEND_API_KEY"),

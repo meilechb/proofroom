@@ -23,9 +23,9 @@ A runbook, followed top to bottom once. Each section is filled in as its phase i
 
 ## 4. Stripe
 
-### 4a. Platform billing (the $40/month subscription)
+### 4a. Platform billing (the Pro $18/seat/month subscription)
 
-- Run `STRIPE_SECRET_KEY=sk_... NEXT_PUBLIC_APP_URL=https://... npm run stripe:setup`. It creates the product and price (`STRIPE_PRICE_STUDIO_MONTHLY`), the referral coupon (`STRIPE_REFERRAL_COUPON_ID`) and, when the URL is public https, both webhook endpoints, printing the env lines once.
+- Run `STRIPE_SECRET_KEY=sk_... NEXT_PUBLIC_APP_URL=https://... npm run stripe:setup`. It creates the Pro product and its per-seat price (`STRIPE_PRICE_PRO_SEAT_MONTHLY`, $18/seat/month, lookup key `pro_seat_monthly`; billed as quantity × unit_amount where quantity is the studio's seat count), the referral coupon (`STRIPE_REFERRAL_COUPON_ID`) and, when the URL is public https, both webhook endpoints, printing the env lines once.
 - Customer Portal (Dashboard → Settings → Billing → Customer portal): allow updating payment methods and cancelling; leave plan switching off.
 
 ### 4b. Client payments (each studio's own Stripe account)

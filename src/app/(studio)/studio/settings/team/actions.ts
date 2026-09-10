@@ -2,15 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { requireStudio, requireWritableStudio } from "@/lib/auth";
-import { inviteMember, resendInvite, revokeInvite, changeMemberRole, removeMember, transferOwnership } from "@/lib/team";
+import { inviteMember, resendInvite, revokeInvite, changeMemberRole, removeMember, transferOwnership, seatUsage } from "@/lib/team";
+import { syncSeatQuantity } from "@/lib/billing";
 import { sendInviteEmail } from "@/lib/emails/account";
 import { audit } from "@/lib/audit";
 import { str, type ActionState } from "@/lib/action-state";
 
 export async function inviteMemberAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const { studio, user } = await requireWritableStudio("admin");
+  const { studio, user, entitlements } = await requireWritableStudio("admin");
   const email = str(formData, "email", 254);
   const role = str(formData, "role", 10) === "admin" ? "admin" : "member";
+  if (entitlements.maxSeats !== null && (await seatUsage(studio.id)) >= entitlements.maxSeats) {
+    const msg = `The Free plan includes ${entitlements.maxSeats} seat${entitlements.maxSeats === 1 ? "" : "s"}. Upgrade to Pro to add teammates.`;
+    return { error: msg, upgrade: { feature: "seats" } };
+  }
   try {
     const token = await inviteMember(studio.id, user.id, email, role);
     await sendInviteEmail(email, studio.name, user.name || studio.name, token);
@@ -54,6 +59,7 @@ export async function removeMemberAction(userId: string): Promise<ActionState> {
   try {
     await removeMember(studio.id, userId);
     await audit({ studioId: studio.id, actorUserId: user.id, action: "team.removed", targetId: userId });
+    await syncSeatQuantity(studio);
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Could not remove the member." };
   }

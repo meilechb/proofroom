@@ -2,6 +2,8 @@
 
 A multi-tenant platform for photographers. Each studio gets: a public website built from one of two templates, branded client galleries with proofing, deposits and e-signed agreements paid into the studio's **own** Stripe account, a CRM (inbox, clients, sessions, tasks), an asset library, email templates and automations sent from the studio's **own** domain, unlimited team seats, a referral program, a booking page, import from other gallery tools, session planning, and a two-way Lightroom Classic plugin. Built as a separate app in `saas/`, deployed to its own Vercel project and domain.
 
+**Superseded — see `docs/PRICING-PLAN.md`.** The single-$40-plan decision below is replaced by two tiers: **Free** (1 seat, 5 GB cap, feature-gated) and **Pro** ($18/seat/month). New studios trial full Pro for 14 days then downgrade to Free. The build history in this file is kept for reference; the pricing model it describes no longer matches the code.
+
 **One plan. $40 per month. Everything included. Unlimited seats. 14-day free trial.** No feature is gated behind a tier. Pricing is revisited after launch with real customers; nothing in the code assumes tiers beyond a single `plan` string so that tiers can be added later without a rewrite.
 
 **Name: on hold.** Code uses the placeholder `NEXT_PUBLIC_APP_NAME` (currently "Proofroom") and neutral identifiers (`app`, `pr_`) that a single rename pass (item 1.30) replaces. Candidate names checked on September 9 are kept in `docs/NAME-CANDIDATES.md` for later.

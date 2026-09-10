@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db, one } from "@/lib/db";
+import { billingState, entitlements, formatBytes, type StudioBillingFields } from "@/lib/plans";
 
 /**
  * Per-studio usage counters. Shown on the billing and assets pages and to the
@@ -29,6 +30,32 @@ export async function getUsage(studioId: string): Promise<Usage> {
     members: row?.members ?? 0,
     apiTokens: row?.tokens ?? 0,
   };
+}
+
+/**
+ * Whether a studio is at or over its plan's storage cap. Uses the cached
+ * storage_bytes column (refreshStorage corrects any drift daily) and the
+ * studio's effective plan. Free is capped; Pro is uncapped (capBytes null).
+ */
+export async function overStorageCap(studioId: string): Promise<{ over: boolean; capBytes: number | null; usedBytes: number }> {
+  const row = one<StudioBillingFields & { storage_bytes: string }>(
+    await db()`
+      select plan, trial_ends_at::text, subscription_status, current_period_end::text, cancel_at_period_end,
+             suspended_at::text, read_only_since::text, grace_ends_at::text, plan_override, storage_bytes
+      from studios where id = ${studioId}`
+  );
+  if (!row) return { over: false, capBytes: null, usedBytes: 0 };
+  const capBytes = entitlements(billingState(row).effectivePlan).storageBytes;
+  const usedBytes = Number(row.storage_bytes ?? 0);
+  return { over: capBytes !== null && usedBytes >= capBytes, capBytes, usedBytes };
+}
+
+/** Throws a clear upgrade message when a studio is at or over its storage cap. Call before any upload. */
+export async function assertUnderStorageCap(studioId: string) {
+  const { over, capBytes } = await overStorageCap(studioId);
+  if (over) {
+    throw new Error(`You've reached your ${formatBytes(capBytes ?? 0)} storage limit on the Free plan. Upgrade to Pro for uncapped storage, or remove some photos to free up space.`);
+  }
 }
 
 /** Refreshes the cached storage_bytes on the studio row (called after uploads and deletes). */

@@ -6,6 +6,7 @@ import type { Site, TemplateId } from "@/lib/site/schema";
 import { buttonHref, navPages } from "@/lib/site/publish";
 import { assetUrl, type SiteAsset, type PortfolioItem, type Testimonial } from "@/lib/site/render";
 import { APP_NAME, appUrl } from "@/lib/env";
+import { billingState, entitlements } from "@/lib/plans";
 
 /**
  * Public website sections (plan 14.1-14.16). One set of components; the two
@@ -71,6 +72,8 @@ export function SiteHeader({ studio, site }: { studio: Studio; site: Site }) {
 export function SiteFooter({ studio, site }: { studio: Studio; site: Site }) {
   const s = site.settings;
   const socials = Object.entries(s.social).filter(([, v]) => v);
+  const showBadge = !entitlements(billingState(studio).effectivePlan).removeBranding;
+  const badgeHref = studio.referral_code ? `${appUrl()}/?ref=${studio.referral_code}` : appUrl();
   return (
     <footer className="border-t border-[var(--site-line)] mt-20">
       <Container className="py-12 grid gap-8 sm:grid-cols-3">
@@ -93,7 +96,7 @@ export function SiteFooter({ studio, site }: { studio: Studio; site: Site }) {
             {navPages(site).slice(0, 4).map((n) => <Link key={n.path} href={n.path} className="hover:text-[var(--site-ink)]">{n.label}</Link>)}
           </div>
           <p className="mt-4 text-xs text-[var(--site-ink-2)]">© {new Date().getFullYear()} {studio.name}. {s.footerText}</p>
-          <a href={appUrl()} className="mt-1 inline-block text-xs text-[var(--site-ink-2)] hover:text-[var(--site-ink)]" target="_blank" rel="noopener">Powered by {APP_NAME}</a>
+          {showBadge ? <a href={badgeHref} className="mt-1 inline-block text-xs text-[var(--site-ink-2)] hover:text-[var(--site-ink)]" target="_blank" rel="noopener">Powered by {APP_NAME}</a> : null}
         </div>
       </Container>
     </footer>

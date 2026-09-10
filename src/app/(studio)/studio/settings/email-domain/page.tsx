@@ -5,6 +5,7 @@ import { Card, Badge, Notice, Table, Th, Td } from "@/components/ui";
 import { CopyButton } from "@/components/forms/copy-button";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { SubmitButton } from "@/components/forms/submit-button";
+import { UpgradeLock } from "@/components/studio/upgrade-lock";
 import { AddDomainForm, LocalPartForm, TestSendButton } from "./email-domain-forms";
 import { checkEmailDomainAction, removeEmailDomainAction } from "./actions";
 
@@ -21,6 +22,13 @@ const STATUS: Record<SendingDomainStatus, { label: string; tone: "neutral" | "su
 /** A studio's own email sending domain via Resend (plan 16.11-16.17). */
 export default async function EmailDomainSettingsPage() {
   const ctx = await requireStudioPage("admin");
+  if (!ctx.entitlements.sendingDomain) {
+    return (
+      <div className="max-w-3xl space-y-6">
+        <UpgradeLock title="Send email from your own domain">On Free, client emails come from our shared address with your studio name on them. Pro lets you verify a domain you own so mail leaves from your address.</UpgradeLock>
+      </div>
+    );
+  }
   const domain = await getSendingDomain(ctx.studio.id);
   const suggestion = `mail.${(ctx.studio.custom_domain || "").replace(/^www\./, "") || "yourstudio.com"}`;
 

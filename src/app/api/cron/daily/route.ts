@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cronAuthorized, runJobs } from "@/lib/cron";
-import { markExpiredTrialsReadOnly } from "@/lib/billing";
+import { downgradeExpiredTrials, reconcileSeatQuantities } from "@/lib/billing";
 import { expireGalleries } from "@/lib/galleries";
 import { purgeDeleted, dropStalePending } from "@/lib/photos";
 import { recheckPendingDomains } from "@/lib/sending-domains";
@@ -19,11 +19,12 @@ export async function GET(request: NextRequest) {
   if (!cronAuthorized(request)) return new NextResponse("Unauthorized", { status: 401 });
   const results = await runJobs("daily", {
     trialReminders,
-    markReadOnly: async () => {
-      const count = await markExpiredTrialsReadOnly();
-      if (count > 0) await notifyTrialEnded();
-      return count;
+    downgradeTrials: async () => {
+      const ids = await downgradeExpiredTrials();
+      if (ids.length > 0) await notifyDowngraded(ids);
+      return ids.length;
     },
+    reconcileSeats: reconcileSeatQuantities,
     expireGalleries,
     purgeDeletedPhotos: () => purgeDeleted(30),
     dropStalePendingUploads: () => dropStalePending(24),
@@ -56,10 +57,12 @@ async function trialReminders() {
   return sent;
 }
 
-async function notifyTrialEnded() {
+async function notifyDowngraded(ids: string[]) {
   const rows = (await db()`
-    select s.id, s.name, u.email from studios s join memberships m on m.studio_id = s.id and m.role = 'owner' join users u on u.id = m.user_id
-    where s.read_only_since > now() - interval '1 day' and s.subscription_status is null`) as { id: string; name: string; email: string }[];
+    select s.id, s.name, u.email from studios s
+      join memberships m on m.studio_id = s.id and m.role = 'owner'
+      join users u on u.id = m.user_id
+    where s.id = any(${ids}::uuid[])`) as { id: string; name: string; email: string }[];
   for (const s of rows) {
     const marked = await db()`insert into automation_sends (studio_id, rule, target) values (${s.id}, 'trial_ended', ${s.id}) on conflict do nothing returning rule`;
     if (marked.length > 0) await sendTrialEndedEmail(s.email, s.name);

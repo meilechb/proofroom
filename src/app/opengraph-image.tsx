@@ -1,6 +1,5 @@
 import { ImageResponse } from "next/og";
 import { APP_NAME } from "@/lib/env";
-import { PLAN, formatPrice } from "@/lib/plans";
 
 export const alt = `${APP_NAME}: cull in Lightroom, deliver in one click, get paid in your own Stripe`;
 export const size = { width: 1200, height: 630 };
@@ -22,7 +21,7 @@ export default function Image() {
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 28, color: "#4b4b4b" }}>
           <div>Galleries, website, CRM and email for photographers</div>
-          <div>{`${formatPrice(PLAN.monthlyCents)}/month, 0% commission`}</div>
+          <div>Free to start · 0% commission</div>
         </div>
       </div>
     ),

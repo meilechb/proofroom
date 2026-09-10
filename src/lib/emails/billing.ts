@@ -2,14 +2,14 @@ import "server-only";
 
 import { APP_NAME, appUrl, supportEmail } from "@/lib/env";
 import { sendPlatformEmail } from "@/lib/email";
-import { formatPrice, GRACE_DAYS, PLAN, RETENTION_DAYS } from "@/lib/plans";
+import { formatPrice, PRO_SEAT_CENTS } from "@/lib/plans";
 import { REFERRAL_REWARD_TEXT } from "@/lib/referrals";
 
 /** Platform billing mail. Always from our domain; never subject to studio suppressions. */
 
 const sig = `${APP_NAME}\n${supportEmail()}`;
 const billingUrl = () => `${appUrl()}/studio/billing`;
-const price = () => `${formatPrice(PLAN.monthlyCents)} a month`;
+const price = () => `${formatPrice(PRO_SEAT_CENTS)} per seat / month`;
 
 export function sendTrialEndingEmail(to: string, studioName: string, daysLeft: number) {
   const url = billingUrl();
@@ -17,7 +17,7 @@ export function sendTrialEndingEmail(to: string, studioName: string, daysLeft: n
     to,
     kind: "trial_ending",
     subject: `${daysLeft} day${daysLeft === 1 ? "" : "s"} left on your ${APP_NAME} trial`,
-    text: `Your free trial for ${studioName} ends in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.\n\nTo keep everything running, start your subscription: ${price()}, everything included, unlimited team members, cancel any time.\n\n${url}\n\nIf you do nothing, the studio becomes read-only when the trial ends. Client galleries and your website stay live for ${GRACE_DAYS} more days.\n\n${sig}`,
+    text: `Your Pro trial for ${studioName} ends in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.\n\nStay on Pro to keep your team, custom domain, your own email domain, automations, booking, import and session planning: ${price()}, cancel any time.\n\n${url}\n\nIf you do nothing, the studio moves to the Free plan (1 seat, 5 GB, no team or custom domain). Your galleries and website stay live.\n\n${sig}`,
     cta: { label: "Start your subscription", url },
   });
 }
@@ -28,8 +28,8 @@ export function sendTrialEndedEmail(to: string, studioName: string) {
     to,
     kind: "trial_ended",
     subject: `Your ${APP_NAME} trial for ${studioName} has ended`,
-    text: `The free trial for ${studioName} has ended and the studio is now read-only. Client galleries and your website stay live for ${GRACE_DAYS} days.\n\nSubscribe to pick up where you left off: ${price()}, everything included.\n\n${url}\n\n${sig}`,
-    cta: { label: "Subscribe", url },
+    text: `The Pro trial for ${studioName} has ended, so the studio is now on the Free plan. Your galleries and website stay live, and you can keep sending galleries, taking payments and using the Lightroom plugin.\n\nUpgrade to Pro to restore your team, custom domain, your own email domain, automations, booking, import and session planning: ${price()}.\n\n${url}\n\n${sig}`,
+    cta: { label: "Upgrade to Pro", url },
   });
 }
 
@@ -50,7 +50,7 @@ export function sendSubscriptionCancelledEmail(to: string, studioName: string, e
     to,
     kind: "subscription_cancelled",
     subject: `Your ${APP_NAME} subscription for ${studioName} is cancelled`,
-    text: `Your subscription for ${studioName} is cancelled${endsOn ? ` and ends on ${endsOn}` : ""}. After that the studio becomes read-only, galleries and your website stay live for ${GRACE_DAYS} days, and your data is kept for ${RETENTION_DAYS} days in case you come back.\n\nChanged your mind? You can resume any time:\n${url}\n\n${sig}`,
+    text: `Your Pro subscription for ${studioName} is cancelled${endsOn ? ` and ends on ${endsOn}` : ""}. After that the studio moves to the Free plan. Your galleries and website stay live and all your data is kept; the Pro features (team, custom domain, your own email domain, automations, booking, import, session planning) switch off.\n\nChanged your mind? You can upgrade again any time:\n${url}\n\n${sig}`,
     cta: { label: "Manage billing", url },
   });
 }

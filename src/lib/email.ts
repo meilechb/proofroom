@@ -2,6 +2,7 @@ import "server-only";
 
 import { db, dbConfigured } from "@/lib/db";
 import { APP_NAME, appDomain, env, supportEmail } from "@/lib/env";
+import { billingState, entitlements, type StudioBillingFields } from "@/lib/plans";
 
 /**
  * Transactional email through Resend's HTTP API. Optional: without
@@ -94,15 +95,22 @@ async function suppressed(studioId: string, to: string | string[]) {
   }
 }
 
-/** Resolves the sender for a studio: its verified domain when present, else the platform domain (plan 3.74). */
+/**
+ * Resolves the sender for a studio: its verified domain when present AND the
+ * studio's plan includes an own sending domain (Pro), else the platform domain
+ * (plan 3.74). A Free studio always sends from the platform domain, even if a
+ * domain it verified on Pro is still stored.
+ */
 export async function senderFor(studio: { id: string; name: string; email: string }) {
   if (!dbConfigured()) return { fromName: studio.name, fromAddress: null as string | null, replyTo: studio.email };
-  const [domainRow, nameRow] = await Promise.all([
+  const [domainRow, studioRow] = await Promise.all([
     db()`select domain, from_local_part from sending_domains where studio_id = ${studio.id} and status = 'verified' limit 1`,
-    db()`select settings->>'email_from_name' as from_name from studios where id = ${studio.id}`,
+    db()`select settings->>'email_from_name' as from_name, plan, trial_ends_at::text, subscription_status, current_period_end::text, cancel_at_period_end, suspended_at::text, read_only_since::text, grace_ends_at::text, plan_override from studios where id = ${studio.id}`,
   ]);
-  const row = domainRow[0] as { domain: string; from_local_part: string } | undefined;
-  const fromName = ((nameRow[0] as { from_name: string | null } | undefined)?.from_name ?? "").trim() || studio.name;
+  const s = studioRow[0] as (StudioBillingFields & { from_name: string | null }) | undefined;
+  const fromName = (s?.from_name ?? "").trim() || studio.name;
+  const canUseOwnDomain = s ? entitlements(billingState(s).effectivePlan).sendingDomain : false;
+  const row = canUseOwnDomain ? (domainRow[0] as { domain: string; from_local_part: string } | undefined) : undefined;
   return { fromName, fromAddress: row ? `${row.from_local_part}@${row.domain}` : null, replyTo: studio.email };
 }
 

@@ -25,6 +25,14 @@ export async function listMembers(studioId: string) {
   );
 }
 
+/** Seats in use = current members plus live pending invites (used for the plan seat cap). */
+export async function seatUsage(studioId: string): Promise<number> {
+  const row = one<{ n: number }>(await db()`
+    select (select count(*) from memberships where studio_id = ${studioId})
+         + (select count(*) from invitations where studio_id = ${studioId} and accepted_at is null and expires_at > now()) as n`);
+  return Number(row?.n ?? 0);
+}
+
 export async function listPendingInvites(studioId: string) {
   return rows<PendingInvite>(
     await db()`select id, email, role, expires_at::text, created_at::text from invitations where studio_id = ${studioId} and accepted_at is null and expires_at > now() order by created_at desc`

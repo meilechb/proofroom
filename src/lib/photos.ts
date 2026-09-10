@@ -3,7 +3,7 @@ import "server-only";
 import { db, one, rows } from "@/lib/db";
 import { ALLOWED_IMAGE_TYPES, MAX_UPLOAD_BYTES, PREVIEW_MAX_EDGE, THUMB_MAX_EDGE, captureTime, downloadBlob, makeWatermarkedVersion, makeWebVersion, putJpeg, sha256 } from "@/lib/images";
 import { clientUploadToken, deleteMany, galleryPath, safeFilename, putPrivate } from "@/lib/storage";
-import { addBytes, subtractBytes } from "@/lib/usage";
+import { addBytes, subtractBytes, assertUnderStorageCap } from "@/lib/usage";
 import type { Gallery, Photo } from "@/lib/types";
 
 /**
@@ -68,6 +68,7 @@ export async function ingestServerPhoto(studioId: string, photoId: string, buffe
 export async function beginUpload(studioId: string, gallery: Pick<Gallery, "id">, input: { filename: string; size: number; contentType: string; sha256?: string | null; uploadedBy?: Photo["uploaded_by"] }): Promise<UploadTicket> {
   if (input.size <= 0 || input.size > MAX_UPLOAD_BYTES) throw new Error(`Files must be under ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.`);
   if (!ALLOWED_IMAGE_TYPES.includes(input.contentType)) throw new Error("Only JPEG, PNG, WebP, TIFF and HEIC files are accepted.");
+  await assertUnderStorageCap(studioId);
   const filename = safeFilename(input.filename, "photo.jpg");
   const duplicate = input.sha256
     ? one<{ id: string }>(await db()`select id from photos where gallery_id = ${gallery.id} and sha256 = ${input.sha256} and deleted_at is null limit 1`)

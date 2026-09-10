@@ -1,11 +1,13 @@
 import Link from "next/link";
-import type { BillingState } from "@/lib/plans";
+import { entitlements, formatBytes, type BillingState } from "@/lib/plans";
 import type { Studio } from "@/lib/types";
 import type { CurrentUser } from "@/lib/auth";
 import { ResendVerification } from "@/components/studio/resend-verification";
 
 export function Banners({ user, studio, billing }: { user: CurrentUser; studio: Studio; billing: BillingState }) {
   const items: React.ReactNode[] = [];
+  const ent = entitlements(billing.effectivePlan);
+  const overCap = ent.storageBytes !== null && studio.storage_bytes >= ent.storageBytes;
   if (!user.email_verified_at) {
     items.push(
       <span key="verify">
@@ -16,21 +18,21 @@ export function Banners({ user, studio, billing }: { user: CurrentUser; studio: 
   if (billing.status === "trialing") {
     items.push(
       <span key="trial">
-        Free trial: {billing.trialDaysLeft} day{billing.trialDaysLeft === 1 ? "" : "s"} left. <Link href="/studio/billing" className="underline">Start your subscription</Link> to keep everything running.
+        Pro trial: {billing.trialDaysLeft} day{billing.trialDaysLeft === 1 ? "" : "s"} left, then your studio moves to the Free plan. <Link href="/studio/billing" className="underline">Upgrade to Pro</Link> to keep your team and Pro features.
       </span>
     );
   }
   if (billing.status === "past_due") {
     items.push(
       <span key="past-due">
-        Your last subscription payment failed. <Link href="/studio/billing" className="underline">Update your card</Link>.
+        Your last Pro payment failed. <Link href="/studio/billing" className="underline">Update your card</Link> to avoid moving to the Free plan.
       </span>
     );
   }
-  if (billing.status === "read_only" || billing.status === "locked") {
+  if (overCap) {
     items.push(
-      <span key="read-only">
-        Your trial has ended and the studio is read-only{billing.status === "locked" ? "; client galleries are locked" : ""}. <Link href="/studio/billing" className="underline">Subscribe</Link> to continue.
+      <span key="over-cap">
+        You&apos;ve reached your {formatBytes(ent.storageBytes ?? 0)} Free storage limit, so new uploads are paused. <Link href="/studio/billing" className="underline">Upgrade to Pro</Link> for uncapped storage, or remove some photos.
       </span>
     );
   }

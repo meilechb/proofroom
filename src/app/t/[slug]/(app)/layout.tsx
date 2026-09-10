@@ -2,12 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { APP_NAME, appUrl } from "@/lib/env";
 import { studioBySlug } from "@/lib/tenant-data";
+import { billingState, entitlements } from "@/lib/plans";
 
 /** Minimal chrome for client-facing app pages (galleries, pay, hub): logo, name, powered-by (plan 13.1). */
 export default async function TenantAppLayout({ children, params }: LayoutProps<"/t/[slug]">) {
   const { slug } = await params;
   const studio = await studioBySlug(slug);
   if (!studio) notFound();
+  const showBadge = !entitlements(billingState(studio).effectivePlan).removeBranding;
+  const badgeHref = studio.referral_code ? `${appUrl()}/?ref=${studio.referral_code}` : appUrl();
   return (
     <>
       <header className="border-b border-[var(--site-line)]">
@@ -27,7 +30,7 @@ export default async function TenantAppLayout({ children, params }: LayoutProps<
       <footer className="border-t border-[var(--site-line)] mt-16">
         <div className="mx-auto w-full max-w-6xl px-5 sm:px-8 py-6 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between text-xs text-[var(--site-ink-2)]">
           <span>© {new Date().getFullYear()} {studio.name}</span>
-          <a href={appUrl()} className="hover:text-[var(--site-ink)]" target="_blank" rel="noopener">Powered by {APP_NAME}</a>
+          {showBadge ? <a href={badgeHref} className="hover:text-[var(--site-ink)]" target="_blank" rel="noopener">Powered by {APP_NAME}</a> : null}
         </div>
       </footer>
     </>

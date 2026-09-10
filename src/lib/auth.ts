@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { db, one, rows } from "@/lib/db";
 import { readSession, setSessionStudio } from "@/lib/session";
 import type { Membership, MembershipRole, Studio, User } from "@/lib/types";
-import { billingState, type BillingState } from "@/lib/plans";
+import { billingState, entitlements, type BillingState, type Entitlements } from "@/lib/plans";
 
 /**
  * Data Access Layer. Every page, server action and route handler that touches
@@ -40,8 +40,13 @@ export type StudioContext = {
   studio: Studio;
   role: MembershipRole;
   billing: BillingState;
+  /** Feature limits for the studio's effective plan (Pro while trialing/active/past_due, else Free). */
+  entitlements: Entitlements;
   impersonating?: boolean;
 };
+
+/** Entitlement keys that are simple on/off feature flags (excludes the numeric caps). */
+export type FeatureFlag = { [K in keyof Entitlements]: Entitlements[K] extends boolean ? K : never }[keyof Entitlements];
 
 const roleRank: Record<MembershipRole, number> = { member: 0, admin: 1, owner: 2 };
 
@@ -64,7 +69,10 @@ export const getStudioContext = cache(async (): Promise<StudioContext | null> =>
     const impId = await readImpersonation();
     if (impId) {
       const s = one<Studio>(await db()`select * from studios where id = ${impId}`);
-      if (s) return { user, studio: normalizeStudio(s), role: "member", billing: { ...billingState(s), canWrite: false, publicLive: false }, impersonating: true };
+      if (s) {
+        const b = billingState(s);
+        return { user, studio: normalizeStudio(s), role: "member", billing: { ...b, canWrite: false, publicLive: false }, entitlements: entitlements(b.effectivePlan), impersonating: true };
+      }
     }
   }
 
@@ -73,7 +81,8 @@ export const getStudioContext = cache(async (): Promise<StudioContext | null> =>
   let m = memberships.find((x) => x.studio_id === user.session_studio_id) ?? memberships[0];
   if (m.studio_id !== user.session_studio_id) await setSessionStudio(user.session_id, m.studio_id);
   m = { ...m, studio: normalizeStudio(m.studio) };
-  return { user, studio: m.studio, role: m.role, billing: billingState(m.studio) };
+  const billing = billingState(m.studio);
+  return { user, studio: m.studio, role: m.role, billing, entitlements: entitlements(billing.effectivePlan) };
 });
 
 function normalizeStudio(s: Studio): Studio {
@@ -114,12 +123,27 @@ export async function requireWritableStudio(minRole: MembershipRole = "member"):
 
 export class ReadOnlyError extends Error {
   constructor(public status: string) {
-    super(
-      status === "locked"
-        ? "Your trial has ended and client galleries are locked. Subscribe in Billing to continue."
-        : "Your trial has ended and the studio is read-only. Subscribe in Billing to make changes."
-    );
+    super("This studio can't be edited right now. Check Billing to continue.");
   }
+}
+
+/** Thrown when a studio tries to use a feature its plan does not include. The UI renders it as an upgrade prompt. */
+export class UpgradeRequiredError extends Error {
+  constructor(public feature: FeatureFlag) {
+    super("That is a Pro feature. Upgrade to Pro in Billing to use it.");
+  }
+}
+
+/** Rejects when the studio's effective plan does not include a feature flag. */
+export function requireEntitlement(ctx: StudioContext, feature: FeatureFlag): StudioContext {
+  if (!ctx.entitlements[feature]) throw new UpgradeRequiredError(feature);
+  return ctx;
+}
+
+/** Writable + entitled: the common gate for a Pro-only server action. */
+export async function requireEntitledStudio(feature: FeatureFlag, minRole: MembershipRole = "member"): Promise<StudioContext> {
+  const ctx = await requireWritableStudio(minRole);
+  return requireEntitlement(ctx, feature);
 }
 
 export async function requireUser(): Promise<CurrentUser> {

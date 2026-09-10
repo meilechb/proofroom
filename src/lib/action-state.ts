@@ -7,6 +7,8 @@ export type ActionState = {
   fields?: Record<string, string>;
   /** Echo of submitted values so forms can repopulate after an error. */
   values?: Record<string, string>;
+  /** Set when the action was blocked because the feature needs Pro. */
+  upgrade?: { feature: string };
 };
 
 export const initialActionState: ActionState = {};
