@@ -89,6 +89,7 @@ export function WebsiteEditor({ initialDraft, hasDraft, liveUrl }: { initialDraf
           <div className="flex items-center gap-2">
             <a href="/studio/website/reviews" className="btn-ghost btn-sm">Reviews</a>
             <a href="/studio/website/areas" className="btn-ghost btn-sm">Areas</a>
+            <a href="/studio/website/analytics" className="btn-ghost btn-sm">Analytics</a>
             <a href={liveUrl} target="_blank" rel="noopener" className="btn-ghost btn-sm">View live</a>
             {hasDraft ? <form action={discardDraftAction}><button className="btn-ghost btn-sm text-danger">Discard draft</button></form> : null}
             <form action={pubAction}><button className="btn-primary btn-sm">Publish</button></form>

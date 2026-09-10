@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { studioBySlug, siteOf } from "@/lib/tenant-data";
 import { SiteHeader, SiteFooter } from "@/components/site/sections";
 import { LocalBusinessJsonLd } from "@/components/site/json-ld";
+import { SiteViewBeacon } from "@/components/site/site-view-beacon";
 
 /** Full marketing chrome for the public website pages (plan 14.12, 14.13). */
 export default async function SiteLayout({ children, params }: LayoutProps<"/t/[slug]">) {
@@ -12,6 +13,7 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/t/[
   return (
     <>
       <LocalBusinessJsonLd studio={studio} site={site} />
+      <SiteViewBeacon />
       <SiteHeader studio={studio} site={site} />
       <main className="flex-1">{children}</main>
       <SiteFooter studio={studio} site={site} />

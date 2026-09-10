@@ -26,6 +26,15 @@ export async function summary(studioId: string, event: AnalyticsEvent, target: s
   return result as Array<{ day: string; count: number }>;
 }
 
+/** The busiest targets for an event (e.g. which site pages got the most views). */
+export async function topTargets(studioId: string, event: AnalyticsEvent, days = 30, limit = 20) {
+  const result = await db()`
+    select target, sum(count)::int as count from analytics_daily
+    where studio_id = ${studioId} and event = ${event} and day >= current_date - ${days}::int
+    group by target order by count desc limit ${limit}`;
+  return result as Array<{ target: string; count: number }>;
+}
+
 export async function totals(studioId: string, days = 30) {
   const result = await db()`
     select event, sum(count)::int as count from analytics_daily

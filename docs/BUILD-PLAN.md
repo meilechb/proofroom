@@ -888,7 +888,7 @@ Editor
 - [x] 14.24 Preview device toggle (desktop, tablet, phone widths).
 - [x] 14.25 Publish validation: required hero heading, at least one enabled page, contrast passes; errors shown inline.
 - [x] 14.26 Reviews manager `/studio/website/reviews`: add, edit, publish, order.
-- [ ] 14.27 Site analytics tab: views per page per day, top areas, contact form submissions.
+- [x] 14.27 Site analytics tab: views per page per day, top areas, contact form submissions.
 
 Domains
 - [x] 14.28 `/studio/settings/domain`: enter domain, instructions (CNAME to platform host or A records), "Add to Vercel" when API token configured, verify button, status badge, HTTPS note.
