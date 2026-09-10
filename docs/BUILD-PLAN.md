@@ -778,11 +778,11 @@ Quality
   - [x] 13.5.4 Sticky action bar
 - [x] 13.6 Favorites: toggle per photo, favorites filter, limit message from package.
 - [x] 13.7 Notes: per photo thread, client name remembered in cookie, studio replies shown.
-- [ ] 13.8 Downloads: single photo (web or full per settings), select many, whole gallery zip (streamed), PIN prompt when set.
+- [x] 13.8 Downloads: single photo (web or full per settings), select many, whole gallery zip (streamed), PIN prompt when set.
 - [x] 13.9 Pay gate: locked overlay with "Pay balance to unlock" button to the pay page; unlocks on webhook.
 - [x] 13.10 Expired and closed states with studio contact.
 - [x] 13.11 Slideshow mode (full screen, keyboard, autoplay, exit).
-- [ ] 13.12 Share sheet (copy link, email) when sharing is allowed; watermarked share image.
+- [~] 13.12 Share sheet (copy link, email) when sharing is allowed; watermarked share image.
 - [ ] 13.13 Client upload area when enabled (drag and drop, limits, appears in studio as `uploaded_by=client`).
 - [~] 13.14 Mobile layout: bottom action bar (favorites, download, notes), swipe in lightbox.
 - [x] 13.15 `/pay/[orderId]`: order summary, agreement text with checkbox and typed name, choose deposit, balance or full, "Pay with card" → Checkout on the studio's account; manual mode shows instructions.
@@ -808,8 +808,8 @@ Quality
   - [x] 13.21.3 Pay-gate check for full size
   - [x] 13.21.4 ETag and 304 handling
   - [x] 13.21.5 Streaming from Blob with correct content type
-- [ ] 13.22 `GET /api/gallery/[id]/zip?size=`: access and PIN check, streaming, filename sanitization.
-- [ ] 13.23 `POST /api/track`: page and gallery views, downloads; visitor hash from ip + user agent + day salt.
+- [x] 13.22 `GET /api/gallery/[id]/zip?size=`: access and PIN check, streaming, filename sanitization.
+- [x] 13.23 `POST /api/track`: page and gallery views, downloads; visitor hash from ip + user agent + day salt.
 - [x] 13.24 `noindex` on all gallery, pay, hub pages; `index` on website pages.
 - [ ] 13.25 Tests: access grant cookie scope per gallery, PIN, pay gate, zip filename dedupe.
 - [x] 13.26 Accessibility: lightbox keyboard trap, alt text from filename, focus return.

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db, one } from "@/lib/db";
 import { getPrivateBlob } from "@/lib/storage";
-import { hasGalleryAccess, unlockMethod, downloadGate } from "@/lib/gallery-access";
+import { hasGalleryAccess, unlockMethod, downloadGate, verifyDownloadPin } from "@/lib/gallery-access";
 import { listPayments } from "@/lib/payments";
 import { getOrder } from "@/lib/orders";
 import type { Gallery, Photo } from "@/lib/types";
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!unlocked) return new NextResponse(null, { status: 403 });
 
   if (size === "full") {
+    if (!verifyDownloadPin(request.nextUrl.searchParams.get("pin") ?? "", gallery)) return new NextResponse(null, { status: 401 });
     const order = gallery.order_id ? await getOrder(gallery.studio_id, gallery.order_id) : null;
     const payments = gallery.order_id ? await listPayments(gallery.order_id) : [];
     const picks = (await db()`select count(*)::int as n from photo_selections s where s.gallery_id = ${gallery.id} and s.selected`)[0] as { n: number } | undefined;

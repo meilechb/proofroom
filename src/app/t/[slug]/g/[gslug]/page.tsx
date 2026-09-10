@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation";
 import { studioBySlug, galleryBySlug } from "@/lib/tenant-data";
-import { hasGalleryAccess, unlockMethod } from "@/lib/gallery-access";
+import { hasGalleryAccess, unlockMethod, sharingAllowed, downloadGate } from "@/lib/gallery-access";
 import { db, one, rows } from "@/lib/db";
 import { listPhotos } from "@/lib/photos";
 import { getOrder } from "@/lib/orders";
 import { listPayments } from "@/lib/payments";
-import { downloadGate } from "@/lib/gallery-access";
 import { orderMoney } from "@/lib/types";
-import { payUrl } from "@/lib/tenant";
+import { payUrl, galleryUrl } from "@/lib/tenant";
 import { GalleryView, type ClientPhoto } from "./gallery-view";
 import { UnlockForm } from "./unlock-form";
 
@@ -70,7 +69,18 @@ export default async function TenantGalleryPage({ params }: PageProps<"/t/[slug]
       {clientPhotos.length === 0 ? (
         <p className="text-[var(--site-ink-2)]">Photos are being prepared. Please check back shortly.</p>
       ) : (
-        <GalleryView galleryId={gallery.id} photos={clientPhotos} allowComments={gallery.allow_comments} favoritesLimit={included?.included || null} />
+        <GalleryView
+          galleryId={gallery.id}
+          photos={clientPhotos}
+          allowComments={gallery.allow_comments}
+          favoritesLimit={included?.included || null}
+          download={{
+            web: gate === "open" && (gallery.download_size === "web" || gallery.download_size === "both"),
+            full: gate === "open" && (gallery.download_size === "full" || gallery.download_size === "both"),
+            pinRequired: Boolean(gallery.download_pin_hash),
+          }}
+          shareUrl={sharingAllowed(gallery) ? galleryUrl(studio, gallery.slug) : null}
+        />
       )}
     </div>
   );
