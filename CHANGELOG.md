@@ -4,6 +4,7 @@ Newest first. One line per meaningful change; phase numbers refer to docs/BUILD-
 
 ## Unreleased
 
+- Phase 12: galleries studio side: list with cover cards and counts, new-gallery flow, gallery detail with direct-to-Blob uploader, selectable photo grid (delete, set cover), settings drawer (access, downloads, pay-gate, watermark, expiry, password, PIN), publish/unpublish, send-to-client email, client notes panel, favorites and create-finals-from-favorites.
 - Phase 11: packages management; sessions list, new-session flow and session detail (money, pay link, manual payments, agreement status, galleries, edit, cancel).
 - Phase 10: clients CRM (list, detail, timeline, stages, tags, merge, CSV export), inbox (reply, convert, archive) and tasks.
 - Phase 9: onboarding wizard (/studio/welcome) with brand, template, packages, Stripe connect, email sender and Lightroom token steps; API token library.

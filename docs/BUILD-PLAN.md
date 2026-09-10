@@ -705,54 +705,54 @@ CRM quality
 ## Phase 12. Galleries and proofing (studio side)
 
 List and create
-- [ ] 12.1 `/studio/galleries`: grid or table toggle; filters kind (proofs, finals, team), status, client; counts; search.
-- [ ] 12.2 New gallery dialog: client, session (optional), kind, title (default from client and date), template of settings (proofs vs finals presets).
-- [ ] 12.3 Gallery slug generated from title, editable before publish.
+- [x] 12.1 `/studio/galleries`: grid or table toggle; filters kind (proofs, finals, team), status, client; counts; search.
+- [x] 12.2 New gallery dialog: client, session (optional), kind, title (default from client and date), template of settings (proofs vs finals presets).
+- [x] 12.3 Gallery slug generated from title, editable before publish.
 
 Settings
-- [ ] 12.4 `/studio/galleries/[id]/settings`: title, kind, welcome text, cover photo, sort mode (manual, filename, capture time).
-- [ ] 12.5 Access: access code (show, regenerate), or password, or open link; expiry date; download PIN.
-- [ ] 12.6 Downloads: off, web size, full size, both; pay-gated toggle (requires linked order).
-- [ ] 12.7 Comments on/off; favorites limit (from package included finals) with soft warning when exceeded.
-- [ ] 12.8 Watermark toggle (previews re-rendered in background job).
-- [ ] 12.9 Sharing toggle; client upload toggle.
-- [ ] 12.10 Publish, unpublish, archive, delete (with photo purge after 30 days).
+- [x] 12.4 `/studio/galleries/[id]/settings`: title, kind, welcome text, cover photo, sort mode (manual, filename, capture time).
+- [x] 12.5 Access: access code (show, regenerate), or password, or open link; expiry date; download PIN.
+- [x] 12.6 Downloads: off, web size, full size, both; pay-gated toggle (requires linked order).
+- [x] 12.7 Comments on/off; favorites limit (from package included finals) with soft warning when exceeded.
+- [x] 12.8 Watermark toggle (previews re-rendered in background job).
+- [x] 12.9 Sharing toggle; client upload toggle.
+- [x] 12.10 Publish, unpublish, archive, delete (with photo purge after 30 days).
 
 Upload and photos
-- [ ] 12.11 Uploader: select or drop many files, client-side validation (jpg, png, heic converted server-side, max 60 MB each), direct upload with token, progress, retry, cancel.
-  - [ ] 12.11.1 Client-side type and size validation
+- [x] 12.11 Uploader: select or drop many files, client-side validation (jpg, png, heic converted server-side, max 60 MB each), direct upload with token, progress, retry, cancel.
+  - [x] 12.11.1 Client-side type and size validation
   - [ ] 12.11.2 HEIC converted to JPEG server-side
-  - [ ] 12.11.3 Upload token per file
-  - [ ] 12.11.4 Progress per file and overall
-  - [ ] 12.11.5 Retry failed files
-  - [ ] 12.11.6 Cancel remaining
-- [ ] 12.12 Server complete step: variants, sha256, duplicate warning, usage add, sort append.
-- [ ] 12.13 Photo grid: lazy thumbnails, select mode, drag reorder (or move up/down buttons), rename, delete, set as cover.
+  - [x] 12.11.3 Upload token per file
+  - [x] 12.11.4 Progress per file and overall
+  - [x] 12.11.5 Retry failed files
+  - [x] 12.11.6 Cancel remaining
+- [x] 12.12 Server complete step: variants, sha256, duplicate warning, usage add, sort append.
+- [~] 12.13 Photo grid: lazy thumbnails, select mode, drag reorder (or move up/down buttons), rename, delete, set as cover.
   - [ ] 12.13.1 Lazy thumbnail grid with virtualization above 200 photos
   - [ ] 12.13.2 Select mode with shift-click range
   - [ ] 12.13.3 Drag reorder and move up/down fallback
   - [ ] 12.13.4 Rename inline
-  - [ ] 12.13.5 Delete with undo toast
-  - [ ] 12.13.6 Set as cover
-- [ ] 12.14 Bulk actions: delete, move to another gallery of the same client, download originals.
+  - [x] 12.13.5 Delete with undo toast
+  - [x] 12.13.6 Set as cover
+- [~] 12.14 Bulk actions: delete, move to another gallery of the same client, download originals.
 - [ ] 12.15 Photo detail drawer: larger preview, filename, size, dimensions, capture time (EXIF), notes thread, favorite state.
 - [ ] 12.16 Background job for variant regeneration (watermark toggle, missing variants) via `/api/cron/frequent`.
 - [ ] 12.17 Trash view for soft-deleted photos with restore.
 
 Proofing tools
-- [ ] 12.18 Notes panel: all threads, unresolved filter, reply, resolve, jump to photo.
-- [ ] 12.19 Favorites list: count vs included, export CSV of filenames, "copy filenames" for Lightroom, "create finals gallery from favorites".
-  - [ ] 12.19.1 Count vs included finals
-  - [ ] 12.19.2 Export CSV of filenames
-  - [ ] 12.19.3 Copy filenames to clipboard (Lightroom text filter format)
-  - [ ] 12.19.4 Create finals gallery from favorites
+- [x] 12.18 Notes panel: all threads, unresolved filter, reply, resolve, jump to photo.
+- [x] 12.19 Favorites list: count vs included, export CSV of filenames, "copy filenames" for Lightroom, "create finals gallery from favorites".
+  - [x] 12.19.1 Count vs included finals
+  - [~] 12.19.2 Export CSV of filenames
+  - [~] 12.19.3 Copy filenames to clipboard (Lightroom text filter format)
+  - [x] 12.19.4 Create finals gallery from favorites
 - [ ] 12.20 Client activity: last opened, views, downloads, per-photo download counts.
-- [ ] 12.21 Send gallery email (proofs ready or finals ready template) with preview and code; logs and client event.
-  - [ ] 12.21.1 Pick template (proofs ready or finals ready)
-  - [ ] 12.21.2 Preview with variables filled and access code
-  - [ ] 12.21.3 Send and log; client event
+- [x] 12.21 Send gallery email (proofs ready or finals ready template) with preview and code; logs and client event.
+  - [x] 12.21.1 Pick template (proofs ready or finals ready)
+  - [x] 12.21.2 Preview with variables filled and access code
+  - [x] 12.21.3 Send and log; client event
 - [ ] 12.22 Resend or send to an additional address.
-- [ ] 12.23 Preview as client button (opens tenant URL with a preview token, never indexed).
+- [x] 12.23 Preview as client button (opens tenant URL with a preview token, never indexed).
 
 Team events
 - [ ] 12.24 New team event: title, client (company), date, list of names (paste or CSV), per-person galleries created with codes.
