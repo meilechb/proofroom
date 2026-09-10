@@ -40,6 +40,7 @@ export type StudioContext = {
   studio: Studio;
   role: MembershipRole;
   billing: BillingState;
+  impersonating?: boolean;
 };
 
 const roleRank: Record<MembershipRole, number> = { member: 0, admin: 1, owner: 2 };
@@ -56,6 +57,17 @@ export function hasRole(role: MembershipRole, needed: MembershipRole) {
 export const getStudioContext = cache(async (): Promise<StudioContext | null> => {
   const user = await getCurrentUser();
   if (!user) return null;
+
+  // Platform admins can view any studio read-only via a signed cookie (plan 19.4).
+  if (user.is_platform_admin) {
+    const { readImpersonation } = await import("@/lib/impersonation");
+    const impId = await readImpersonation();
+    if (impId) {
+      const s = one<Studio>(await db()`select * from studios where id = ${impId}`);
+      if (s) return { user, studio: normalizeStudio(s), role: "member", billing: { ...billingState(s), canWrite: false, publicLive: false }, impersonating: true };
+    }
+  }
+
   const memberships = await listMemberships(user.id);
   if (memberships.length === 0) return null;
   let m = memberships.find((x) => x.studio_id === user.session_studio_id) ?? memberships[0];

@@ -8,6 +8,7 @@ import { applyDueRewards } from "@/lib/referrals-server";
 import { cleanupImports } from "@/lib/imports";
 import { cleanupOrphanBlobs } from "@/lib/maintenance";
 import { runAutomations } from "@/lib/automations";
+import { sendPlatformDigest } from "@/lib/platform-digest";
 import { db } from "@/lib/db";
 import { sendTrialEndedEmail, sendTrialEndingEmail } from "@/lib/emails/billing";
 
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
     cleanupImports,
     cleanupOrphanBlobs,
     runAutomations,
+    platformDigest: sendPlatformDigest,
     refreshStorageCounters,
   });
   return NextResponse.json(results);

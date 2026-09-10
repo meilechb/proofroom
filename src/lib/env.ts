@@ -44,6 +44,7 @@ export const env = {
   emailFrom: () => read("EMAIL_FROM"),
   resendWebhookSecret: () => read("RESEND_WEBHOOK_SECRET"),
   platformAlertEmail: () => read("PLATFORM_ALERT_EMAIL"),
+  resendDomainLimit: () => read("RESEND_DOMAIN_LIMIT"),
   vercelApiToken: () => read("VERCEL_API_TOKEN"),
   vercelProjectId: () => read("VERCEL_PROJECT_ID"),
   vercelTeamId: () => read("VERCEL_TEAM_ID"),

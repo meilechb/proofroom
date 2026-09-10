@@ -6,6 +6,7 @@ import { StudioNav } from "@/components/studio/nav";
 import { StudioSwitcher } from "@/components/studio/switcher";
 import { Banners } from "@/components/studio/banners";
 import { ToastProvider } from "@/components/ui/toast";
+import { stopImpersonationAction } from "@/app/admin/studios/actions";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -33,6 +34,12 @@ export default async function StudioLayout({ children }: { children: React.React
         </div>
       </aside>
       <div className="flex-1 min-w-0">
+        {ctx.impersonating ? (
+          <div className="flex items-center justify-between gap-3 bg-danger px-4 py-2 text-sm text-white">
+            <span>Viewing <strong>{ctx.studio.name}</strong> as an admin (read-only). Changes are blocked.</span>
+            <form action={stopImpersonationAction}><button className="underline">Stop</button></form>
+          </div>
+        ) : null}
         <Banners user={ctx.user} studio={ctx.studio} billing={ctx.billing} />
         <ToastProvider>
           <main className="container-x py-6 lg:py-8">{children}</main>

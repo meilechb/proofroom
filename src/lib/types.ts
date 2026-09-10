@@ -55,6 +55,7 @@ export type Studio = {
   settings: Record<string, unknown>;
   suspended_at: string | null;
   deleted_at: string | null;
+  purge_at: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -556,6 +556,11 @@ alter table studios add column if not exists site jsonb not null default '{}'::j
 alter table studios add column if not exists site_draft jsonb;
 alter table studios add column if not exists site_published_at timestamptz;
 
+-- Platform admin: scheduled hard-delete of a studio's data (plan 19.3.6/7)
+alter table studios add column if not exists purge_at timestamptz;
+-- Leads: mark a lead contacted from the platform admin (plan 19.6)
+alter table leads add column if not exists contacted_at timestamptz;
+
 -- clients: pipeline stage, activity, archive timestamp, one client per email (plan 2.19)
 alter table clients add column if not exists stage text not null default 'lead';
 alter table clients drop constraint if exists clients_stage_check;

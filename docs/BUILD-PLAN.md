@@ -958,7 +958,7 @@ Sending domains
 - [x] 16.15 Verified switch: `senderFor(studio)` uses the domain; test send button.
 - [x] 16.16 DMARC helper: suggested `v=DMARC1; p=none; rua=mailto:...` with explanation; marked optional.
 - [x] 16.17 Remove domain: delete in Resend, fall back to platform sender.
-- [ ] 16.18 Platform admin: domains used vs Resend plan limit with a warning at 80%.
+- [x] 16.18 Platform admin: domains used vs Resend plan limit with a warning at 80%.
 - [x] 16.19 Tests: status mapping, sender selection, suppression enforcement, automation idempotency.
 - [x] 16.20 `docs/SETUP.md`: Resend account, API key, platform domain verification, webhook, plan size guidance.
 
@@ -1018,33 +1018,33 @@ Plugin
 
 ## Phase 19. Platform admin (`/admin`)
 
-- [ ] 19.1 Guard and layout (platform admin flag), separate nav.
-- [ ] 19.2 Studios list: name, slug, owner, state, trial end, storage, members, Stripe connected, sending domain, created, last activity; search and filters.
-- [ ] 19.3 Studio detail: read-only view of settings and counts; actions suspend, unsuspend, extend trial, comp, force read-only, schedule purge, cancel purge.
-  - [ ] 19.3.1 Suspend
-  - [ ] 19.3.2 Unsuspend
-  - [ ] 19.3.3 Extend trial
-  - [ ] 19.3.4 Comp
-  - [ ] 19.3.5 Force read-only
-  - [ ] 19.3.6 Schedule purge
-  - [ ] 19.3.7 Cancel purge
-- [ ] 19.4 Impersonation (read-only) link into the studio with a red banner and audit entry.
-- [ ] 19.5 Metrics: studios by state, trials converting, MRR, signups per week, storage total, galleries live, emails sent, referral rewards granted.
-  - [ ] 19.5.1 Studios by state
-  - [ ] 19.5.2 Trial conversion rate
-  - [ ] 19.5.3 MRR
-  - [ ] 19.5.4 Signups per week
-  - [ ] 19.5.5 Storage total and top 10
-  - [ ] 19.5.6 Galleries live
-  - [ ] 19.5.7 Emails sent and failure rate
-  - [ ] 19.5.8 Referral rewards granted
-- [ ] 19.6 Leads list with mark contacted.
-- [ ] 19.7 Email log across studios with failure rate and bounce rate.
-- [ ] 19.8 Referrals list with void and re-grant.
-- [ ] 19.9 Platform settings: signups open, maintenance banner text, minimum plugin version.
+- [x] 19.1 Guard and layout (platform admin flag), separate nav.
+- [x] 19.2 Studios list: name, slug, owner, state, trial end, storage, members, Stripe connected, sending domain, created, last activity; search and filters.
+- [x] 19.3 Studio detail: read-only view of settings and counts; actions suspend, unsuspend, extend trial, comp, force read-only, schedule purge, cancel purge.
+  - [x] 19.3.1 Suspend
+  - [x] 19.3.2 Unsuspend
+  - [x] 19.3.3 Extend trial
+  - [x] 19.3.4 Comp
+  - [x] 19.3.5 Force read-only
+  - [x] 19.3.6 Schedule purge
+  - [x] 19.3.7 Cancel purge
+- [x] 19.4 Impersonation (read-only) link into the studio with a red banner and audit entry.
+- [x] 19.5 Metrics: studios by state, trials converting, MRR, signups per week, storage total, galleries live, emails sent, referral rewards granted.
+  - [x] 19.5.1 Studios by state
+  - [x] 19.5.2 Trial conversion rate
+  - [x] 19.5.3 MRR
+  - [x] 19.5.4 Signups per week
+  - [x] 19.5.5 Storage total and top 10
+  - [x] 19.5.6 Galleries live
+  - [x] 19.5.7 Emails sent and failure rate
+  - [x] 19.5.8 Referral rewards granted
+- [x] 19.6 Leads list with mark contacted.
+- [x] 19.7 Email log across studios with failure rate and bounce rate.
+- [x] 19.8 Referrals list with void and re-grant.
+- [x] 19.9 Platform settings: signups open, maintenance banner text, minimum plugin version.
 - [x] 19.10 `GET /api/health`: db, blob, stripe, resend reachability (cached 60 s).
-- [ ] 19.11 Daily platform digest email to `PLATFORM_ALERT_EMAIL`: signups, conversions, failures, storage outliers.
-- [ ] 19.12 Tests: admin guard, suspend blocks studio writes.
+- [x] 19.11 Daily platform digest email to `PLATFORM_ALERT_EMAIL`: signups, conversions, failures, storage outliers.
+- [x] 19.12 Tests: admin guard, suspend blocks studio writes.
 
 ## Phase 20. Referral program
 
