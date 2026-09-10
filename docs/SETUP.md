@@ -43,11 +43,42 @@ stripe trigger --stripe-account acct_xxx checkout.session.completed
 
 `stripe listen` prints a signing secret; put it in `.env.local` as the matching `STRIPE_*_WEBHOOK_SECRET` while testing.
 
-## 5. Resend (to write in full)
+## 5. Resend
 
-- Verify the platform sending domain (a subdomain such as `mail.APP_DOMAIN`) and set `RESEND_API_KEY`, `EMAIL_FROM`.
-- Webhook endpoint `https://APP_DOMAIN/api/resend/webhook` for email events and `domain.updated`; set `RESEND_WEBHOOK_SECRET`.
-- Plan size: each studio that verifies its own sending domain uses one Resend domain. Pro allows 10, Scale 1,000, and an add-on adds 100 for $20/month (checked September 9, 2026).
+Email is sent through Resend. Studio mail can leave from the platform's shared
+address (with the studio's name) or, once a studio verifies its own domain, from
+that domain.
+
+1. **Account and API key.** Create a Resend account and an API key with send
+   access. Set `RESEND_API_KEY`.
+2. **Platform sending domain.** In Resend, add a subdomain you control for the
+   platform itself, e.g. `mail.APP_DOMAIN`. Create the DKIM/SPF records Resend
+   shows at your DNS host and wait for it to verify. Set `EMAIL_FROM` to an
+   address on that domain, e.g. `hello@mail.APP_DOMAIN`. This is the fallback
+   sender for every studio that has not verified its own domain, and the sender
+   for platform mail (login, billing).
+3. **Webhook.** In Resend, add a webhook to `https://APP_DOMAIN/api/resend/webhook`
+   subscribed to `email.delivered`, `email.opened`, `email.clicked`,
+   `email.bounced`, `email.complained` and `domain.updated`. Copy its signing
+   secret (starts with `whsec_`) into `RESEND_WEBHOOK_SECRET`. The endpoint
+   verifies the Svix signature on every request and refuses unsigned requests in
+   production; delivery events update the email log, hard bounces and complaints
+   add suppressions, and `domain.updated` mirrors a studio's sending-domain
+   status.
+4. **Per-studio sending domains.** Studios add their own domain under
+   Settings → Email domain. The app calls Resend to create the domain, shows the
+   DNS records, and verifies on demand and on the cron. Each verified studio
+   domain is one Resend domain against your plan.
+5. **Plan size.** Pro allows 10 domains, Scale 1,000, and an add-on adds 100 for
+   $20/month (checked September 9, 2026). The platform admin surfaces domains
+   used against the limit with a warning at 80%. Pick a plan for the number of
+   studios you expect to verify their own domain.
+
+Local testing: without `RESEND_API_KEY` the app logs each email as `skipped`
+rather than sending, so the rest of the flow still works. To exercise the
+webhook locally, forward Resend events (or replay a saved payload) to
+`localhost:3000/api/resend/webhook` with valid `svix-*` headers; an unsigned
+request is accepted only outside production.
 
 ## 6. DNS (to write in full)
 

@@ -6,6 +6,7 @@ import { getTemplate } from "@/lib/email-templates-server";
 import { sendStudioEmail } from "@/lib/email";
 import { studioBaseUrl, galleryUrl } from "@/lib/tenant";
 import { formatMoney, type Studio } from "@/lib/types";
+import { recordClientEvent } from "@/lib/clients";
 import { log } from "@/lib/logger";
 import { AUTOMATION_RULES, automationSettings, automationsPaused, type AutomationRule, type RuleDef } from "@/lib/automations-shared";
 
@@ -99,7 +100,13 @@ export async function runAutomations() {
       if (!(await markSent(t.studio_id, def.rule, t.target))) continue;
       try {
         const done = await sendAutomation(def, studio, t);
-        if (done) sent++;
+        if (done) {
+          sent++;
+          // Show the send on the client's timeline (plan 16.9).
+          if (t.client_id && def.rule !== "unanswered_note") {
+            await recordClientEvent(t.studio_id, t.client_id, `automation.${def.rule}`, "order", t.ref_id, `Automatic email sent: ${def.label}`).catch(() => {});
+          }
+        }
       } catch (error) {
         log.warn("automation.send_failed", { rule: def.rule, target: t.target, error: error instanceof Error ? error.message : String(error) });
       }

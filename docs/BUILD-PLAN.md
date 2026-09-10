@@ -944,7 +944,7 @@ Automations
   - [x] 16.7.5 Review request rule
   - [x] 16.7.6 Session reminder rule
 - [x] 16.8 Cron `daily` runs automations idempotently via `automation_sends`.
-- [ ] 16.9 Automation log visible per client in the timeline.
+- [x] 16.9 Automation log visible per client in the timeline.
 - [x] 16.10 Pause all automations switch (for vacations).
 
 Sending domains
@@ -959,8 +959,8 @@ Sending domains
 - [x] 16.16 DMARC helper: suggested `v=DMARC1; p=none; rua=mailto:...` with explanation; marked optional.
 - [x] 16.17 Remove domain: delete in Resend, fall back to platform sender.
 - [ ] 16.18 Platform admin: domains used vs Resend plan limit with a warning at 80%.
-- [ ] 16.19 Tests: status mapping, sender selection, suppression enforcement, automation idempotency.
-- [ ] 16.20 `docs/SETUP.md`: Resend account, API key, platform domain verification, webhook, plan size guidance.
+- [x] 16.19 Tests: status mapping, sender selection, suppression enforcement, automation idempotency.
+- [x] 16.20 `docs/SETUP.md`: Resend account, API key, platform domain verification, webhook, plan size guidance.
 
 ## Phase 17. Settings, team, data
 
