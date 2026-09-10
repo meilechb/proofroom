@@ -4,6 +4,7 @@ Newest first. One line per meaningful change; phase numbers refer to docs/BUILD-
 
 ## Unreleased
 
+- Phase 14 (public website): tenant route groups split client-app chrome from marketing chrome; shared section components (hero, intro, portfolio strip, packages, testimonials, FAQ, location, CTA, page hero, steps, included list) styled by the editorial/gallery template and theme variables; home, portfolio (filterable grid + lightbox), pricing, about and contact pages assembled from site settings and honoring each section's enabled flag; contact form creates an inquiry and booking request with rate limit and honeypot; local area pages /headshots/[town]; site header nav and footer.
 - Phase 13 complete: tests for signed link-token scope/expiry/tampering and gallery PIN and password verification. Client-facing surfaces (gallery, downloads, pay, hub, invoice/receipt, unsubscribe, team, preview) all built.
 - Phase 13 (extras): client photo uploads to a gallery when enabled (stored as uploaded_by=client); team manager overview at /team/[eventSlug] behind the event's manager code, showing each person's opened/photos/picked status.
 - Phase 13 (client hub): signed magic-link client portal (/my/[token]) listing galleries, sessions with pay/invoice links, payments with receipts, documents and upcoming bookings, with a re-request form when the link expires; printable invoice and receipt pages; unsubscribe/resubscribe page that also updates the suppression list.

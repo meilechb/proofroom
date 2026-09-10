@@ -817,57 +817,57 @@ Quality
 ## Phase 14. Tenant public website (two templates)
 
 Templates and sections
-- [ ] 14.1 `site/templates/editorial/*`: Header, Hero, Intro, PortfolioStrip, Packages, Testimonials, FAQ, Location, CTA, Footer, PageHero, Grid, Steps, ContactForm, GalleryLogin.
-  - [ ] 14.1.1 Header
-  - [ ] 14.1.2 Hero
-  - [ ] 14.1.3 Intro
-  - [ ] 14.1.4 PortfolioStrip
-  - [ ] 14.1.5 Packages
-  - [ ] 14.1.6 Testimonials
-  - [ ] 14.1.7 FAQ
-  - [ ] 14.1.8 Location
-  - [ ] 14.1.9 CTA
-  - [ ] 14.1.10 Footer
-  - [ ] 14.1.11 PageHero
-  - [ ] 14.1.12 Grid
-  - [ ] 14.1.13 Steps
-  - [ ] 14.1.14 ContactForm
-  - [ ] 14.1.15 GalleryLogin
-- [ ] 14.2 `site/templates/gallery/*`: the same section set with the dark, full-bleed design.
-  - [ ] 14.2.1 Header
-  - [ ] 14.2.2 Hero
-  - [ ] 14.2.3 Intro
-  - [ ] 14.2.4 PortfolioStrip
-  - [ ] 14.2.5 Packages
-  - [ ] 14.2.6 Testimonials
-  - [ ] 14.2.7 FAQ
-  - [ ] 14.2.8 Location
-  - [ ] 14.2.9 CTA
-  - [ ] 14.2.10 Footer
-  - [ ] 14.2.11 PageHero
-  - [ ] 14.2.12 Grid
-  - [ ] 14.2.13 Steps
-  - [ ] 14.2.14 ContactForm
-  - [ ] 14.2.15 GalleryLogin
-- [ ] 14.3 Section props are identical across templates so switching keeps content.
-- [ ] 14.4 Home page assembly: hero, intro, portfolio strip, packages, testimonials, FAQ, location, CTA, each honoring `enabled`.
-- [ ] 14.5 Portfolio page: page hero, category filter, grid, lightbox.
-- [ ] 14.6 Pricing page: page hero, packages (active and show_on_site), "what's included" list, FAQ, CTA.
-- [ ] 14.7 About page: page hero, bio with portrait, process steps, CTA.
-- [ ] 14.8 Contact page: page hero, form (name, email, phone, message, preferred date), contact details, map link; submission → inquiry + booking request; rate limit; honeypot; thank-you state.
-- [ ] 14.9 Open-your-gallery page in template styling (reuses 13.3).
+- [~] 14.1 `site/templates/editorial/*`: Header, Hero, Intro, PortfolioStrip, Packages, Testimonials, FAQ, Location, CTA, Footer, PageHero, Grid, Steps, ContactForm, GalleryLogin.
+  - [~] 14.1.1 Header
+  - [~] 14.1.2 Hero
+  - [~] 14.1.3 Intro
+  - [~] 14.1.4 PortfolioStrip
+  - [~] 14.1.5 Packages
+  - [~] 14.1.6 Testimonials
+  - [~] 14.1.7 FAQ
+  - [~] 14.1.8 Location
+  - [~] 14.1.9 CTA
+  - [~] 14.1.10 Footer
+  - [~] 14.1.11 PageHero
+  - [~] 14.1.12 Grid
+  - [~] 14.1.13 Steps
+  - [~] 14.1.14 ContactForm
+  - [~] 14.1.15 GalleryLogin
+- [~] 14.2 `site/templates/gallery/*`: the same section set with the dark, full-bleed design.
+  - [~] 14.2.1 Header
+  - [~] 14.2.2 Hero
+  - [~] 14.2.3 Intro
+  - [~] 14.2.4 PortfolioStrip
+  - [~] 14.2.5 Packages
+  - [~] 14.2.6 Testimonials
+  - [~] 14.2.7 FAQ
+  - [~] 14.2.8 Location
+  - [~] 14.2.9 CTA
+  - [~] 14.2.10 Footer
+  - [~] 14.2.11 PageHero
+  - [~] 14.2.12 Grid
+  - [~] 14.2.13 Steps
+  - [~] 14.2.14 ContactForm
+  - [~] 14.2.15 GalleryLogin
+- [x] 14.3 Section props are identical across templates so switching keeps content.
+- [x] 14.4 Home page assembly: hero, intro, portfolio strip, packages, testimonials, FAQ, location, CTA, each honoring `enabled`.
+- [x] 14.5 Portfolio page: page hero, category filter, grid, lightbox.
+- [x] 14.6 Pricing page: page hero, packages (active and show_on_site), "what's included" list, FAQ, CTA.
+- [x] 14.7 About page: page hero, bio with portrait, process steps, CTA.
+- [x] 14.8 Contact page: page hero, form (name, email, phone, message, preferred date), contact details, map link; submission → inquiry + booking request; rate limit; honeypot; thank-you state.
+- [x] 14.9 Open-your-gallery page in template styling (reuses 13.3).
 - [ ] 14.10 Book page (Phase 21) styled by template.
-- [ ] 14.11 Local area pages `/headshots/[town]`: templated copy with town name, portfolio strip, packages, CTA, FAQ; toggle per town; sitemap entries.
-  - [ ] 14.11.1 Route and slug per town
-  - [ ] 14.11.2 Templated copy with town name
-  - [ ] 14.11.3 Portfolio strip and packages
-  - [ ] 14.11.4 FAQ and CTA
-  - [ ] 14.11.5 Sitemap entries and toggle
-- [ ] 14.12 Nav builder: pages enabled appear in header; order fixed (Home, Portfolio, Pricing, About, Book, Contact, Gallery).
-- [ ] 14.13 Footer: contact details, social links, legal line, "Powered by".
+- [x] 14.11 Local area pages `/headshots/[town]`: templated copy with town name, portfolio strip, packages, CTA, FAQ; toggle per town; sitemap entries.
+  - [x] 14.11.1 Route and slug per town
+  - [x] 14.11.2 Templated copy with town name
+  - [x] 14.11.3 Portfolio strip and packages
+  - [x] 14.11.4 FAQ and CTA
+  - [~] 14.11.5 Sitemap entries and toggle
+- [x] 14.12 Nav builder: pages enabled appear in header; order fixed (Home, Portfolio, Pricing, About, Book, Contact, Gallery).
+- [x] 14.13 Footer: contact details, social links, legal line, "Powered by".
 - [ ] 14.14 Theme: primary, accent, base (light or dark), font pairing (3 presets loaded from Google Fonts via `next/font`), logo, favicon.
-- [ ] 14.15 Image handling: section images from assets with responsive `sizes`, blur placeholder, alt text.
-- [ ] 14.16 Starter copy seeded on studio creation for every section, written for headshot studios, with `{studio}` and `{location}` filled.
+- [x] 14.15 Image handling: section images from assets with responsive `sizes`, blur placeholder, alt text.
+- [x] 14.16 Starter copy seeded on studio creation for every section, written for headshot studios, with `{studio}` and `{location}` filled.
 
 Editor
 - [ ] 14.17 `/studio/website`: two-column editor. Left: pages list with sections and on/off switches; right: live preview iframe of the draft (`/t/[slug]?draft=token`).
