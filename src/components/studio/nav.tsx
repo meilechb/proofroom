@@ -10,6 +10,7 @@ const items: Array<{ href: string; label: string; minRole?: MembershipRole; exac
   { href: "/studio/inbox", label: "Inbox" },
   { href: "/studio/clients", label: "Clients" },
   { href: "/studio/sessions", label: "Sessions" },
+  { href: "/studio/packages", label: "Packages", minRole: "admin" },
   { href: "/studio/calendar", label: "Calendar" },
   { href: "/studio/tasks", label: "Tasks" },
   { href: "/studio/galleries", label: "Galleries" },

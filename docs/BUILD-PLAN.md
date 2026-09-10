@@ -676,9 +676,9 @@ CRM quality
 
 ## Phase 11. Packages, sessions, agreements, payments UI
 
-- [ ] 11.1 `/studio/packages`: list with price, deposit, finals included, active, on-site; drag to reorder.
-- [ ] 11.2 Package form: name, description, price, deposit (fixed or percent), included finals, extra final price, duration, active, show on site.
-- [ ] 11.3 Package archive (kept for existing orders).
+- [x] 11.1 `/studio/packages`: list with price, deposit, finals included, active, on-site; drag to reorder.
+- [x] 11.2 Package form: name, description, price, deposit (fixed or percent), included finals, extra final price, duration, active, show on site.
+- [x] 11.3 Package archive (kept for existing orders).
 - [ ] 11.4 `/studio/sessions`: tabs upcoming, unpaid, past, all; columns date, client, package, total, paid, balance, agreement.
 - [ ] 11.5 New session dialog: client (search or create), package, date and time (studio timezone), location, notes; creates order with next number.
 - [ ] 11.6 `/studio/sessions/[id]`: header (order number, client, date, status), money card (total, deposit, paid, balance), agreement card, galleries card, plan card (Phase 21), timeline.

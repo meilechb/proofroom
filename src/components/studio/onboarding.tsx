@@ -7,7 +7,7 @@ const steps: Array<{ key: string; label: string; href: string; detail: string }>
   { key: "branded", label: "Add your logo and brand color", href: "/studio/settings/branding", detail: "Galleries, emails and your website use them." },
   { key: "website", label: "Publish your website", href: "/studio/website", detail: "Home, portfolio, pricing, about and contact pages are ready to edit." },
   { key: "payments", label: "Connect Stripe for client payments", href: "/studio/settings/payments", detail: "Deposits and balances go straight to your bank. 0% commission." },
-  { key: "packages", label: "Review your packages", href: "/studio/settings/packages", detail: "Prices, deposits and how many retouched images are included." },
+  { key: "packages", label: "Review your packages", href: "/studio/packages", detail: "Prices, deposits and how many retouched images are included." },
   { key: "client", label: "Add your first client", href: "/studio/clients?new=1", detail: "Or wait for the first inquiry from your website." },
   { key: "gallery", label: "Create your first gallery", href: "/studio/galleries?new=1", detail: "Upload proofs, send the link and code." },
   { key: "lightroom", label: "Install the Lightroom plugin", href: "/studio/settings/lightroom", detail: "Publish straight from Lightroom and get favorites and notes back." },
