@@ -51,9 +51,16 @@ authenticated for. This is enforced in three ways depending on the surface.
   contact, booking, pay checkout and the Lightroom API are rate-limited via
   `limited(action, key)`.
 
+## Dependency audit (22.12)
+
+`npm audit` reports 3 moderate advisories, all in the Vitest test toolchain
+(`@vitest/mocker` path-traversal, GHSA-82fw-gwwq-j7x9, pulled in through
+`vitest` and `@vitest/coverage-v8`). These are **dev dependencies only** — they
+never ship to production and are not reachable at runtime. The only fix is
+`vitest@5` (a breaking major); accepted until the test stack is upgraded. No
+advisories affect runtime dependencies.
+
 ## Still to verify before launch (need production)
 
-- 22.12 `npm audit` triaged (3 moderate advisories from the coverage toolchain
-  at review time; none reachable at runtime — document or upgrade).
 - 22.13 Response headers scanned (HSTS, CSP report-only → enforce).
 - 22.14 Neon point-in-time restore exercised once; Blob export script run.

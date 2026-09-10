@@ -1147,7 +1147,7 @@ Security
 - [x] 22.9 Secrets never logged; log redaction test.
 - [x] 22.10 Upload validation: content sniffing, size caps, filename sanitization, no SVG in galleries.
 - [ ] 22.11 Rate limits verified with a script.
-- [ ] 22.12 Dependency audit (`npm audit`) clean or documented.
+- [x] 22.12 Dependency audit (`npm audit`) clean or documented.
 - [ ] 22.13 Headers verified with a scanner (HSTS, CSP report-only first, then enforce).
 - [ ] 22.14 Backups: Neon point-in-time restore tested once; Blob export script.
 
