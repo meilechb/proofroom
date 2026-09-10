@@ -891,9 +891,9 @@ Editor
 - [ ] 14.27 Site analytics tab: views per page per day, top areas, contact form submissions.
 
 Domains
-- [ ] 14.28 `/studio/settings/domain`: enter domain, instructions (CNAME to platform host or A records), "Add to Vercel" when API token configured, verify button, status badge, HTTPS note.
-- [ ] 14.29 Custom domain verification job (Vercel Domains API `verified` flag) in cron; proxy cache invalidation.
-- [ ] 14.30 Remove domain.
+- [x] 14.28 `/studio/settings/domain`: enter domain, instructions (CNAME to platform host or A records), "Add to Vercel" when API token configured, verify button, status badge, HTTPS note.
+- [x] 14.29 Custom domain verification job (Vercel Domains API `verified` flag) in cron; proxy cache invalidation.
+- [x] 14.30 Remove domain.
 
 SEO and quality
 - [x] 14.31 Per-tenant `sitemap.xml` and `robots.txt` (galleries and hub excluded).

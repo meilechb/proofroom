@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { cronAuthorized, runJobs } from "@/lib/cron";
 import { releaseExpiredHolds } from "@/lib/booking";
 import { advanceRunningImports } from "@/lib/imports";
+import { recheckPendingCustomDomains } from "@/lib/domains";
 
 export const maxDuration = 300;
 
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
   const results = await runJobs("frequent", {
     releaseExpiredBookingHolds: releaseExpiredHolds,
     advanceImports: advanceRunningImports,
+    recheckCustomDomains: recheckPendingCustomDomains,
   });
   return NextResponse.json(results);
 }
