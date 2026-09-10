@@ -2,7 +2,6 @@ import "server-only";
 
 import Stripe from "stripe";
 import { APP_NAME, appUrl, env } from "@/lib/env";
-import { PLAN } from "@/lib/plans";
 
 let client: Stripe | null = null;
 
@@ -25,10 +24,10 @@ export function onAccount(accountId: string): Stripe.RequestOptions {
   return { stripeAccount: accountId };
 }
 
-/** The one subscription price. */
+/** The Pro per-seat subscription price. Billed as quantity (seats) * unit_amount. */
 export function subscriptionPriceId(): string {
-  const v = process.env[PLAN.priceEnvName]?.trim();
-  if (!v) throw new Error(`${PLAN.priceEnvName} is not set. Run: npm run stripe:setup`);
+  const v = env.stripeProSeatPriceId();
+  if (!v) throw new Error("STRIPE_PRICE_PRO_SEAT_MONTHLY is not set. Run: npm run stripe:setup");
   return v;
 }
 

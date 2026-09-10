@@ -2,18 +2,25 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { db, one } from "@/lib/db";
-import { GRACE_DAYS, PLAN } from "@/lib/plans";
+import { PLANS } from "@/lib/plans";
 import { referralCouponId, stripe, subscriptionPriceId } from "@/lib/stripe";
 import type { Studio } from "@/lib/types";
 import { log } from "@/lib/logger";
 
 /**
- * The platform's own subscription: one price, $40/month, 14-day trial without
- * a card. This is the only money the platform ever touches. Client payments
- * live in payments.ts and run on the studio's Stripe account.
+ * The platform's own Pro subscription: $18 per seat / month (Stripe quantity =
+ * seat count), 14-day trial without a card. This is the only money the platform
+ * ever touches. Client payments live in payments.ts and run on the studio's
+ * Stripe account.
  */
 
 type BillingStudio = Pick<Studio, "id" | "name" | "email" | "slug" | "stripe_customer_id" | "trial_ends_at">;
+
+/** Number of billable seats for a studio = its team member count (at least 1). */
+export async function seatCount(studioId: string): Promise<number> {
+  const row = one<{ n: number }>(await db()`select count(*)::int as n from memberships where studio_id = ${studioId}`);
+  return Math.max(1, row?.n ?? 1);
+}
 
 /** Creates the Stripe customer for a studio once and stores its id. */
 export async function ensureCustomer(studio: BillingStudio): Promise<string> {
@@ -55,17 +62,18 @@ export async function createSubscriptionCheckout(
   const customer = await ensureCustomer(studio);
   const trialEnd = remainingTrialEnd(studio.trial_ends_at);
   const coupon = options.applyReferralCoupon ? referralCouponId() : null;
+  const quantity = await seatCount(studio.id);
   const session = await stripe().checkout.sessions.create({
     mode: "subscription",
     customer,
     client_reference_id: studio.id,
-    line_items: [{ price: subscriptionPriceId(), quantity: 1 }],
+    line_items: [{ price: subscriptionPriceId(), quantity }],
     success_url: urls.successUrl,
     cancel_url: urls.cancelUrl,
     metadata: { studio_id: studio.id },
     subscription_data: {
       metadata: { studio_id: studio.id },
-      description: `${PLAN.name} plan`,
+      description: `${PLANS.pro.name} — per seat`,
       ...(trialEnd
         ? { trial_end: trialEnd, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } }
         : {}),
@@ -116,8 +124,13 @@ export async function applySubscription(sub: Stripe.Subscription) {
     return null;
   }
   const active = ACTIVE.has(snap.subscription_status);
+  // Any live subscription (incl. past_due dunning) keeps the studio on Pro; a
+  // terminal status downgrades it to Free.
+  const terminal = snap.subscription_status === "canceled" || snap.subscription_status === "incomplete_expired";
+  const plan = terminal ? "free" : "pro";
   await db()`
     update studios set
+      plan = ${plan},
       stripe_subscription_id = ${snap.stripe_subscription_id},
       stripe_customer_id = coalesce(stripe_customer_id, ${snap.stripe_customer_id}),
       subscription_status = ${snap.subscription_status},
@@ -129,18 +142,63 @@ export async function applySubscription(sub: Stripe.Subscription) {
   return studioId;
 }
 
-/** When a subscription is deleted (cancelled and ended), the studio becomes read-only with the usual grace period. */
+type SeatSyncStudio = Pick<Studio, "id" | "stripe_subscription_id" | "subscription_status">;
+const SEAT_SYNCABLE = new Set(["active", "trialing", "past_due"]);
+
+/**
+ * Pushes the studio's current seat count to Stripe as the subscription
+ * quantity. No-op for Free / no-subscription studios. Best-effort: failures are
+ * logged, never thrown into the seat-change UI path; the daily cron reconciles.
+ */
+export async function syncSeatQuantity(studio: SeatSyncStudio): Promise<void> {
+  if (!studio.stripe_subscription_id || !studio.subscription_status || !SEAT_SYNCABLE.has(studio.subscription_status)) return;
+  try {
+    const quantity = await seatCount(studio.id);
+    const sub = await stripe().subscriptions.retrieve(studio.stripe_subscription_id);
+    const item = sub.items?.data?.[0];
+    if (!item || item.quantity === quantity) return;
+    await stripe().subscriptions.update(studio.stripe_subscription_id, {
+      items: [{ id: item.id, quantity }],
+      proration_behavior: "create_prorations",
+    });
+  } catch (error) {
+    log.warn("billing.seat_sync_failed", { studio: studio.id, error: error instanceof Error ? error.message : String(error) });
+  }
+}
+
+/**
+ * When a subscription is deleted (cancelled and ended), the studio downgrades to
+ * the Free plan (D1). Data is kept; Pro features switch off; the Free storage cap
+ * applies going forward. No read-only lock, no purge.
+ */
 export async function applySubscriptionDeleted(sub: Stripe.Subscription) {
   const studioId = sub.metadata?.studio_id || (await studioIdForCustomer(typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? null));
   if (!studioId) return null;
   await db()`
     update studios set
+      plan = 'free',
       subscription_status = 'canceled',
+      stripe_subscription_id = null,
+      current_period_end = null,
       cancel_at_period_end = false,
-      read_only_since = coalesce(read_only_since, now()),
-      grace_ends_at = coalesce(grace_ends_at, now() + (${GRACE_DAYS} || ' days')::interval)
+      read_only_since = null,
+      grace_ends_at = null
     where id = ${studioId}`;
   return studioId;
+}
+
+/**
+ * Cron: reconcile the Stripe seat quantity with the current member count for
+ * every live subscription, catching any best-effort `syncSeatQuantity` that
+ * failed at the time of a seat change. Returns the number of studios checked.
+ */
+export async function reconcileSeatQuantities(): Promise<number> {
+  const rows = (await db()`
+    select id, stripe_subscription_id, subscription_status from studios
+    where deleted_at is null and stripe_subscription_id is not null
+      and subscription_status in ('active', 'trialing', 'past_due')`) as SeatSyncStudio[];
+  for (const s of rows) await syncSeatQuantity(s);
+  return rows.length;
 }
 
 export async function studioIdForCustomer(customerId: string | null) {
@@ -164,19 +222,18 @@ export function isFirstPaidInvoice(invoice: Stripe.Invoice) {
 }
 
 /**
- * Cron: studios whose trial ended with no subscription become read-only, with
- * galleries live until grace_ends_at. Idempotent.
+ * Cron: studios whose 14-day Pro trial ended with no subscription downgrade to
+ * the Free plan (writable, feature-gated) — not read-only. Idempotent. Returns
+ * the ids downgraded on this run so the caller can notify their owners.
  */
-export async function markExpiredTrialsReadOnly() {
-  const rows = await db()`
-    update studios set
-      read_only_since = trial_ends_at,
-      grace_ends_at = trial_ends_at + (${GRACE_DAYS} || ' days')::interval
+export async function downgradeExpiredTrials(): Promise<string[]> {
+  const rows = (await db()`
+    update studios set plan = 'free', read_only_since = null, grace_ends_at = null
     where deleted_at is null
-      and read_only_since is null
       and subscription_status is null
       and plan_override is null
+      and plan <> 'free'
       and trial_ends_at is not null and trial_ends_at < now()
-    returning id`;
-  return rows.length;
+    returning id`) as { id: string }[];
+  return rows.map((r) => r.id);
 }

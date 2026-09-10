@@ -101,34 +101,34 @@ Naming: keep `pro` / `free` as the `PlanId` values; Stripe per-seat price lookup
 
 ## Phase 6 — `billing.ts`: per-seat checkout + seat sync
 
-- [ ] 6.1 Add `seatCount(studioId): Promise<number>` (`select count(*) from memberships`), min 1.
-- [ ] 6.2 `subscriptionPriceId()` → resolve `STRIPE_PRICE_PRO_SEAT_MONTHLY` (rename from studio price).
-- [ ] 6.3 `createSubscriptionCheckout`: set line item `quantity` = `seatCount(studio.id)` (was `1`).
-- [ ] 6.4 `createSubscriptionCheckout`: `subscription_data.description` = `${PLANS.pro.name} — per seat`.
-- [ ] 6.5 Add `adjustable_quantity` off (quantity is app-controlled) — confirm Checkout config.
-- [ ] 6.6 `subscriptionSnapshot`: on active/trialing/past_due, also set `plan='pro'`.
-- [ ] 6.7 `applySubscriptionDeleted`: set `plan='free'`, clear `stripe_subscription_id`, `subscription_status`, `current_period_end`, `cancel_at_period_end` (D1); do not set read_only/grace.
-- [ ] 6.8 Add `syncSeatQuantity(studio): Promise<void>` — fetch subscription, find the item, `stripe.subscriptions.update(subId,{ items:[{id, quantity}], proration_behavior:'create_prorations' })`.
-- [ ] 6.9 `syncSeatQuantity`: no-op when `subscription_status` ∉ {active,trialing,past_due} or no `stripe_subscription_id`.
-- [ ] 6.10 `syncSeatQuantity`: wrap Stripe errors, log via `logger`, never throw into the seat-change UI path (best-effort; cron reconciles).
-- [ ] 6.11 Add `reconcileSeatQuantities()` for the daily cron: for each Pro studio, ensure Stripe quantity == seatCount.
-- [ ] 6.12 Rename `markExpiredTrialsReadOnly` → `downgradeExpiredTrials` (body in Phase 7).
-- [ ] 6.13 Confirm `remainingTrialEnd`, `ensureCustomer`, `createPortalSession` unchanged.
+- [x] 6.1 Add `seatCount(studioId): Promise<number>` (`select count(*) from memberships`), min 1.
+- [x] 6.2 `subscriptionPriceId()` → resolve `STRIPE_PRICE_PRO_SEAT_MONTHLY` (rename from studio price).
+- [x] 6.3 `createSubscriptionCheckout`: set line item `quantity` = `seatCount(studio.id)` (was `1`).
+- [x] 6.4 `createSubscriptionCheckout`: `subscription_data.description` = `${PLANS.pro.name} — per seat`.
+- [x] 6.5 Add `adjustable_quantity` off (quantity is app-controlled) — confirm Checkout config.
+- [x] 6.6 `subscriptionSnapshot`: on active/trialing/past_due, also set `plan='pro'`.
+- [x] 6.7 `applySubscriptionDeleted`: set `plan='free'`, clear `stripe_subscription_id`, `subscription_status`, `current_period_end`, `cancel_at_period_end` (D1); do not set read_only/grace.
+- [x] 6.8 Add `syncSeatQuantity(studio): Promise<void>` — fetch subscription, find the item, `stripe.subscriptions.update(subId,{ items:[{id, quantity}], proration_behavior:'create_prorations' })`.
+- [x] 6.9 `syncSeatQuantity`: no-op when `subscription_status` ∉ {active,trialing,past_due} or no `stripe_subscription_id`.
+- [x] 6.10 `syncSeatQuantity`: wrap Stripe errors, log via `logger`, never throw into the seat-change UI path (best-effort; cron reconciles).
+- [x] 6.11 Add `reconcileSeatQuantities()` for the daily cron: for each Pro studio, ensure Stripe quantity == seatCount.
+- [x] 6.12 Rename `markExpiredTrialsReadOnly` → `downgradeExpiredTrials` (body in Phase 7).
+- [x] 6.13 Confirm `remainingTrialEnd`, `ensureCustomer`, `createPortalSession` unchanged.
 
 ## Phase 7 — Trial-end & cancellation → Free (cron + webhooks)
 
-- [ ] 7.1 `downgradeExpiredTrials()`: `update studios set plan='free', read_only_since=null, grace_ends_at=null where trial_ends_at < now() and subscription_status is null and plan_override is null and plan <> 'free'`.
-- [ ] 7.2 `api/cron/daily`: call `downgradeExpiredTrials()` (replace the read-only call).
-- [ ] 7.3 `api/cron/daily`: call `reconcileSeatQuantities()` (6.11).
-- [ ] 7.4 Remove the gallery-lock step (old 6.10) from the daily cron.
-- [ ] 7.5 Remove the trial-driven 90-day purge scheduling (old 6.12); keep purge only for explicit deletion (leave that path intact).
-- [ ] 7.6 Webhook `customer.subscription.deleted` → `applySubscriptionDeleted` sets `plan='free'` (verify path).
-- [ ] 7.7 Webhook `customer.subscription.updated` with terminal status (`canceled`/`unpaid` after dunning) → `plan='free'`.
-- [ ] 7.8 Webhook `invoice.payment_failed` → keep `past_due` (still Pro/writable) until Stripe cancels; no immediate downgrade.
-- [ ] 7.9 Confirm `invoice.paid` still clears any read-only and sets `plan='pro'`.
-- [ ] 7.10 Billing emails: "trial ends in 3 days" copy → "then your studio moves to the Free plan" (not read-only).
-- [ ] 7.11 Billing email "trial ended" → "you're now on Free — here's what changed" (list gated features).
-- [ ] 7.12 Remove/repoint the "galleries locked" purge-warning emails from the trial path.
+- [x] 7.1 `downgradeExpiredTrials()`: `update studios set plan='free', read_only_since=null, grace_ends_at=null where trial_ends_at < now() and subscription_status is null and plan_override is null and plan <> 'free'`.
+- [x] 7.2 `api/cron/daily`: call `downgradeExpiredTrials()` (replace the read-only call).
+- [x] 7.3 `api/cron/daily`: call `reconcileSeatQuantities()` (6.11).
+- [x] 7.4 Remove the gallery-lock step (old 6.10) from the daily cron.
+- [x] 7.5 Remove the trial-driven 90-day purge scheduling (old 6.12); keep purge only for explicit deletion (leave that path intact).
+- [x] 7.6 Webhook `customer.subscription.deleted` → `applySubscriptionDeleted` sets `plan='free'` (verify path).
+- [x] 7.7 Webhook `customer.subscription.updated` with terminal status (`canceled`/`unpaid` after dunning) → `plan='free'`.
+- [x] 7.8 Webhook `invoice.payment_failed` → keep `past_due` (still Pro/writable) until Stripe cancels; no immediate downgrade.
+- [x] 7.9 Confirm `invoice.paid` still clears any read-only and sets `plan='pro'`.
+- [x] 7.10 Billing emails: "trial ends in 3 days" copy → "then your studio moves to the Free plan" (not read-only).
+- [x] 7.11 Billing email "trial ended" → "you're now on Free — here's what changed" (list gated features).
+- [x] 7.12 Remove/repoint the "galleries locked" purge-warning emails from the trial path.
 
 ## Phase 8 — `auth.ts`: entitlements in context + gate helper
 

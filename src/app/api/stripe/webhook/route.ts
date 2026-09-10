@@ -9,8 +9,9 @@ import { sendPaymentFailedEmail, sendSubscriptionCancelledEmail } from "@/lib/em
 import { log } from "@/lib/logger";
 
 /**
- * Platform account events: the $40/month subscription (plan 6.5). Verified
+ * Platform account events: the Pro per-seat subscription (plan 6.5). Verified
  * with STRIPE_WEBHOOK_SECRET; each event id is processed once (stripe_events).
+ * A deleted/terminal subscription downgrades the studio to Free (see billing.ts).
  */
 export async function POST(request: NextRequest) {
   const secret = env.stripeWebhookSecret();
