@@ -4,6 +4,7 @@ Newest first. One line per meaningful change; phase numbers refer to docs/BUILD-
 
 ## Unreleased
 
+- Phase 9: onboarding wizard (/studio/welcome) with brand, template, packages, Stripe connect, email sender and Lightroom token steps; API token library.
 - Phase 8: marketing site: layout with mobile nav, home, pricing, eight feature pages, five comparison pages, Lightroom install guide, security, legal pages (terms, privacy, cookies, DPA, referral terms, fair use), contact form, changelog, sitemap, robots, Open Graph image, JSON-LD, page-view beacon. Health route.
 - Phase 3 complete except types/tests sweep: gallery, photo, CRM, email, sending-domain, automation, referral, booking, planning, import and site libraries.
 - Phase 4: tenant headers in proxy, loading skeleton, toast, dialog, drawer, tabs, menu, icons, fields, pagination, search, data table, stepper, uploader, lightbox, print styles, /dev/ui.

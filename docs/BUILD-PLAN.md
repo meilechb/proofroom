@@ -580,16 +580,16 @@ Validation and types
 - [ ] 9.2 Sidebar collapses on small screens; active item state; unread counts for Inbox and Notes.
 - [x] 9.3 Studio switcher and "create another studio".
 - [x] 9.4 Banners: email verification, trial, read-only, suspended.
-- [ ] 9.5 `/studio/welcome` wizard (Stepper): 1 brand (name, logo, color), 2 template pick with preview, 3 packages (edit the three defaults), 4 connect Stripe (skippable), 5 email sender, 6 install Lightroom (skippable), 7 done with checklist link.
-  - [ ] 9.5.1 Step 1 brand: name, logo upload, color
-  - [ ] 9.5.2 Step 2 template: pick Editorial or Gallery with preview
-  - [ ] 9.5.3 Step 3 packages: edit the three defaults
-  - [ ] 9.5.4 Step 4 payments: connect Stripe or skip
-  - [ ] 9.5.5 Step 5 email: display name and reply-to
-  - [ ] 9.5.6 Step 6 Lightroom: create token, download plugin, or skip
-  - [ ] 9.5.7 Step 7 done: link to checklist and website editor
+- [x] 9.5 `/studio/welcome` wizard (Stepper): 1 brand (name, logo, color), 2 template pick with preview, 3 packages (edit the three defaults), 4 connect Stripe (skippable), 5 email sender, 6 install Lightroom (skippable), 7 done with checklist link.
+  - [x] 9.5.1 Step 1 brand: name, logo upload, color
+  - [x] 9.5.2 Step 2 template: pick Editorial or Gallery with preview
+  - [x] 9.5.3 Step 3 packages: edit the three defaults
+  - [x] 9.5.4 Step 4 payments: connect Stripe or skip
+  - [x] 9.5.5 Step 5 email: display name and reply-to
+  - [x] 9.5.6 Step 6 Lightroom: create token, download plugin, or skip
+  - [x] 9.5.7 Step 7 done: link to checklist and website editor
 - [x] 9.6 Onboarding checklist card with progress and dismiss.
-- [ ] 9.7 Checklist items link to the exact page and auto-check from data (logo set, template published, Stripe connected, first package, first client, first gallery, plugin token created, sending domain verified).
+- [x] 9.7 Checklist items link to the exact page and auto-check from data (logo set, template published, Stripe connected, first package, first client, first gallery, plugin token created, sending domain verified).
 - [~] 9.8 Dashboard stats: live galleries, unanswered notes, unpaid balance total, sessions this week, storage used.
 - [~] 9.9 Dashboard to-do list generated from data (unpaid balances, unanswered notes, expiring galleries, unread inquiries, tasks due).
   - [ ] 9.9.1 Unpaid balances due within 7 days
