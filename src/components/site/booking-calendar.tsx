@@ -15,10 +15,11 @@ function weekday(dateISO: string) {
   return new Date(`${dateISO}T12:00:00Z`).getUTCDay();
 }
 
-export function BookingCalendar({ minDateISO, maxDateISO, openWeekdays, blockedDates, selected, onPick }: { minDateISO: string; maxDateISO: string; openWeekdays: number[]; blockedDates: string[]; selected: string | null; onPick: (d: string) => void }) {
+export function BookingCalendar({ minDateISO, maxDateISO, openWeekdays, blockedDates, extraOpenDates = [], selected, onPick }: { minDateISO: string; maxDateISO: string; openWeekdays: number[]; blockedDates: string[]; extraOpenDates?: string[]; selected: string | null; onPick: (d: string) => void }) {
   const [my, setMy] = useState(() => { const [y, m] = minDateISO.split("-").map(Number); return { y, m: m - 1 }; });
   const open = useMemo(() => new Set(openWeekdays), [openWeekdays]);
   const blocked = useMemo(() => new Set(blockedDates), [blockedDates]);
+  const extraOpen = useMemo(() => new Set(extraOpenDates), [extraOpenDates]);
   const lead = weekday(iso(my.y, my.m, 1));
   const daysInMonth = new Date(Date.UTC(my.y, my.m + 1, 0)).getUTCDate();
   const canPrev = iso(my.y, my.m, 1) > minDateISO;
@@ -41,7 +42,7 @@ export function BookingCalendar({ minDateISO, maxDateISO, openWeekdays, blockedD
         {Array.from({ length: daysInMonth }).map((_, i) => {
           const d = i + 1;
           const dISO = iso(my.y, my.m, d);
-          const selectable = dISO >= minDateISO && dISO <= maxDateISO && open.has(weekday(dISO)) && !blocked.has(dISO);
+          const selectable = dISO >= minDateISO && dISO <= maxDateISO && (open.has(weekday(dISO)) || extraOpen.has(dISO)) && !blocked.has(dISO);
           const isSel = selected === dISO;
           return (
             <button key={dISO} type="button" disabled={!selectable} onClick={() => onPick(dISO)}

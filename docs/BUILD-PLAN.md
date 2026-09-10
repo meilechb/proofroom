@@ -1096,8 +1096,8 @@ Booking
 - [x] 21.11 Hold expiry (15 minutes) and release.
 - [x] 21.12 Confirmation creates client (or links), order, booking slot, session; emails `booking_confirmed` to client and notice to studio; calendar shows it.
 - [x] 21.13 Reschedule and cancel links in the client hub within policy; studio can override.
-- [ ] 21.14 Booking reminders (automation) and no-show marking.
-- [ ] 21.15 Blocked dates (holidays) and one-off overrides.
+- [x] 21.14 Booking reminders (automation) and no-show marking.
+- [x] 21.15 Blocked dates (holidays) and one-off overrides.
 - [ ] 21.16 Tests: availability math, hold race (two clients same slot), policy enforcement.
 
 Session planning

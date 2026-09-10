@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_BOOKING, addDaysISO, localDateISO, openWeekdays, slotsForDate, tzOffsetMinutes, weekdayOfISO, withinChangeWindow, zonedTime } from "@/lib/booking";
+import { DEFAULT_BOOKING, addDaysISO, localDateISO, openWeekdays, overrideDates, slotsForDate, tzOffsetMinutes, weekdayOfISO, withinChangeWindow, zonedTime } from "@/lib/booking";
 
 const tz = "America/New_York";
 const settings = { ...DEFAULT_BOOKING, enabled: true, leadTimeHours: 0, bufferMinutes: 15, slotStepMinutes: 30, maxPerDay: 6 };
@@ -30,6 +30,17 @@ describe("slotsForDate", () => {
     expect(slots).not.toContain("2026-09-09T15:00:00.000Z");
     expect(slots).toContain("2026-09-09T13:30:00.000Z"); // 09:30-10:30 ends before 10:45 buffer start
     expect(slots).toContain("2026-09-09T16:30:00.000Z"); // 12:30 starts after the 12:15 buffer end
+  });
+  it("lets a one-off override replace the weekly hours for a date", () => {
+    // Wednesday is normally open; close it with an empty override.
+    expect(slotsForDate("2026-09-09", tz, { ...settings, overrides: { "2026-09-09": [] } }, 60, [], now)).toHaveLength(0);
+    // Sunday is normally closed; open it for a few hours with an override.
+    const sun = slotsForDate("2026-09-13", tz, { ...settings, overrides: { "2026-09-13": [{ start: "10:00", end: "12:00" }] } }, 60, [], now);
+    expect(sun.map((d) => d.toISOString())).toEqual(["2026-09-13T14:00:00.000Z", "2026-09-13T14:30:00.000Z", "2026-09-13T15:00:00.000Z"]);
+  });
+  it("splits overrides into open and closed dates for the calendar", () => {
+    const s = { ...DEFAULT_BOOKING, overrides: { "2026-12-25": [], "2026-12-27": [{ start: "10:00", end: "14:00" }] } };
+    expect(overrideDates(s)).toEqual({ open: ["2026-12-27"], closed: ["2026-12-25"] });
   });
   it("honours lead time, blocked dates, closed days and the daily maximum", () => {
     expect(slotsForDate("2026-09-13", tz, settings, 60, [], now)).toHaveLength(0); // Sunday closed

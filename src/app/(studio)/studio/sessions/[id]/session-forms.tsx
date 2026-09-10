@@ -9,7 +9,7 @@ import { FormMessage } from "@/components/forms/form-message";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { CopyButton } from "@/components/forms/copy-button";
 import { initialActionState } from "@/lib/action-state";
-import { cancelSessionAction, editSessionAction, manualPaymentAction } from "./session-actions";
+import { cancelSessionAction, editSessionAction, manualPaymentAction, markNoShowAction } from "./session-actions";
 
 export function EditSessionButton({ order, timezone }: { order: Order; timezone: string }) {
   const [open, setOpen] = useState(false);
@@ -82,6 +82,25 @@ export function CancelSessionButton({ orderId }: { orderId: string }) {
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Keep it</Button>
             <Button type="submit" variant="danger">Cancel session</Button>
+          </div>
+        </form>
+      </Dialog>
+    </>
+  );
+}
+
+export function NoShowButton({ orderId }: { orderId: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>Mark no-show</Button>
+      <Dialog open={open} onClose={() => setOpen(false)} title="Mark as a no-show?">
+        <form action={markNoShowAction} className="space-y-4">
+          <input type="hidden" name="id" value={orderId} />
+          <p className="text-sm text-ink-2">The booking is recorded as a no-show and noted on the client&apos;s timeline. The session and its payments are kept.</p>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Back</Button>
+            <Button type="submit" variant="danger">Mark no-show</Button>
           </div>
         </form>
       </Dialog>

@@ -16,13 +16,14 @@ type Props = {
   maxDateISO: string;
   openWeekdays: number[];
   blockedDates: string[];
+  extraOpenDates: string[];
   depositRequired: boolean;
   canPayNow: boolean;
   policy: string;
 };
 
 export function BookingFlow(props: Props) {
-  const { slug, packages, currency, minDateISO, maxDateISO, openWeekdays, blockedDates, depositRequired, canPayNow, policy } = props;
+  const { slug, packages, currency, minDateISO, maxDateISO, openWeekdays, blockedDates, extraOpenDates, depositRequired, canPayNow, policy } = props;
   const [pkg, setPkg] = useState<Pkg | null>(packages.length === 1 ? packages[0] : null);
   const [date, setDate] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotOption[] | null>(null);
@@ -105,7 +106,7 @@ export function BookingFlow(props: Props) {
 
       {pkg ? (
         <Step n={2} title="Pick a date and time" done={!!slot}>
-          <BookingCalendar minDateISO={minDateISO} maxDateISO={maxDateISO} openWeekdays={openWeekdays} blockedDates={blockedDates} selected={date} onPick={pickDate} />
+          <BookingCalendar minDateISO={minDateISO} maxDateISO={maxDateISO} openWeekdays={openWeekdays} blockedDates={blockedDates} extraOpenDates={extraOpenDates} selected={date} onPick={pickDate} />
           {date ? (
             <div className="mt-5">
               <p className="text-sm font-medium">{prettyDate(date)}</p>

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { audit } from "@/lib/audit";
 import { requireWritableStudio } from "@/lib/auth";
 import { cancelOrder, getOrder, updateOrder } from "@/lib/orders";
+import { markOrderNoShow } from "@/lib/booking";
+import { recordClientEvent } from "@/lib/clients";
 import { recordManualPayment, undoManualPayment } from "@/lib/payments";
 import { cents, str, type ActionState } from "@/lib/action-state";
 
@@ -34,6 +36,18 @@ export async function cancelSessionAction(formData: FormData) {
   await audit({ studioId: studio.id, actorUserId: user.id, action: "order.cancelled", targetType: "order", targetId: id });
   revalidatePath(`/studio/sessions/${id}`);
   revalidatePath("/studio/sessions");
+}
+
+export async function markNoShowAction(formData: FormData) {
+  const { studio, user } = await requireWritableStudio();
+  const id = str(formData, "id", 64);
+  const order = await getOrder(studio.id, id);
+  const slot = await markOrderNoShow(studio.id, id);
+  if (slot && order) {
+    await recordClientEvent(studio.id, order.client_id, "booking.no_show", "order", id, `Session #${order.order_number} marked as a no-show`);
+    await audit({ studioId: studio.id, actorUserId: user.id, action: "booking.no_show", targetType: "order", targetId: id });
+  }
+  revalidatePath(`/studio/sessions/${id}`);
 }
 
 export async function manualPaymentAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

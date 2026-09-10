@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { requireStudioPage } from "@/lib/auth";
 import { getOrder } from "@/lib/orders";
 import { listPayments } from "@/lib/payments";
+import { slotForOrder } from "@/lib/booking";
 import { db, one, rows } from "@/lib/db";
 import { payUrl } from "@/lib/tenant";
 import { orderMoney, formatMoney, formatDate, orderStatusLabels, type Client, type OrderStatus } from "@/lib/types";
 import { PageHeader, Card, Badge, ButtonLink, cx } from "@/components/ui";
-import { CancelSessionButton, EditSessionButton, ManualPaymentButton, PayLink } from "./session-forms";
+import { CancelSessionButton, EditSessionButton, ManualPaymentButton, NoShowButton, PayLink } from "./session-forms";
 import { undoManualPaymentAction } from "./session-actions";
 
 export async function generateMetadata({ params }: PageProps<"/studio/sessions/[id]">) {
@@ -34,6 +35,8 @@ export default async function SessionDetailPage({ params }: PageProps<"/studio/s
   const cur = order.currency;
   const link = payUrl(ctx.studio, order.id);
   const canPayOnline = ctx.studio.stripe_account_status === "enabled";
+  const slot = await slotForOrder(ctx.studio.id, order.id);
+  const slotPast = slot ? new Date(slot.starts_at).getTime() < new Date().getTime() : false;
 
   return (
     <>
@@ -44,6 +47,8 @@ export default async function SessionDetailPage({ params }: PageProps<"/studio/s
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={order.status === "completed" ? "success" : order.status === "cancelled" ? "neutral" : order.status === "pending_payment" ? "warning" : "brand"}>{orderStatusLabels[order.status as OrderStatus] ?? order.status}</Badge>
+            {slot?.status === "no_show" ? <Badge tone="neutral">No-show</Badge> : null}
+            {slot && slot.status === "confirmed" && slotPast && order.status !== "cancelled" ? <NoShowButton orderId={order.id} /> : null}
             {order.status !== "cancelled" ? <EditSessionButton order={order} timezone={ctx.studio.timezone} /> : null}
             {client ? <ButtonLink href={`/studio/clients/${client.id}`} variant="ghost">Client</ButtonLink> : null}
           </div>

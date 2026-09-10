@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { loadSiteData, assetUrl } from "@/lib/site/render";
-import { bookingSettings, openWeekdays, localDateISO, addDaysISO, BOOKING_HORIZON_DAYS } from "@/lib/booking-shared";
+import { bookingSettings, openWeekdays, overrideDates, localDateISO, addDaysISO, BOOKING_HORIZON_DAYS } from "@/lib/booking-shared";
 import { canTakeCardPayments } from "@/lib/connect";
 import { billingState } from "@/lib/plans";
 import { PageHero, Container } from "@/components/site/sections";
@@ -33,6 +33,7 @@ export default async function BookPage({ params }: PageProps<"/t/[slug]/book">) 
   const todayISO = localDateISO(now, tz);
   const minDateISO = localDateISO(new Date(now.getTime() + settings.leadTimeHours * 3600000), tz);
   const maxDateISO = addDaysISO(todayISO, BOOKING_HORIZON_DAYS);
+  const ov = overrideDates(settings);
 
   return (
     <>
@@ -51,7 +52,8 @@ export default async function BookPage({ params }: PageProps<"/t/[slug]/book">) 
             minDateISO={minDateISO}
             maxDateISO={maxDateISO}
             openWeekdays={openWeekdays(settings)}
-            blockedDates={settings.blockedDates}
+            blockedDates={[...settings.blockedDates, ...ov.closed]}
+            extraOpenDates={ov.open}
             depositRequired={settings.depositRequired}
             canPayNow={canTakeCardPayments(studio)}
             policy={settings.policy}

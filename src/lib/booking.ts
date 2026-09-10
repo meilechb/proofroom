@@ -9,7 +9,7 @@ import { HOLD_MINUTES, type Busy } from "@/lib/booking-shared";
  */
 
 export type { WeeklyHours, BookingSettings, Busy } from "@/lib/booking-shared";
-export { DEFAULT_BOOKING, HOLD_MINUTES, DEFAULT_SESSION_MINUTES, BOOKING_HORIZON_DAYS, bookingSettings, zonedTime, tzOffsetMinutes, localDateISO, slotsForDate, openWeekdays, addDaysISO, weekdayOfISO, withinChangeWindow } from "@/lib/booking-shared";
+export { DEFAULT_BOOKING, HOLD_MINUTES, DEFAULT_SESSION_MINUTES, BOOKING_HORIZON_DAYS, bookingSettings, zonedTime, tzOffsetMinutes, localDateISO, slotsForDate, openWeekdays, overrideDates, addDaysISO, weekdayOfISO, withinChangeWindow } from "@/lib/booking-shared";
 
 export async function busyRanges(studioId: string, from: Date, to: Date): Promise<Busy[]> {
   return rows<Busy>(
@@ -54,6 +54,20 @@ export async function confirmSlot(studioId: string, holdId: string, input: { cli
 
 export async function cancelSlot(studioId: string, slotId: string, status: "cancelled" | "no_show" | "completed" = "cancelled") {
   return one<{ id: string }>(await db()`update booking_slots set status = ${status} where id = ${slotId} and studio_id = ${studioId} returning id`);
+}
+
+/** The confirmed booking a session holds, if any (for the session page and no-show marking). */
+export async function slotForOrder(studioId: string, orderId: string) {
+  return one<{ id: string; starts_at: string; ends_at: string; status: string }>(
+    await db()`select id, starts_at, ends_at, status from booking_slots where order_id = ${orderId} and studio_id = ${studioId} order by starts_at desc limit 1`
+  );
+}
+
+/** Marks the session's booking as a no-show (plan 21.14). */
+export async function markOrderNoShow(studioId: string, orderId: string) {
+  return one<{ id: string }>(
+    await db()`update booking_slots set status = 'no_show' where order_id = ${orderId} and studio_id = ${studioId} and status = 'confirmed' returning id`
+  );
 }
 
 /** Cron (frequent): expired holds are released. */

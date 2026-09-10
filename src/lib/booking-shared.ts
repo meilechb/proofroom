@@ -17,6 +17,7 @@ export type BookingSettings = {
   cancelWindowHours: number; // clients can self-reschedule or cancel up to this many hours before
   policy: string;
   blockedDates: string[]; // "YYYY-MM-DD"
+  overrides: Record<string, { start: string; end: string }[]>; // date → hours that replace the weekly pattern; [] means closed
 };
 
 export const DEFAULT_BOOKING: BookingSettings = {
@@ -30,6 +31,7 @@ export const DEFAULT_BOOKING: BookingSettings = {
   cancelWindowHours: 48,
   policy: "Reschedule or cancel up to 48 hours before the session at no charge.",
   blockedDates: [],
+  overrides: {},
 };
 
 /** Whether a client may still reschedule or cancel this booking themselves (plan 21.13). */
@@ -53,6 +55,14 @@ export const BOOKING_HORIZON_DAYS = 60;
 /** Weekdays (0 = Sunday) that have at least one open window. */
 export function openWeekdays(settings: BookingSettings): number[] {
   return [0, 1, 2, 3, 4, 5, 6].filter((d) => (settings.weekly[String(d) as keyof WeeklyHours] ?? []).length > 0);
+}
+
+/** One-off override dates split into those that open a day and those that close it (plan 21.15). */
+export function overrideDates(settings: BookingSettings): { open: string[]; closed: string[] } {
+  const open: string[] = [];
+  const closed: string[] = [];
+  for (const [date, windows] of Object.entries(settings.overrides ?? {})) (windows.length === 0 ? closed : open).push(date);
+  return { open, closed };
 }
 
 /** Adds whole days to a "YYYY-MM-DD" string without timezone drift. */
@@ -101,7 +111,9 @@ export type Busy = { starts_at: string; ends_at: string };
 export function slotsForDate(dateISO: string, timeZone: string, settings: BookingSettings, durationMinutes: number, busy: Busy[], now = new Date()): Date[] {
   if (!settings.enabled || settings.blockedDates.includes(dateISO)) return [];
   const weekday = String(new Date(`${dateISO}T12:00:00Z`).getUTCDay()) as keyof WeeklyHours;
-  const windows = settings.weekly[weekday] ?? [];
+  // A one-off override replaces the weekly pattern for that date; [] means closed.
+  const override = settings.overrides?.[dateISO];
+  const windows = override !== undefined ? override : settings.weekly[weekday] ?? [];
   const buffered = busy.map((b) => ({ start: new Date(b.starts_at).getTime() - settings.bufferMinutes * 60000, end: new Date(b.ends_at).getTime() + settings.bufferMinutes * 60000 }));
   const dayBusy = busy.filter((b) => localDateISO(new Date(b.starts_at), timeZone) === dateISO).length;
   if (dayBusy >= settings.maxPerDay) return [];

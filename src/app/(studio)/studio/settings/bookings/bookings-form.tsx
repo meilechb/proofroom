@@ -70,6 +70,8 @@ export function BookingsForm({ initial }: { initial: BookingSettings }) {
 
       <BlockedDates dates={s.blockedDates} onChange={(d) => setField("blockedDates", d)} />
 
+      <Overrides overrides={s.overrides} onChange={(o) => setField("overrides", o)} />
+
       <Button onClick={save} disabled={pending}>{pending ? "Saving…" : "Save booking settings"}</Button>
     </div>
   );
@@ -81,6 +83,54 @@ function NumField({ label, value, min, max, onChange }: { label: string; value: 
       <span className="font-medium">{label}</span>
       <input type="number" min={min} max={max} value={value} onChange={(e) => onChange(Math.max(min, Math.min(max, Number(e.target.value) || min)))} className="mt-1 w-full h-10 rounded-lg border border-line-2 bg-surface px-3" />
     </label>
+  );
+}
+
+type Windows = { start: string; end: string }[];
+
+function Overrides({ overrides, onChange }: { overrides: Record<string, Windows>; onChange: (o: Record<string, Windows>) => void }) {
+  const [date, setDate] = useState("");
+  const [closed, setClosed] = useState(true);
+  const [start, setStart] = useState("09:00");
+  const [end, setEnd] = useState("17:00");
+  const entries = Object.entries(overrides).sort(([a], [b]) => a.localeCompare(b));
+
+  const add = () => {
+    if (!date) return;
+    const windows: Windows = closed ? [] : start < end ? [{ start, end }] : [];
+    onChange({ ...overrides, [date]: windows });
+    setDate("");
+  };
+  const remove = (d: string) => { const next = { ...overrides }; delete next[d]; onChange(next); };
+
+  return (
+    <div className="max-w-lg">
+      <span className="text-sm font-medium">One-off day overrides</span>
+      <p className="text-xs text-muted mb-1">Set special hours for a single date, or close a day that&apos;s normally open. Overrides replace the weekly hours for that date.</p>
+      <div className="mt-1 flex flex-wrap items-center gap-2">
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-9 rounded-lg border border-line-2 bg-surface px-2 text-sm" />
+        <label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={closed} onChange={(e) => setClosed(e.target.checked)} className="h-4 w-4" /> Closed</label>
+        {!closed ? (
+          <span className="flex items-center gap-1">
+            <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="h-9 rounded border border-line-2 bg-surface px-1.5 text-sm" />
+            <span className="text-muted">–</span>
+            <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="h-9 rounded border border-line-2 bg-surface px-1.5 text-sm" />
+          </span>
+        ) : null}
+        <button type="button" onClick={add} className="btn-secondary btn-sm">Add</button>
+      </div>
+      {entries.length ? (
+        <ul className="mt-2 space-y-1">
+          {entries.map(([d, w]) => (
+            <li key={d} className="flex items-center gap-2 text-sm">
+              <span className="w-28">{d}</span>
+              <span className="text-ink-2">{w.length === 0 ? "Closed" : w.map((x) => `${x.start}–${x.end}`).join(", ")}</span>
+              <button type="button" onClick={() => remove(d)} className="text-muted hover:text-danger text-xs">✕</button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }
 

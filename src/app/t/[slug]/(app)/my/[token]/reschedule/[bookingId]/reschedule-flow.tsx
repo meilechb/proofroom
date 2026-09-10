@@ -14,9 +14,10 @@ type Props = {
   maxDateISO: string;
   openWeekdays: number[];
   blockedDates: string[];
+  extraOpenDates: string[];
 };
 
-export function RescheduleFlow({ slug, token, bookingId, currentLabel, minDateISO, maxDateISO, openWeekdays, blockedDates }: Props) {
+export function RescheduleFlow({ slug, token, bookingId, currentLabel, minDateISO, maxDateISO, openWeekdays, blockedDates, extraOpenDates }: Props) {
   const [date, setDate] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotOption[] | null>(null);
   const [slot, setSlot] = useState<SlotOption | null>(null);
@@ -59,7 +60,7 @@ export function RescheduleFlow({ slug, token, bookingId, currentLabel, minDateIS
   return (
     <div className="space-y-5">
       <p className="text-sm text-[var(--site-ink-2)]">Currently booked for <span className="text-[var(--site-ink)]">{currentLabel}</span>. Pick a new day and time.</p>
-      <BookingCalendar minDateISO={minDateISO} maxDateISO={maxDateISO} openWeekdays={openWeekdays} blockedDates={blockedDates} selected={date} onPick={pickDate} />
+      <BookingCalendar minDateISO={minDateISO} maxDateISO={maxDateISO} openWeekdays={openWeekdays} blockedDates={blockedDates} extraOpenDates={extraOpenDates} selected={date} onPick={pickDate} />
       {date ? (
         <div>
           <p className="text-sm font-medium">{prettyDate(date)}</p>
