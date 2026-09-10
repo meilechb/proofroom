@@ -37,3 +37,19 @@ export function formatBytes(n: number) {
   if (n < 1024 ** 3) return `${(n / 1024 / 1024).toFixed(1)} MB`;
   return `${(n / 1024 ** 3).toFixed(2)} GB`;
 }
+
+/** True when the site JSON (published or draft) mentions the asset id anywhere (plan 15.2). */
+export function jsonReferencesAssetId(value: unknown, assetId: string) {
+  if (!assetId) return false;
+  return JSON.stringify(value ?? "").includes(assetId);
+}
+
+/** An asset with any recorded use is blocked from deletion (plan 15.2, 15.9). */
+export function assetIsInUse(uses: string[]) {
+  return uses.length > 0;
+}
+
+/** Storage delta to apply when a pending asset's bytes are replaced by its variants (plan 15.7, 15.9). */
+export function reprocessBytesDelta(previousBytes: number, newTotalBytes: number) {
+  return newTotalBytes - previousBytes;
+}

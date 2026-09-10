@@ -1,6 +1,9 @@
 import "server-only";
 
 import { db, one, rows } from "@/lib/db";
+import { assetPath } from "@/lib/storage";
+import { downloadBlob, makeWebVersion, putJpeg, PREVIEW_MAX_EDGE, THUMB_MAX_EDGE } from "@/lib/images";
+import { addBytes } from "@/lib/usage";
 
 /**
  * The public portfolio (plan 15.5). Each item points at an asset and carries a
@@ -83,6 +86,79 @@ export async function reorderPortfolio(studioId: string, orderedIds: string[]) {
     update portfolio_items set sort_order = sub.rn + ${orderedIds.length}
     from (select id, row_number() over (order by sort_order, created_at) as rn from portfolio_items where studio_id = ${studioId} and id <> all(${orderedIds}::uuid[])) sub
     where portfolio_items.id = sub.id and portfolio_items.studio_id = ${studioId}`;
+}
+
+/**
+ * Galleries a studio may pull portfolio photos from (plan 15.6): only those whose
+ * order recorded the client's portfolio consent (`contract_portfolio_ok`).
+ */
+export type ImportableGallery = { id: string; title: string; kind: string; client_name: string; photo_count: number };
+export async function importableGalleries(studioId: string) {
+  return rows<ImportableGallery>(
+    await db()`
+      select g.id, g.title, g.kind, c.name as client_name,
+        (select count(*)::int from photos p where p.gallery_id = g.id) as photo_count
+      from galleries g
+      join orders o on o.id = g.order_id and o.contract_portfolio_ok is true
+      join clients c on c.id = g.client_id
+      where g.studio_id = ${studioId} and g.status <> 'archived'
+        and exists (select 1 from photos p where p.gallery_id = g.id)
+      order by g.created_at desc`
+  );
+}
+
+export type ImportablePhoto = { id: string; thumb: string; filename: string };
+export async function galleryPhotosForImport(studioId: string, galleryId: string) {
+  const consented = one<{ id: string }>(
+    await db()`select g.id from galleries g join orders o on o.id = g.order_id and o.contract_portfolio_ok is true where g.id = ${galleryId} and g.studio_id = ${studioId}`
+  );
+  if (!consented) return [];
+  return rows<ImportablePhoto>(
+    await db()`select id, coalesce(thumb_url, preview_url) as thumb, filename from photos where gallery_id = ${galleryId} and studio_id = ${studioId} and preview_url <> '' order by sort_order, created_at`
+  );
+}
+
+/** Copy chosen gallery photos into the public asset store and add them to the portfolio (plan 15.6). */
+export async function importPhotosToPortfolio(studioId: string, photoIds: string[], category: string) {
+  if (!photoIds.length) return 0;
+  const photos = rows<{ id: string; preview_url: string; original_url: string; filename: string }>(
+    await db()`
+      select p.id, p.preview_url, p.original_url, p.filename
+      from photos p
+      join galleries g on g.id = p.gallery_id
+      join orders o on o.id = g.order_id and o.contract_portfolio_ok is true
+      where p.studio_id = ${studioId} and p.id = any(${photoIds}::uuid[])`
+  );
+  const newAssetIds: string[] = [];
+  for (const photo of photos) {
+    try {
+      const source = await downloadBlob(photo.preview_url, "galleries");
+      const [web, thumb] = await Promise.all([
+        makeWebVersion(source, PREVIEW_MAX_EDGE),
+        makeWebVersion(source, THUMB_MAX_EDGE, 80),
+      ]);
+      const asset = one<{ id: string }>(
+        await db()`
+          insert into assets (studio_id, kind, url, filename, content_type, size_bytes, folder)
+          values (${studioId}, 'image', ${`pending:import`}, ${photo.filename}, 'image/jpeg', 0, 'portfolio')
+          returning id`
+      );
+      if (!asset) continue;
+      const webBlob = await putJpeg("assets", assetPath(studioId, `${asset.id}-web.jpg`), web.buffer);
+      const thumbBlob = await putJpeg("assets", assetPath(studioId, `${asset.id}-thumb.jpg`), thumb.buffer);
+      const totalBytes = web.buffer.length + thumb.buffer.length;
+      await db()`
+        update assets set url = ${webBlob.url}, web_url = ${webBlob.url}, thumb_url = ${thumbBlob.url},
+          width = ${web.width}, height = ${web.height}, size_bytes = ${totalBytes}
+        where id = ${asset.id} and studio_id = ${studioId}`;
+      await addBytes(studioId, totalBytes);
+      newAssetIds.push(asset.id);
+    } catch {
+      // Skip a photo we could not copy; the rest still import.
+    }
+  }
+  if (newAssetIds.length) await addAssetsToPortfolio(studioId, newAssetIds, category);
+  return newAssetIds.length;
 }
 
 export async function renamePortfolioCategory(studioId: string, from: string, to: string) {

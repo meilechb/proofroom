@@ -4,7 +4,7 @@ import { db, one, rows } from "@/lib/db";
 import { assetPath, clientUploadToken, deleteBlobs, safeFilename } from "@/lib/storage";
 import { downloadBlob, makeWebVersion, putJpeg, sha256, PREVIEW_MAX_EDGE, THUMB_MAX_EDGE, MAX_UPLOAD_BYTES, ALLOWED_IMAGE_TYPES } from "@/lib/images";
 import { addBytes } from "@/lib/usage";
-import { isAssetFolder, type Asset, type AssetSort } from "@/lib/assets-shared";
+import { isAssetFolder, jsonReferencesAssetId, assetIsInUse, reprocessBytesDelta, type Asset, type AssetSort } from "@/lib/assets-shared";
 
 /**
  * The studio asset library (plan 15). Assets live in the public Blob store so the
@@ -79,7 +79,7 @@ export async function completeAssetUpload(studioId: string, assetId: string, ori
         width = ${web.width}, height = ${web.height}, size_bytes = ${totalBytes}
       where id = ${assetId} and studio_id = ${studioId} returning *`
   );
-  await addBytes(studioId, totalBytes - asset.size_bytes);
+  await addBytes(studioId, reprocessBytesDelta(asset.size_bytes, totalBytes));
   return updated;
 }
 
@@ -103,8 +103,7 @@ export async function assetUses(studioId: string, id: string): Promise<string[]>
   const studio = one<{ site: unknown; site_draft: unknown }>(await db()`select site, site_draft from studios where id = ${studioId}`);
   if (studio) {
     // Logo, favicon and section images are all stored by id inside the site JSON.
-    const haystack = `${JSON.stringify(studio.site ?? "")}${JSON.stringify(studio.site_draft ?? "")}`;
-    if (haystack.includes(id)) uses.push("Website");
+    if (jsonReferencesAssetId(studio.site, id) || jsonReferencesAssetId(studio.site_draft, id)) uses.push("Website");
   }
   return [...new Set(uses)];
 }
@@ -114,7 +113,7 @@ export async function deleteAsset(studioId: string, id: string) {
   const asset = await assetById(studioId, id);
   if (!asset) return { deleted: false, uses: [] as string[] };
   const uses = await assetUses(studioId, id);
-  if (uses.length) return { deleted: false, uses };
+  if (assetIsInUse(uses)) return { deleted: false, uses };
   await deleteBlobs("assets", [asset.url, asset.web_url, asset.thumb_url]);
   await db()`delete from assets where id = ${id} and studio_id = ${studioId}`;
   await addBytes(studioId, -asset.size_bytes);

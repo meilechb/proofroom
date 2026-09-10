@@ -6,6 +6,7 @@ import { purgeDeleted, dropStalePending } from "@/lib/photos";
 import { recheckPendingDomains } from "@/lib/sending-domains";
 import { applyDueRewards } from "@/lib/referrals-server";
 import { cleanupImports } from "@/lib/imports";
+import { cleanupOrphanBlobs } from "@/lib/maintenance";
 import { db } from "@/lib/db";
 import { sendTrialEndedEmail, sendTrialEndingEmail } from "@/lib/emails/billing";
 
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
     recheckSendingDomains: recheckPendingDomains,
     applyQueuedReferralRewards: applyDueRewards,
     cleanupImports,
+    cleanupOrphanBlobs,
     refreshStorageCounters,
   });
   return NextResponse.json(results);

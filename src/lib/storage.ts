@@ -1,6 +1,6 @@
 import "server-only";
 
-import { del, get, head, put } from "@vercel/blob";
+import { del, get, head, list, put } from "@vercel/blob";
 import { env } from "@/lib/env";
 
 /**
@@ -99,6 +99,17 @@ export async function deleteMany(store: Store, urls: Array<string | null | undef
     }
   }
   return list.length;
+}
+
+export type ListedBlob = { url: string; pathname: string; size: number; uploadedAt: Date };
+/** One page of blobs in a store, for orphan cleanup (plan 15.8). */
+export async function listBlobs(store: Store, cursor?: string, limit = 500): Promise<{ blobs: ListedBlob[]; cursor?: string; hasMore: boolean }> {
+  const res = await list({ token: blobToken(store), cursor, limit });
+  return {
+    blobs: res.blobs.map((b) => ({ url: b.url, pathname: b.pathname, size: b.size, uploadedAt: new Date(b.uploadedAt) })),
+    cursor: res.cursor,
+    hasMore: res.hasMore,
+  };
 }
 
 /** Keeps only safe characters in a filename and caps its length; never returns an empty name. */

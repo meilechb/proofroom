@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Dialog } from "@/components/ui/dialog";
 import { Button, cx } from "@/components/ui";
 import type { PortfolioItem } from "@/lib/portfolio";
-import { addToPortfolioAction, updatePortfolioItemAction, removePortfolioItemAction, reorderPortfolioAction, renameCategoryAction } from "./actions";
+import { addToPortfolioAction, updatePortfolioItemAction, removePortfolioItemAction, reorderPortfolioAction, renameCategoryAction, listImportGalleriesAction, listGalleryPhotosAction, importPhotosAction } from "./actions";
+
+type ImportGallery = { id: string; title: string; kind: string; client_name: string; photo_count: number };
+type ImportPhoto = { id: string; thumb: string; filename: string };
 
 type Available = { id: string; thumb: string; filename: string; alt: string };
 
@@ -15,6 +18,7 @@ export function PortfolioManager({ initialItems, available, categories }: { init
   const [items, setItems] = useState(initialItems);
   const [dragId, setDragId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [, start] = useTransition();
 
   const commit = (fn: () => Promise<void>) => start(async () => { await fn(); router.refresh(); });
@@ -48,6 +52,7 @@ export function PortfolioManager({ initialItems, available, categories }: { init
         <p className="text-sm text-ink-2">{items.length} photo{items.length === 1 ? "" : "s"}. Drag to reorder; the order is how they appear on your site.</p>
         <div className="flex gap-2">
           {categories.length ? <CategoryRenamer categories={categories} onRename={(from, to) => commit(() => renameCategoryAction(from, to))} /> : null}
+          <Button size="sm" variant="secondary" onClick={() => setImporting(true)}>Import from gallery</Button>
           <Button size="sm" onClick={() => setAdding(true)} disabled={available.length === 0}>Add photos</Button>
         </div>
       </div>
@@ -106,7 +111,92 @@ export function PortfolioManager({ initialItems, available, categories }: { init
         categories={categories}
         onAdd={(ids, category) => { setAdding(false); commit(() => addToPortfolioAction(ids, category)); }}
       />
+
+      <ImportDialog
+        open={importing}
+        onClose={() => setImporting(false)}
+        categories={categories}
+        onImported={() => { setImporting(false); router.refresh(); }}
+      />
     </div>
+  );
+}
+
+function ImportDialog({ open, onClose, categories, onImported }: { open: boolean; onClose: () => void; categories: string[]; onImported: () => void }) {
+  const [galleries, setGalleries] = useState<ImportGallery[] | null>(null);
+  const [openedOnce, setOpenedOnce] = useState(false);
+  const [gallery, setGallery] = useState<ImportGallery | null>(null);
+  const [photos, setPhotos] = useState<ImportPhoto[] | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [category, setCategory] = useState(categories[0] ?? "headshots");
+  const [pending, start] = useTransition();
+
+  // Load galleries the first time the dialog opens (guarded, not in an effect).
+  if (open && !openedOnce) {
+    setOpenedOnce(true);
+    void listImportGalleriesAction().then(setGalleries);
+  }
+  if (!open && openedOnce) {
+    // reset when closed so a re-open starts fresh
+    setOpenedOnce(false);
+    setGallery(null);
+    setPhotos(null);
+    setSelected(new Set());
+  }
+
+  const pickGallery = (g: ImportGallery) => {
+    setGallery(g);
+    setPhotos(null);
+    setSelected(new Set());
+    void listGalleryPhotosAction(g.id).then(setPhotos);
+  };
+  const toggle = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const doImport = () => start(async () => { await importPhotosAction([...selected], category || "headshots"); onImported(); });
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={gallery ? `Import from ${gallery.title}` : "Import from a gallery"}
+      footer={gallery ? <>
+        <Button variant="secondary" size="sm" onClick={() => setGallery(null)}>Back</Button>
+        <Button size="sm" disabled={selected.size === 0 || pending} onClick={doImport}>{pending ? "Importing…" : `Import ${selected.size || ""}`}</Button>
+      </> : undefined}
+    >
+      {!gallery ? (
+        galleries === null ? <p className="text-sm text-muted">Loading…</p> :
+        galleries.length === 0 ? <p className="text-sm text-ink-2">No galleries are available. Only galleries whose client agreed to portfolio use in their agreement can be imported.</p> :
+        <ul className="divide-y divide-line">
+          {galleries.map((g) => (
+            <li key={g.id}>
+              <button type="button" onClick={() => pickGallery(g)} className="flex w-full items-center justify-between py-2.5 text-left text-sm hover:text-brand">
+                <span><span className="font-medium">{g.title}</span> <span className="text-muted">· {g.client_name}</span></span>
+                <span className="text-muted text-xs">{g.photo_count} photo{g.photo_count === 1 ? "" : "s"} ›</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <span className="text-muted">Category</span>
+            <input value={category} onChange={(e) => setCategory(e.target.value)} list="portfolio-categories" className="h-9 flex-1 rounded-lg border border-line-2 bg-surface px-3 text-sm" placeholder="e.g. headshots" />
+          </label>
+          {photos === null ? <p className="text-sm text-muted">Loading photos…</p> :
+          photos.length === 0 ? <p className="text-sm text-ink-2">This gallery has no photos.</p> :
+          <ul className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[45vh] overflow-y-auto">
+            {photos.map((p) => (
+              <li key={p.id}>
+                <button type="button" onClick={() => toggle(p.id)} className={cx("block w-full aspect-square overflow-hidden rounded-lg border-2", selected.has(p.id) ? "border-brand" : "border-transparent hover:border-line-2")} title={p.filename}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.thumb} alt={p.filename} loading="lazy" className="h-full w-full object-cover" />
+                </button>
+              </li>
+            ))}
+          </ul>}
+        </div>
+      )}
+    </Dialog>
   );
 }
 

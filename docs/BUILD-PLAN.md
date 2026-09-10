@@ -915,10 +915,10 @@ SEO and quality
 - [x] 15.3 Bulk tag and bulk delete.
 - [x] 15.4 Variants generated on upload (thumb 480, web 1600, original kept); public store for site use.
 - [x] 15.5 `/studio/portfolio`: pick assets, order (drag), categories (create, rename), captions, featured flag, publish toggle.
-- [ ] 15.6 Import from gallery: pick a finished gallery, select photos, copy into assets as portfolio items; requires the client consent checkbox recorded on the order.
+- [x] 15.6 Import from gallery: pick a finished gallery, select photos, copy into assets as portfolio items; requires the client consent checkbox recorded on the order.
 - [x] 15.7 Storage accounting includes assets and documents; usage shown on billing and assets pages.
-- [ ] 15.8 Orphan cleanup job: blobs without rows older than 7 days are deleted (cron, logged).
-- [ ] 15.9 Tests: usage count maintenance, delete blocked when in use.
+- [x] 15.8 Orphan cleanup job: blobs without rows older than 7 days are deleted (cron, logged).
+- [x] 15.9 Tests: usage count maintenance, delete blocked when in use.
 
 ## Phase 16. Emails, automations, sending domains
 
