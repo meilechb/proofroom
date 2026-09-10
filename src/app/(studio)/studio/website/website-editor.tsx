@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Site } from "@/lib/site/schema";
 import { TEMPLATES, FONT_PAIRINGS } from "@/lib/site/schema";
 import { discardDraftAction, publishSiteAction, saveDraftAction } from "./actions";
@@ -123,6 +123,74 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   return <label className="flex items-center justify-between gap-3 text-sm py-1.5"><span>{label}</span><input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4" /></label>;
 }
 
+function NumberField({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
+  return (
+    <label className="flex items-center justify-between gap-3 text-sm py-1">
+      <span>{label}</span>
+      <input type="number" min={min} max={max} value={value} onChange={(e) => onChange(Math.max(min, Math.min(max, Number(e.target.value) || min)))} className="h-9 w-20 rounded-lg border border-line-2 bg-surface px-2 text-sm" />
+    </label>
+  );
+}
+
+type ButtonValue = { label: string; target: "contact" | "pricing" | "portfolio" | "book" | "gallery" | "about" | "url"; url?: string };
+const BUTTON_TARGETS: { value: ButtonValue["target"]; label: string }[] = [
+  { value: "contact", label: "Contact page" },
+  { value: "pricing", label: "Pricing page" },
+  { value: "portfolio", label: "Portfolio" },
+  { value: "book", label: "Book page" },
+  { value: "gallery", label: "Client gallery" },
+  { value: "about", label: "About page" },
+  { value: "url", label: "Custom link" },
+];
+
+/** Edits one button's text and where it points (plan 14.18.2). */
+function ButtonEditor({ label, value, onChange }: { label: string; value: ButtonValue; onChange: (v: ButtonValue) => void }) {
+  return (
+    <div className="rounded-md border border-line p-2 space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
+      <input value={value.label} onChange={(e) => onChange({ ...value, label: e.target.value })} placeholder="Button text" className="w-full h-9 rounded border border-line-2 px-2 text-sm" />
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted whitespace-nowrap">Goes to</span>
+        <select value={value.target} onChange={(e) => onChange({ ...value, target: e.target.value as ButtonValue["target"] })} className="flex-1 h-9 rounded border border-line-2 px-2 text-sm">
+          {BUTTON_TARGETS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+        </select>
+      </div>
+      {value.target === "url" ? <input value={value.url ?? ""} onChange={(e) => onChange({ ...value, url: e.target.value })} placeholder="https://example.com" className="w-full h-9 rounded border border-line-2 px-2 text-sm" /> : null}
+    </div>
+  );
+}
+
+/** List editor for the About page process steps (plan 14.19.2). */
+function StepsEditor({ items, onChange }: { items: { title: string; text: string }[]; onChange: (items: { title: string; text: string }[]) => void }) {
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => (
+        <div key={i} className="rounded-md border border-line p-2 space-y-1">
+          <input value={it.title} onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} placeholder="Step title" className="w-full h-8 rounded border border-line-2 px-2 text-sm" />
+          <textarea value={it.text} onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} placeholder="What happens in this step" rows={2} className="w-full rounded border border-line-2 px-2 py-1 text-sm" />
+          <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))} className="text-xs text-muted hover:text-danger">Remove</button>
+        </div>
+      ))}
+      {items.length < 6 ? <button type="button" onClick={() => onChange([...items, { title: "", text: "" }])} className="btn-secondary btn-sm">Add step</button> : null}
+    </div>
+  );
+}
+
+/** List editor for a simple bullet list, e.g. what's included with every session (plan 14.19). */
+function ListEditor({ items, placeholder, max, onChange }: { items: string[]; placeholder: string; max: number; onChange: (items: string[]) => void }) {
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => (
+        <div key={i} className="flex gap-2">
+          <input value={it} onChange={(e) => onChange(items.map((x, j) => (j === i ? e.target.value : x)))} placeholder={placeholder} className="flex-1 h-8 rounded border border-line-2 px-2 text-sm" />
+          <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))} className="text-xs text-muted hover:text-danger px-1">Remove</button>
+        </div>
+      ))}
+      {items.length < max ? <button type="button" onClick={() => onChange([...items, ""])} className="btn-secondary btn-sm">Add item</button> : null}
+    </div>
+  );
+}
+
 type SetFn = (updater: (d: Site) => Site) => void;
 
 function HomePanel({ draft, set }: { draft: Site; set: SetFn }) {
@@ -133,7 +201,8 @@ function HomePanel({ draft, set }: { draft: Site; set: SetFn }) {
         <legend className="text-xs font-semibold uppercase tracking-wide text-muted">Hero</legend>
         <Field label="Headline" value={h.hero.heading} onChange={(v) => set((d) => { d.home.hero.heading = v; return d; })} />
         <Field label="Subheading" value={h.hero.subheading} onChange={(v) => set((d) => { d.home.hero.subheading = v; return d; })} textarea />
-        <Field label="Primary button label" value={h.hero.button.label} onChange={(v) => set((d) => { d.home.hero.button.label = v; return d; })} />
+        <ButtonEditor label="Primary button" value={h.hero.button} onChange={(v) => set((d) => { d.home.hero.button = v; return d; })} />
+        <ButtonEditor label="Secondary button" value={h.hero.secondaryButton} onChange={(v) => set((d) => { d.home.hero.secondaryButton = v; return d; })} />
       </fieldset>
       <SectionBlock title="Intro" enabled={h.intro.enabled} onToggle={(v) => set((d) => { d.home.intro.enabled = v; return d; })}>
         <Field label="Heading" value={h.intro.heading} onChange={(v) => set((d) => { d.home.intro.heading = v; return d; })} />
@@ -144,7 +213,9 @@ function HomePanel({ draft, set }: { draft: Site; set: SetFn }) {
         <Field label="Intro" value={h.packages.body} onChange={(v) => set((d) => { d.home.packages.body = v; return d; })} hint="Manage the packages themselves under Packages." />
       </SectionBlock>
       <SectionBlock title="Testimonials" enabled={h.testimonials.enabled} onToggle={(v) => set((d) => { d.home.testimonials.enabled = v; return d; })}>
-        <Field label="Heading" value={h.testimonials.heading} onChange={(v) => set((d) => { d.home.testimonials.heading = v; return d; })} hint="Add reviews on the Reviews page." />
+        <Field label="Heading" value={h.testimonials.heading} onChange={(v) => set((d) => { d.home.testimonials.heading = v; return d; })} />
+        <NumberField label="How many to show" value={h.testimonials.limit} min={1} max={12} onChange={(v) => set((d) => { d.home.testimonials.limit = v; return d; })} />
+        <p className="text-xs text-muted">Your most recent published reviews appear here. Add and reorder them on the Reviews page.</p>
       </SectionBlock>
       <SectionBlock title="FAQ" enabled={h.faq.enabled} onToggle={(v) => set((d) => { d.home.faq.enabled = v; return d; })}>
         <Field label="Heading" value={h.faq.heading} onChange={(v) => set((d) => { d.home.faq.heading = v; return d; })} />
@@ -157,6 +228,7 @@ function HomePanel({ draft, set }: { draft: Site; set: SetFn }) {
       <SectionBlock title="Closing call to action" enabled={h.cta.enabled} onToggle={(v) => set((d) => { d.home.cta.enabled = v; return d; })}>
         <Field label="Heading" value={h.cta.heading} onChange={(v) => set((d) => { d.home.cta.heading = v; return d; })} />
         <Field label="Body" value={h.cta.body} onChange={(v) => set((d) => { d.home.cta.body = v; return d; })} textarea />
+        <ButtonEditor label="Button" value={h.cta.button} onChange={(v) => set((d) => { d.home.cta.button = v; return d; })} />
       </SectionBlock>
     </div>
   );
@@ -191,16 +263,46 @@ function FaqEditor({ items, onChange }: { items: { q: string; a: string }[]; onC
 
 function PagesPanel({ draft, set }: { draft: Site; set: SetFn }) {
   return (
-    <fieldset className="space-y-1">
-      <legend className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Show these pages</legend>
-      <Toggle label="Portfolio" checked={draft.portfolio.enabled} onChange={(v) => set((d) => { d.portfolio.enabled = v; return d; })} />
-      <Toggle label="Pricing" checked={draft.pricing.enabled} onChange={(v) => set((d) => { d.pricing.enabled = v; return d; })} />
-      <Toggle label="About" checked={draft.about.enabled} onChange={(v) => set((d) => { d.about.enabled = v; return d; })} />
-      <Toggle label="Contact" checked={draft.contact.enabled} onChange={(v) => set((d) => { d.contact.enabled = v; return d; })} />
-      <Toggle label="Book" checked={draft.book.enabled} onChange={(v) => set((d) => { d.book.enabled = v; return d; })} />
-      <Toggle label="Your gallery (client login)" checked={draft.gallery.enabled} onChange={(v) => set((d) => { d.gallery.enabled = v; return d; })} />
-      <Toggle label="Local area pages" checked={draft.areas.enabled} onChange={(v) => set((d) => { d.areas.enabled = v; return d; })} />
-    </fieldset>
+    <div className="space-y-6">
+      <fieldset className="space-y-1">
+        <legend className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Show these pages</legend>
+        <Toggle label="Portfolio" checked={draft.portfolio.enabled} onChange={(v) => set((d) => { d.portfolio.enabled = v; return d; })} />
+        <Toggle label="Pricing" checked={draft.pricing.enabled} onChange={(v) => set((d) => { d.pricing.enabled = v; return d; })} />
+        <Toggle label="About" checked={draft.about.enabled} onChange={(v) => set((d) => { d.about.enabled = v; return d; })} />
+        <Toggle label="Contact" checked={draft.contact.enabled} onChange={(v) => set((d) => { d.contact.enabled = v; return d; })} />
+        <Toggle label="Book" checked={draft.book.enabled} onChange={(v) => set((d) => { d.book.enabled = v; return d; })} />
+        <Toggle label="Your gallery (client login)" checked={draft.gallery.enabled} onChange={(v) => set((d) => { d.gallery.enabled = v; return d; })} />
+        <Toggle label="Local area pages" checked={draft.areas.enabled} onChange={(v) => set((d) => { d.areas.enabled = v; return d; })} />
+      </fieldset>
+
+      {draft.about.enabled ? (
+        <fieldset className="rounded-lg border border-line p-3 space-y-3">
+          <legend className="text-xs font-semibold uppercase tracking-wide text-muted">About page</legend>
+          <Field label="About heading" value={draft.about.bio.heading} onChange={(v) => set((d) => { d.about.bio.heading = v; return d; })} />
+          <Field label="Your story" value={draft.about.bio.body} onChange={(v) => set((d) => { d.about.bio.body = v; return d; })} textarea hint="A few sentences about you and how you work." />
+          <div>
+            <p className="text-sm font-medium mb-1">How a session works</p>
+            <StepsEditor items={draft.about.steps.items} onChange={(items) => set((d) => { d.about.steps.items = items; return d; })} />
+          </div>
+        </fieldset>
+      ) : null}
+
+      {draft.pricing.enabled ? (
+        <fieldset className="rounded-lg border border-line p-3 space-y-3">
+          <legend className="text-xs font-semibold uppercase tracking-wide text-muted">Pricing page</legend>
+          <Field label="Intro above packages" value={draft.pricing.packages.body} onChange={(v) => set((d) => { d.pricing.packages.body = v; return d; })} textarea hint="Your packages come from the Packages page." />
+          <Field label="Package button label" value={draft.pricing.packages.buttonLabel} onChange={(v) => set((d) => { d.pricing.packages.buttonLabel = v; return d; })} hint="For example: Book this" />
+          <div>
+            <p className="text-sm font-medium mb-1">What&rsquo;s included with every session</p>
+            <ListEditor items={draft.pricing.included.items} placeholder="e.g. 30-minute session" max={12} onChange={(items) => set((d) => { d.pricing.included.items = items; return d; })} />
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-1">Pricing FAQ</p>
+            <FaqEditor items={draft.pricing.faq.items} onChange={(items) => set((d) => { d.pricing.faq.items = items; return d; })} />
+          </div>
+        </fieldset>
+      ) : null}
+    </div>
   );
 }
 

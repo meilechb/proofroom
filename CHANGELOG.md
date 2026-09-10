@@ -4,6 +4,7 @@ Newest first. One line per meaningful change; phase numbers refer to docs/BUILD-
 
 ## Unreleased
 
+- Phase 14 (editor pickers): button editor (text plus where it points — a page or a custom link) for the hero primary/secondary and closing-CTA buttons; a testimonials count control; and per-page content editing under the Pages panel — About heading, story and a process-steps list editor, and Pricing intro, package button label, an included-with-every-session list and a pricing FAQ.
 - Phase 14 (site analytics): a cookieless per-studio site-view beacon counts public-page views per path per day; /studio/website/analytics shows total views, contact-form messages and the busiest page, a 30-day views-per-day bar, a top-pages table and a top-areas table. No visitor is identified.
 - Phase 14 (domains): /studio/settings/domain to add a studio's own domain, registered with the Vercel Domains API when a token is configured; shows the exact A/CNAME and ownership-TXT records from Vercel's own recommendation with copy buttons, a live status badge (not set, pending DNS, live), a check-again button and remove; a frequent cron job re-checks pending domains and flips them live once ownership is verified and DNS points to us; the proxy routes verified custom hosts to the studio.
 - Phase 14 (SEO): per-tenant sitemap.xml and robots.txt (client areas excluded) routed by the proxy, www-to-apex redirect for custom domains, LocalBusiness and About Person JSON-LD, and a per-tenant Open Graph image from the studio name and colors.
