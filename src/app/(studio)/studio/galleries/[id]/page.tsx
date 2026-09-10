@@ -1,12 +1,11 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStudioPage } from "@/lib/auth";
 import { getGallery } from "@/lib/galleries";
 import { listPhotos } from "@/lib/photos";
 import { db, one, rows } from "@/lib/db";
 import { galleryUrl } from "@/lib/tenant";
-import { galleryKindLabels, formatDate, type Client } from "@/lib/types";
-import { PageHeader, Card, Badge, ButtonLink, cx } from "@/components/ui";
+import { galleryKindLabels, type Client } from "@/lib/types";
+import { PageHeader, Card, Badge, cx } from "@/components/ui";
 import { CopyButton } from "@/components/forms/copy-button";
 import { GalleryUploader } from "./gallery-uploader";
 import { PhotoGrid } from "./photo-grid";

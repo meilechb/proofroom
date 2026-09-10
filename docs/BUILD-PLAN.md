@@ -785,14 +785,14 @@ Quality
 - [ ] 13.12 Share sheet (copy link, email) when sharing is allowed; watermarked share image.
 - [ ] 13.13 Client upload area when enabled (drag and drop, limits, appears in studio as `uploaded_by=client`).
 - [~] 13.14 Mobile layout: bottom action bar (favorites, download, notes), swipe in lightbox.
-- [ ] 13.15 `/pay/[orderId]`: order summary, agreement text with checkbox and typed name, choose deposit, balance or full, "Pay with card" → Checkout on the studio's account; manual mode shows instructions.
-  - [ ] 13.15.1 Order summary (package, date, total, paid)
-  - [ ] 13.15.2 Agreement text with checkbox and typed name
-  - [ ] 13.15.3 Choose deposit, balance or full
-  - [ ] 13.15.4 Pay with card → Checkout on the studio's account
-  - [ ] 13.15.5 Manual mode instructions
-  - [ ] 13.15.6 Error states (order cancelled, already paid)
-- [ ] 13.16 `/pay/[orderId]/success` and `/cancel`.
+- [x] 13.15 `/pay/[orderId]`: order summary, agreement text with checkbox and typed name, choose deposit, balance or full, "Pay with card" → Checkout on the studio's account; manual mode shows instructions.
+  - [x] 13.15.1 Order summary (package, date, total, paid)
+  - [x] 13.15.2 Agreement text with checkbox and typed name
+  - [x] 13.15.3 Choose deposit, balance or full
+  - [x] 13.15.4 Pay with card → Checkout on the studio's account
+  - [x] 13.15.5 Manual mode instructions
+  - [x] 13.15.6 Error states (order cancelled, already paid)
+- [x] 13.16 `/pay/[orderId]/success` and `/cancel`.
 - [ ] 13.17 `/team/[eventSlug]`: manager overview (people, status, picks) behind a manager code.
 - [ ] 13.18 `/my/[token]` client hub: galleries, sessions, payments, documents, bookings; magic link expires in 7 days, re-request form.
   - [ ] 13.18.1 Galleries list with status

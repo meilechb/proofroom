@@ -5,7 +5,7 @@ import { requireWritableStudio } from "@/lib/auth";
 import { getGallery, updateGallerySettings } from "@/lib/galleries";
 import { beginUpload, completeUpload, renamePhoto, reorderPhotos, softDeletePhotos } from "@/lib/photos";
 import { db } from "@/lib/db";
-import { str, type ActionState } from "@/lib/action-state";
+import { str } from "@/lib/action-state";
 
 type Meta = { filename: string; size: number; contentType: string; sha256: string | null };
 

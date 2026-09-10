@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { db, one } from "@/lib/db";
 import { studioBySlug, galleryBySlug } from "@/lib/tenant-data";

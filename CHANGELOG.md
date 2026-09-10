@@ -4,6 +4,7 @@ Newest first. One line per meaningful change; phase numbers refer to docs/BUILD-
 
 ## Unreleased
 
+- Phase 13 (pay): client pay page with order summary, e-signed agreement (checkbox and typed name), deposit/balance/full options to Checkout on the studio's Stripe account, manual-payment instructions when cards are off, cancelled/paid/already-paid states, and a payment-received success page.
 - Phase 13 (start): tenant client gallery: themed layout, code/password unlock with rate limit, photo grid with lazy thumbs, lightbox with keyboard and slideshow, favorites and per-photo notes back to the studio, favorites filter and included-count message, pay-gate banner, expired/closed states; photo streaming API with grant-cookie access and pay-gated full size.
 - Phase 12: galleries studio side: list with cover cards and counts, new-gallery flow, gallery detail with direct-to-Blob uploader, selectable photo grid (delete, set cover), settings drawer (access, downloads, pay-gate, watermark, expiry, password, PIN), publish/unpublish, send-to-client email, client notes panel, favorites and create-finals-from-favorites.
 - Phase 11: packages management; sessions list, new-session flow and session detail (money, pay link, manual payments, agreement status, galleries, edit, cancel).

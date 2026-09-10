@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { studioBySlug, galleryBySlug, siteOf } from "@/lib/tenant-data";
+import { studioBySlug, galleryBySlug } from "@/lib/tenant-data";
 import { hasGalleryAccess, unlockMethod } from "@/lib/gallery-access";
 import { db, one, rows } from "@/lib/db";
 import { listPhotos } from "@/lib/photos";
