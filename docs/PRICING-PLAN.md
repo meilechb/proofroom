@@ -222,12 +222,12 @@ Branding
 
 ## Phase 13 — Banners & notices
 
-- [ ] 13.1 Trial banner: "N days of Pro left — then your studio moves to Free" + Upgrade.
+- [x] 13.1 Trial banner: "N days of Pro left — then your studio moves to Free" + Upgrade.
 - [ ] 13.2 Turns amber at 3 days (keep existing threshold behavior).
-- [ ] 13.3 Free banner (dismissible): "You're on the Free plan — upgrade to unlock team, custom domain, automations…".
-- [ ] 13.4 Over-cap notice: "You've reached the 5 GB Free limit. Uploads are paused — upgrade or free up space."
+- [-] 13.3 Free banner (dismissible): "You're on the Free plan — upgrade…". *(skipped: a persistent top-bar upsell nags on every page; the billing page + per-feature upgrade locks carry the upsell instead.)*
+- [x] 13.4 Over-cap notice: "You've reached the 5 GB Free limit. Uploads are paused — upgrade or free up space."
 - [ ] 13.5 Seats-locked notice for non-owner members on a downgraded Free studio (D4).
-- [ ] 13.6 Remove the old "read-only / galleries lock soon" banner from the trial path.
+- [x] 13.6 Remove the old "read-only / galleries lock soon" banner from the trial path.
 
 ## Phase 14 — Tests
 
