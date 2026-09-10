@@ -25,19 +25,21 @@ Base URL: the studio's app URL (for example `https://app.example.com`).
 | GET | `/api/lr/clients?q=` | Search clients. |
 | POST | `/api/lr/clients` | Create a client `{ name, email, phone? }`. |
 | GET | `/api/lr/galleries?client=` | List galleries, optionally for one client. |
+| GET | `/api/lr/galleries/[id]` | One gallery with its access code, URL and photo count. |
 | POST | `/api/lr/galleries` | Create `{ title, kind: "proof"\|"final", client_id \| client_name+client_email }`. |
-| POST | `/api/lr/photos/begin` | Reserve a photo `{ gallery_id, filename, size, sha256?, content_type?, lr_photo_id? }` → `{ photoId, pathname, token, duplicate }`. |
-| POST | `/api/lr/photos/complete` | After upload `{ photo_id, url }` → generates web and thumb variants. |
-| PATCH | `/api/lr/photos/[id]` | Replace the file in place `{ size, content_type?, filename? }` → a fresh upload token; the id and order are kept. |
+| POST | `/api/lr/photos/begin` | Reserve a photo `{ gallery_id, filename, size, sha256?, content_type?, lr_photo_id? }` → `{ photoId, uploadUrl, duplicate }`. |
+| PUT | `/api/lr/photos/[id]/data` | Upload the JPEG bytes (raw body). The server stores the original and builds web and thumb variants. |
+| PATCH | `/api/lr/photos/[id]` | Replace the file in place `{ filename? }` → `{ uploadUrl }`; the id and order are kept. |
 | DELETE | `/api/lr/photos/[id]` | Remove a photo. |
 | GET | `/api/lr/galleries/[id]/feedback?since=` | Client favorites and comments since a timestamp. |
 | POST | `/api/lr/galleries/[id]/publish` | Publish; returns the access code. |
 | POST | `/api/lr/galleries/[id]/unpublish` | Return to draft. |
 
-Uploads use the same direct-to-Blob token flow as the web app: `begin` returns a
-short-lived token and pathname, the plugin uploads the bytes to Blob, then calls
-`complete` with the returned URL. A repeated `sha256` within a gallery returns the
-existing photo id with `duplicate: true`.
+Uploads are server-side so a Lightroom plugin can use plain HTTP: `begin` reserves
+the photo and returns an `uploadUrl`, the plugin PUTs the rendered JPEG bytes to
+that URL, and the server stores the original and builds the variants. A repeated
+`sha256` within a gallery returns the existing photo id with `duplicate: true` and
+a null `uploadUrl`.
 
 ## Changelog
 

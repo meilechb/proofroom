@@ -53,6 +53,16 @@ export async function putPublic(pathname: string, body: Buffer, contentType: str
   });
 }
 
+/** Server-side upload to the private galleries store (for the Lightroom plugin, which cannot use the browser blob client). */
+export async function putPrivate(pathname: string, body: Buffer, contentType: string) {
+  return put(pathname, body, {
+    access: "private",
+    token: blobToken("galleries"),
+    contentType,
+    addRandomSuffix: true,
+  });
+}
+
 /** Best-effort delete; a missing blob must not block deleting the database row. */
 export async function deleteBlobs(store: Store, urls: Array<string | null | undefined>) {
   const list = urls.filter((u): u is string => Boolean(u));

@@ -43,7 +43,10 @@ export function withApi(handler: Handler, opts: { write?: boolean } = {}) {
 
       const params = ctx?.params ? await ctx.params : {};
       let body: unknown = null;
-      if (request.method !== "GET" && request.method !== "DELETE") body = await request.json().catch(() => null);
+      // Parse JSON bodies only; binary uploads (the photo data PUT) are read by the handler.
+      if (request.method !== "GET" && request.method !== "DELETE" && (request.headers.get("content-type") ?? "").includes("application/json")) {
+        body = await request.json().catch(() => null);
+      }
 
       const data = await handler({ studio, request, params, body });
       return NextResponse.json(data ?? { ok: true }, { headers });

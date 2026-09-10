@@ -2,7 +2,7 @@ import "server-only";
 
 import { db, one, rows } from "@/lib/db";
 import { ALLOWED_IMAGE_TYPES, MAX_UPLOAD_BYTES, PREVIEW_MAX_EDGE, THUMB_MAX_EDGE, captureTime, downloadBlob, makeWatermarkedVersion, makeWebVersion, putJpeg, sha256 } from "@/lib/images";
-import { clientUploadToken, deleteMany, galleryPath, safeFilename } from "@/lib/storage";
+import { clientUploadToken, deleteMany, galleryPath, safeFilename, putPrivate } from "@/lib/storage";
 import { addBytes, subtractBytes } from "@/lib/usage";
 import type { Gallery, Photo } from "@/lib/types";
 
@@ -14,6 +14,56 @@ import type { Gallery, Photo } from "@/lib/types";
  */
 
 export type UploadTicket = { photoId: string; pathname: string; token: string; duplicateOf: string | null };
+
+/**
+ * Reserve a photo row for a server-side upload (the Lightroom plugin PUTs the
+ * bytes to our own endpoint). Mirrors beginUpload's validation and dedup but
+ * mints no browser token. Returns the pathname to store the original at.
+ */
+export async function reserveServerPhoto(studioId: string, galleryId: string, input: { filename: string; size: number; contentType: string; sha256?: string | null; lrPhotoId?: string | null }): Promise<{ photoId: string; pathname: string; duplicateOf: string | null }> {
+  if (input.size <= 0 || input.size > MAX_UPLOAD_BYTES) throw new Error(`Files must be under ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.`);
+  if (!ALLOWED_IMAGE_TYPES.includes(input.contentType)) throw new Error("Only JPEG, PNG, WebP, TIFF and HEIC files are accepted.");
+  const filename = safeFilename(input.filename, "photo.jpg");
+  const duplicate = input.sha256
+    ? one<{ id: string }>(await db()`select id from photos where gallery_id = ${galleryId} and sha256 = ${input.sha256} and deleted_at is null limit 1`)
+    : null;
+  if (duplicate) return { photoId: duplicate.id, pathname: "", duplicateOf: duplicate.id };
+  const pathname = galleryPath(studioId, galleryId, `${Date.now()}-${filename}`);
+  const nextOrder = one<{ n: number }>(await db()`select coalesce(max(sort_order), 0) + 1 as n from photos where gallery_id = ${galleryId}`);
+  const photo = one<Photo>(
+    await db()`
+      insert into photos (studio_id, gallery_id, original_url, preview_url, filename, size_bytes, sort_order, sha256, lr_photo_id, uploaded_by)
+      values (${studioId}, ${galleryId}, ${`pending:${pathname}`}, '', ${filename}, ${input.size}, ${nextOrder?.n ?? 1}, ${input.sha256 ?? null}, ${input.lrPhotoId ?? null}, 'studio')
+      returning *`
+  );
+  if (!photo) throw new Error("Could not start the upload.");
+  return { photoId: photo.id, pathname, duplicateOf: null };
+}
+
+/** Store the uploaded bytes and build variants (server-side upload path for the plugin). */
+export async function ingestServerPhoto(studioId: string, photoId: string, buffer: Buffer, contentType: string, watermarkText: string | null) {
+  const photo = one<Photo>(await db()`select * from photos where id = ${photoId} and studio_id = ${studioId} and deleted_at is null`);
+  if (!photo) throw new Error("Photo not found.");
+  const pending = photo.original_url.startsWith("pending:") ? photo.original_url.slice("pending:".length) : galleryPath(studioId, photo.gallery_id, `${photo.id}-original`);
+  const originalBlob = await putPrivate(pending, buffer, contentType || "image/jpeg");
+  const [preview, thumb, captured] = await Promise.all([
+    watermarkText ? makeWatermarkedVersion(buffer, PREVIEW_MAX_EDGE, watermarkText) : makeWebVersion(buffer, PREVIEW_MAX_EDGE),
+    makeWebVersion(buffer, THUMB_MAX_EDGE, 80),
+    captureTime(buffer),
+  ]);
+  const previewBlob = await putJpeg("galleries", galleryPath(studioId, photo.gallery_id, `${photo.id}-preview.jpg`), preview.buffer);
+  const thumbBlob = await putJpeg("galleries", galleryPath(studioId, photo.gallery_id, `${photo.id}-thumb.jpg`), thumb.buffer);
+  const totalBytes = buffer.length + preview.buffer.length + thumb.buffer.length;
+  const updated = one<Photo>(
+    await db()`
+      update photos set original_url = ${originalBlob.url}, preview_url = ${previewBlob.url}, thumb_url = ${thumbBlob.url},
+        width = ${preview.width}, height = ${preview.height}, size_bytes = ${totalBytes}, sha256 = coalesce(sha256, ${sha256(buffer)}),
+        captured_at = ${captured ? captured.toISOString() : null}
+      where id = ${photoId} and studio_id = ${studioId} returning *`
+  );
+  await addBytes(studioId, totalBytes - photo.size_bytes);
+  return updated;
+}
 
 export async function beginUpload(studioId: string, gallery: Pick<Gallery, "id">, input: { filename: string; size: number; contentType: string; sha256?: string | null; uploadedBy?: Photo["uploaded_by"] }): Promise<UploadTicket> {
   if (input.size <= 0 || input.size > MAX_UPLOAD_BYTES) throw new Error(`Files must be under ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB.`);
