@@ -4,7 +4,9 @@ import { studioBySlug } from "@/lib/tenant-data";
 import { verifyLink, signLink } from "@/lib/tenant-tokens";
 import { db, one, rows } from "@/lib/db";
 import { formatDate, formatMoney, orderStatusLabels, type OrderStatus } from "@/lib/types";
+import { bookingSettings, withinChangeWindow } from "@/lib/booking-shared";
 import { RequestHubLink } from "./request-form";
+import { BookingManage } from "./booking-manage";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -31,9 +33,10 @@ export default async function ClientHubPage({ params }: PageProps<"/t/[slug]/my/
     rows<{ id: string; order_number: number; title: string; status: string; amount_cents: number; discount_cents: number; scheduled_at: string | null; currency: string; paid: number }>(await db()`select o.id, o.order_number, o.title, o.status, o.amount_cents, o.discount_cents, o.scheduled_at, o.currency, coalesce((select sum(p.amount_cents - p.refunded_cents) from payments p where p.order_id = o.id and p.status in ('paid','partially_refunded')),0)::int as paid from orders o where o.client_id = ${client.id} and o.studio_id = ${studio.id} and o.status <> 'draft' order by o.created_at desc`),
     rows<{ id: string; amount_cents: number; currency: string; method: string; status: string; paid_at: string | null; created_at: string }>(await db()`select id, amount_cents, currency, method, status, paid_at, created_at from payments where studio_id = ${studio.id} and order_id in (select id from orders where client_id = ${client.id}) and status in ('paid','partially_refunded','refunded') order by coalesce(paid_at, created_at) desc`),
     rows<{ id: string; title: string; kind: string; url: string; created_at: string }>(await db()`select id, title, kind, url, created_at from documents where client_id = ${client.id} and studio_id = ${studio.id} order by created_at desc`),
-    rows<{ id: string; starts_at: string; ends_at: string; status: string; order_id: string | null }>(await db()`select id, starts_at, ends_at, status, order_id from booking_slots where client_id = ${client.id} and studio_id = ${studio.id} and status in ('held','confirmed') and starts_at >= now() order by starts_at`),
+    rows<{ id: string; starts_at: string; ends_at: string; status: string; order_id: string | null }>(await db()`select id, starts_at, ends_at, status, order_id from booking_slots where client_id = ${client.id} and studio_id = ${studio.id} and status = 'confirmed' and starts_at >= now() order by starts_at`),
   ]);
   const cur = studio.currency;
+  const booking = bookingSettings((studio.settings ?? {}) as Record<string, unknown>);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-5 sm:px-8 py-10">
@@ -85,10 +88,7 @@ export default async function ClientHubPage({ params }: PageProps<"/t/[slug]/my/
       {bookings.length > 0 ? (
         <Section title="Upcoming bookings">
           {bookings.map((b) => (
-            <div key={b.id} className="flex items-center justify-between border-b border-[var(--site-line)] py-3 text-sm last:border-0">
-              <span>{formatDate(b.starts_at, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
-              <Link href="/book" className="text-[var(--site-ink-2)] underline">Reschedule</Link>
-            </div>
+            <BookingManage key={b.id} slug={slug} token={token} bookingId={b.id} label={formatDate(b.starts_at, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} canChange={withinChangeWindow(new Date(b.starts_at), booking.cancelWindowHours)} />
           ))}
         </Section>
       ) : null}

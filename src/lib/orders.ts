@@ -96,7 +96,11 @@ export async function updateOrder(studioId: string, id: string, patch: OrderPatc
 
 export async function cancelOrder(studioId: string, id: string, reason: string | null) {
   const order = one<Order>(await db()`update orders set status = 'cancelled', cancelled_at = now(), cancel_reason = ${reason} where id = ${id} and studio_id = ${studioId} returning *`);
-  if (order) await recordClientEvent(studioId, order.client_id, "order.cancelled", "order", id, `Session #${order.order_number} cancelled${reason ? `: ${reason}` : ""}`);
+  if (order) {
+    // Free any booking slot this session holds so the time opens up again (plan 21.13).
+    await db()`update booking_slots set status = 'cancelled', hold_expires_at = null where order_id = ${id} and studio_id = ${studioId} and status in ('held', 'confirmed')`;
+    await recordClientEvent(studioId, order.client_id, "order.cancelled", "order", id, `Session #${order.order_number} cancelled${reason ? `: ${reason}` : ""}`);
+  }
   return order;
 }
 

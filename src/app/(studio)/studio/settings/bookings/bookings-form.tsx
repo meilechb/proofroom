@@ -55,6 +55,7 @@ export function BookingsForm({ initial }: { initial: BookingSettings }) {
         <NumField label="Minimum notice (hours)" value={s.leadTimeHours} min={0} max={720} onChange={(v) => setField("leadTimeHours", v)} />
         <NumField label="Max sessions per day" value={s.maxPerDay} min={1} max={24} onChange={(v) => setField("maxPerDay", v)} />
         <NumField label="Slot step (min)" value={s.slotStepMinutes} min={5} max={120} onChange={(v) => setField("slotStepMinutes", v)} />
+        <NumField label="Self reschedule/cancel until (hours before)" value={s.cancelWindowHours} min={0} max={720} onChange={(v) => setField("cancelWindowHours", v)} />
       </div>
 
       <label className="flex items-start gap-2 text-sm">

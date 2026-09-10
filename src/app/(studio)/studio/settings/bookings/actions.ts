@@ -32,6 +32,7 @@ export async function saveBookingSettingsAction(input: BookingSettings): Promise
     maxPerDay: clamp(input.maxPerDay, 1, 24, DEFAULT_BOOKING.maxPerDay),
     slotStepMinutes: clamp(input.slotStepMinutes, 5, 120, DEFAULT_BOOKING.slotStepMinutes),
     depositRequired: Boolean(input.depositRequired),
+    cancelWindowHours: clamp(input.cancelWindowHours, 0, 720, DEFAULT_BOOKING.cancelWindowHours),
     policy: String(input.policy ?? "").slice(0, 1000),
     blockedDates: Array.isArray(input.blockedDates) ? input.blockedDates.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).slice(0, 366) : [],
   };

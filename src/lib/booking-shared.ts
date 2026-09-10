@@ -14,6 +14,7 @@ export type BookingSettings = {
   maxPerDay: number;
   slotStepMinutes: number;
   depositRequired: boolean;
+  cancelWindowHours: number; // clients can self-reschedule or cancel up to this many hours before
   policy: string;
   blockedDates: string[]; // "YYYY-MM-DD"
 };
@@ -26,9 +27,15 @@ export const DEFAULT_BOOKING: BookingSettings = {
   maxPerDay: 6,
   slotStepMinutes: 30,
   depositRequired: true,
+  cancelWindowHours: 48,
   policy: "Reschedule or cancel up to 48 hours before the session at no charge.",
   blockedDates: [],
 };
+
+/** Whether a client may still reschedule or cancel this booking themselves (plan 21.13). */
+export function withinChangeWindow(startsAt: Date, cancelWindowHours: number, now = new Date()): boolean {
+  return now.getTime() <= startsAt.getTime() - cancelWindowHours * 3600000;
+}
 
 export function bookingSettings(settings: Record<string, unknown> | null | undefined): BookingSettings {
   const raw = (settings?.booking ?? {}) as Partial<BookingSettings>;

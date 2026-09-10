@@ -799,7 +799,7 @@ Quality
   - [x] 13.18.2 Sessions with dates
   - [x] 13.18.3 Payments with receipts
   - [x] 13.18.4 Documents
-  - [~] 13.18.5 Bookings with reschedule and cancel
+  - [x] 13.18.5 Bookings with reschedule and cancel
 - [x] 13.19 `/invoice/[token]`, `/receipt/[token]` printable pages.
 - [x] 13.20 `/u/[token]` unsubscribe.
 - [x] 13.21 `GET /api/photo/[id]?size=`: access check (grant cookie or preview token), pay-gate check for full size, ETag, `Cache-Control: private`, streams from Blob.
@@ -1095,7 +1095,7 @@ Booking
   - [x] 21.10.7 Deposit Checkout or confirm
 - [x] 21.11 Hold expiry (15 minutes) and release.
 - [x] 21.12 Confirmation creates client (or links), order, booking slot, session; emails `booking_confirmed` to client and notice to studio; calendar shows it.
-- [ ] 21.13 Reschedule and cancel links in the client hub within policy; studio can override.
+- [x] 21.13 Reschedule and cancel links in the client hub within policy; studio can override.
 - [ ] 21.14 Booking reminders (automation) and no-show marking.
 - [ ] 21.15 Blocked dates (holidays) and one-off overrides.
 - [ ] 21.16 Tests: availability math, hold race (two clients same slot), policy enforcement.

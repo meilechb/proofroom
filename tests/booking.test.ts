@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_BOOKING, addDaysISO, localDateISO, openWeekdays, slotsForDate, tzOffsetMinutes, weekdayOfISO, zonedTime } from "@/lib/booking";
+import { DEFAULT_BOOKING, addDaysISO, localDateISO, openWeekdays, slotsForDate, tzOffsetMinutes, weekdayOfISO, withinChangeWindow, zonedTime } from "@/lib/booking";
 
 const tz = "America/New_York";
 const settings = { ...DEFAULT_BOOKING, enabled: true, leadTimeHours: 0, bufferMinutes: 15, slotStepMinutes: 30, maxPerDay: 6 };
@@ -54,5 +54,11 @@ describe("calendar helpers", () => {
   it("reads the weekday of a date string the same way slot math does", () => {
     expect(weekdayOfISO("2026-09-13")).toBe(0); // Sunday
     expect(weekdayOfISO("2026-09-09")).toBe(3); // Wednesday
+  });
+  it("closes self-service changes inside the cancellation window", () => {
+    const starts = new Date("2026-09-10T15:00:00Z");
+    expect(withinChangeWindow(starts, 48, new Date("2026-09-08T12:00:00Z"))).toBe(true); // more than 48h out
+    expect(withinChangeWindow(starts, 48, new Date("2026-09-09T12:00:00Z"))).toBe(false); // 27h out
+    expect(withinChangeWindow(starts, 0, new Date("2026-09-10T14:59:00Z"))).toBe(true); // no window: any time before
   });
 });
