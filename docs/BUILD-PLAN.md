@@ -794,14 +794,14 @@ Quality
   - [x] 13.15.6 Error states (order cancelled, already paid)
 - [x] 13.16 `/pay/[orderId]/success` and `/cancel`.
 - [ ] 13.17 `/team/[eventSlug]`: manager overview (people, status, picks) behind a manager code.
-- [ ] 13.18 `/my/[token]` client hub: galleries, sessions, payments, documents, bookings; magic link expires in 7 days, re-request form.
-  - [ ] 13.18.1 Galleries list with status
-  - [ ] 13.18.2 Sessions with dates
-  - [ ] 13.18.3 Payments with receipts
-  - [ ] 13.18.4 Documents
-  - [ ] 13.18.5 Bookings with reschedule and cancel
-- [ ] 13.19 `/invoice/[token]`, `/receipt/[token]` printable pages.
-- [ ] 13.20 `/u/[token]` unsubscribe.
+- [x] 13.18 `/my/[token]` client hub: galleries, sessions, payments, documents, bookings; magic link expires in 7 days, re-request form.
+  - [x] 13.18.1 Galleries list with status
+  - [x] 13.18.2 Sessions with dates
+  - [x] 13.18.3 Payments with receipts
+  - [x] 13.18.4 Documents
+  - [~] 13.18.5 Bookings with reschedule and cancel
+- [x] 13.19 `/invoice/[token]`, `/receipt/[token]` printable pages.
+- [x] 13.20 `/u/[token]` unsubscribe.
 - [x] 13.21 `GET /api/photo/[id]?size=`: access check (grant cookie or preview token), pay-gate check for full size, ETag, `Cache-Control: private`, streams from Blob.
   - [x] 13.21.1 Grant cookie check per gallery
   - [ ] 13.21.2 Preview token check for studio preview
