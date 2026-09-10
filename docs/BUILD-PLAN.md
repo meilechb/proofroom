@@ -767,24 +767,24 @@ Quality
 
 ## Phase 13. Tenant client surfaces (`/t/[slug]`)
 
-- [ ] 13.1 Tenant `layout.tsx`: theme CSS variables from the studio's site settings, logo, nav from enabled pages, footer, "Powered by" line (small, always on for now).
-- [ ] 13.2 Tenant `not-found` and `error` pages branded.
-- [ ] 13.3 `/g`: enter access code page.
-- [ ] 13.4 `/g/[slug]` locked state: code or password form, rate limited, lockout message.
-- [ ] 13.5 `/g/[slug]` gallery: header (title, welcome, counts), grid with lazy thumbs, lightbox.
-  - [ ] 13.5.1 Header with title, welcome, counts
-  - [ ] 13.5.2 Grid with lazy thumbs and aspect ratios
-  - [ ] 13.5.3 Lightbox wired to favorite and note actions
-  - [ ] 13.5.4 Sticky action bar
-- [ ] 13.6 Favorites: toggle per photo, favorites filter, limit message from package.
-- [ ] 13.7 Notes: per photo thread, client name remembered in cookie, studio replies shown.
+- [x] 13.1 Tenant `layout.tsx`: theme CSS variables from the studio's site settings, logo, nav from enabled pages, footer, "Powered by" line (small, always on for now).
+- [~] 13.2 Tenant `not-found` and `error` pages branded.
+- [x] 13.3 `/g`: enter access code page.
+- [x] 13.4 `/g/[slug]` locked state: code or password form, rate limited, lockout message.
+- [x] 13.5 `/g/[slug]` gallery: header (title, welcome, counts), grid with lazy thumbs, lightbox.
+  - [x] 13.5.1 Header with title, welcome, counts
+  - [x] 13.5.2 Grid with lazy thumbs and aspect ratios
+  - [x] 13.5.3 Lightbox wired to favorite and note actions
+  - [x] 13.5.4 Sticky action bar
+- [x] 13.6 Favorites: toggle per photo, favorites filter, limit message from package.
+- [x] 13.7 Notes: per photo thread, client name remembered in cookie, studio replies shown.
 - [ ] 13.8 Downloads: single photo (web or full per settings), select many, whole gallery zip (streamed), PIN prompt when set.
-- [ ] 13.9 Pay gate: locked overlay with "Pay balance to unlock" button to the pay page; unlocks on webhook.
-- [ ] 13.10 Expired and closed states with studio contact.
-- [ ] 13.11 Slideshow mode (full screen, keyboard, autoplay, exit).
+- [x] 13.9 Pay gate: locked overlay with "Pay balance to unlock" button to the pay page; unlocks on webhook.
+- [x] 13.10 Expired and closed states with studio contact.
+- [x] 13.11 Slideshow mode (full screen, keyboard, autoplay, exit).
 - [ ] 13.12 Share sheet (copy link, email) when sharing is allowed; watermarked share image.
 - [ ] 13.13 Client upload area when enabled (drag and drop, limits, appears in studio as `uploaded_by=client`).
-- [ ] 13.14 Mobile layout: bottom action bar (favorites, download, notes), swipe in lightbox.
+- [~] 13.14 Mobile layout: bottom action bar (favorites, download, notes), swipe in lightbox.
 - [ ] 13.15 `/pay/[orderId]`: order summary, agreement text with checkbox and typed name, choose deposit, balance or full, "Pay with card" → Checkout on the studio's account; manual mode shows instructions.
   - [ ] 13.15.1 Order summary (package, date, total, paid)
   - [ ] 13.15.2 Agreement text with checkbox and typed name
@@ -802,17 +802,17 @@ Quality
   - [ ] 13.18.5 Bookings with reschedule and cancel
 - [ ] 13.19 `/invoice/[token]`, `/receipt/[token]` printable pages.
 - [ ] 13.20 `/u/[token]` unsubscribe.
-- [ ] 13.21 `GET /api/photo/[id]?size=`: access check (grant cookie or preview token), pay-gate check for full size, ETag, `Cache-Control: private`, streams from Blob.
-  - [ ] 13.21.1 Grant cookie check per gallery
+- [x] 13.21 `GET /api/photo/[id]?size=`: access check (grant cookie or preview token), pay-gate check for full size, ETag, `Cache-Control: private`, streams from Blob.
+  - [x] 13.21.1 Grant cookie check per gallery
   - [ ] 13.21.2 Preview token check for studio preview
-  - [ ] 13.21.3 Pay-gate check for full size
-  - [ ] 13.21.4 ETag and 304 handling
-  - [ ] 13.21.5 Streaming from Blob with correct content type
+  - [x] 13.21.3 Pay-gate check for full size
+  - [x] 13.21.4 ETag and 304 handling
+  - [x] 13.21.5 Streaming from Blob with correct content type
 - [ ] 13.22 `GET /api/gallery/[id]/zip?size=`: access and PIN check, streaming, filename sanitization.
 - [ ] 13.23 `POST /api/track`: page and gallery views, downloads; visitor hash from ip + user agent + day salt.
-- [ ] 13.24 `noindex` on all gallery, pay, hub pages; `index` on website pages.
+- [x] 13.24 `noindex` on all gallery, pay, hub pages; `index` on website pages.
 - [ ] 13.25 Tests: access grant cookie scope per gallery, PIN, pay gate, zip filename dedupe.
-- [ ] 13.26 Accessibility: lightbox keyboard trap, alt text from filename, focus return.
+- [x] 13.26 Accessibility: lightbox keyboard trap, alt text from filename, focus return.
 
 ## Phase 14. Tenant public website (two templates)
 
