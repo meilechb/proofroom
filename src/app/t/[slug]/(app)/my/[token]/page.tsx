@@ -35,6 +35,7 @@ export default async function ClientHubPage({ params }: PageProps<"/t/[slug]/my/
     rows<{ id: string; title: string; kind: string; url: string; created_at: string }>(await db()`select id, title, kind, url, created_at from documents where client_id = ${client.id} and studio_id = ${studio.id} order by created_at desc`),
     rows<{ id: string; starts_at: string; ends_at: string; status: string; order_id: string | null }>(await db()`select id, starts_at, ends_at, status, order_id from booking_slots where client_id = ${client.id} and studio_id = ${studio.id} and status = 'confirmed' and starts_at >= now() order by starts_at`),
   ]);
+  const sharedPlan = one<{ order_id: string }>(await db()`select sp.order_id from session_plans sp join orders o on o.id = sp.order_id where sp.studio_id = ${studio.id} and o.client_id = ${client.id} and sp.client_visible = true limit 1`);
   const cur = studio.currency;
   const booking = bookingSettings((studio.settings ?? {}) as Record<string, unknown>);
 
@@ -78,6 +79,12 @@ export default async function ClientHubPage({ params }: PageProps<"/t/[slug]/my/
           </div>
         ))}
       </Section>
+
+      {sharedPlan ? (
+        <Section title="Session plan">
+          <Row href={`/my/${token}/plan`}><span>View your session plan</span><span className="text-[var(--site-ink-2)] text-sm">Shot list, looks and notes</span></Row>
+        </Section>
+      ) : null}
 
       {documents.length > 0 ? (
         <Section title="Documents">

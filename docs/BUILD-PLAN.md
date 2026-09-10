@@ -686,7 +686,7 @@ CRM quality
   - [x] 11.6.2 Money card
   - [x] 11.6.3 Agreement card
   - [x] 11.6.4 Galleries card
-  - [~] 11.6.5 Plan card (Phase 21)
+  - [x] 11.6.5 Plan card (Phase 21)
   - [x] 11.6.6 Timeline
 - [x] 11.7 Edit session: reschedule, change package (recompute totals unless payments exist, then warn), discount, notes.
 - [x] 11.8 Cancel session with reason; keeps payments history.
@@ -1101,15 +1101,15 @@ Booking
 - [x] 21.16 Tests: availability math, hold race (two clients same slot), policy enforcement.
 
 Session planning
-- [ ] 21.17 Session plan card on the session page: notes (Markdown), shot list (checklist with add, reorder, check), mood board (asset picker plus upload), "share with client" toggle.
-  - [ ] 21.17.1 Notes (Markdown)
-  - [ ] 21.17.2 Shot list checklist
-  - [ ] 21.17.3 Mood board picker and upload
-  - [ ] 21.17.4 Share with client toggle
-- [ ] 21.18 Client view of the plan in the hub and via emailed link (`session_plan_shared`).
-- [ ] 21.19 Templates for shot lists (headshot, team day, actor) to insert.
-- [ ] 21.20 Print view of the plan.
-- [ ] 21.21 Tests: client visibility flag, asset references.
+- [x] 21.17 Session plan card on the session page: notes (Markdown), shot list (checklist with add, reorder, check), mood board (asset picker plus upload), "share with client" toggle.
+  - [x] 21.17.1 Notes (Markdown)
+  - [x] 21.17.2 Shot list checklist
+  - [x] 21.17.3 Mood board picker and upload
+  - [x] 21.17.4 Share with client toggle
+- [x] 21.18 Client view of the plan in the hub and via emailed link (`session_plan_shared`).
+- [x] 21.19 Templates for shot lists (headshot, team day, actor) to insert.
+- [x] 21.20 Print view of the plan.
+- [x] 21.21 Tests: client visibility flag, asset references.
 
 ## Phase 22. Quality, security, launch
 

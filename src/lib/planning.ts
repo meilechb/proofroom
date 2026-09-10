@@ -42,3 +42,8 @@ export function addShots(list: ShotItem[], texts: string[]): ShotItem[] {
   const fresh = texts.map((t) => t.trim()).filter((t) => t && !existing.has(t.toLowerCase()));
   return [...list, ...fresh.map((text, i) => ({ id: `${Date.now().toString(36)}${i}`, text, done: false }))];
 }
+
+/** Whether a plan has anything worth sharing (gates the share action, plan 21.18). */
+export function planHasContent(plan: Pick<SessionPlan, "notes_md" | "shot_list" | "mood_asset_ids"> | null | undefined): boolean {
+  return Boolean(plan && (plan.notes_md.trim() !== "" || plan.shot_list.length > 0 || plan.mood_asset_ids.length > 0));
+}

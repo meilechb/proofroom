@@ -4,11 +4,15 @@ import { requireStudioPage } from "@/lib/auth";
 import { getOrder } from "@/lib/orders";
 import { listPayments } from "@/lib/payments";
 import { slotForOrder } from "@/lib/booking";
+import { getPlan, SHOT_LIST_TEMPLATES } from "@/lib/planning";
+import { listAssets, isReady } from "@/lib/assets";
 import { db, one, rows } from "@/lib/db";
 import { payUrl } from "@/lib/tenant";
 import { orderMoney, formatMoney, formatDate, orderStatusLabels, type Client, type OrderStatus } from "@/lib/types";
 import { PageHeader, Card, Badge, ButtonLink, cx } from "@/components/ui";
+import type { PickerAsset } from "@/app/(studio)/studio/website/image-picker";
 import { CancelSessionButton, EditSessionButton, ManualPaymentButton, NoShowButton, PayLink } from "./session-forms";
+import { PlanCard } from "./plan-card";
 import { undoManualPaymentAction } from "./session-actions";
 
 export async function generateMetadata({ params }: PageProps<"/studio/sessions/[id]">) {
@@ -37,6 +41,8 @@ export default async function SessionDetailPage({ params }: PageProps<"/studio/s
   const canPayOnline = ctx.studio.stripe_account_status === "enabled";
   const slot = await slotForOrder(ctx.studio.id, order.id);
   const slotPast = slot ? new Date(slot.starts_at).getTime() < new Date().getTime() : false;
+  const [plan, assetRows] = await Promise.all([getPlan(ctx.studio.id, order.id), listAssets(ctx.studio.id)]);
+  const pickerAssets: PickerAsset[] = assetRows.filter((a) => a.kind === "image" && isReady(a)).map((a) => ({ id: a.id, thumb: a.thumb_url ?? a.web_url ?? a.url, filename: a.filename, alt: a.alt }));
 
   return (
     <>
@@ -125,6 +131,15 @@ export default async function SessionDetailPage({ params }: PageProps<"/studio/s
               </ul>
             )}
           </Card>
+
+          {/* Session plan */}
+          <PlanCard
+            orderId={order.id}
+            initial={{ notes_md: plan?.notes_md ?? "", shot_list: plan?.shot_list ?? [], mood_asset_ids: plan?.mood_asset_ids ?? [], client_visible: plan?.client_visible ?? false }}
+            assets={pickerAssets}
+            templates={SHOT_LIST_TEMPLATES}
+            printHref={`/plan/${order.id}/print`}
+          />
         </div>
 
         <div className="space-y-6">
