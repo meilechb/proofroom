@@ -182,7 +182,8 @@ export async function applySubscriptionDeleted(sub: Stripe.Subscription) {
       current_period_end = null,
       cancel_at_period_end = false,
       read_only_since = null,
-      grace_ends_at = null
+      grace_ends_at = null,
+      custom_domain_verified_at = null
     where id = ${studioId}`;
   return studioId;
 }
@@ -228,7 +229,7 @@ export function isFirstPaidInvoice(invoice: Stripe.Invoice) {
  */
 export async function downgradeExpiredTrials(): Promise<string[]> {
   const rows = (await db()`
-    update studios set plan = 'free', read_only_since = null, grace_ends_at = null
+    update studios set plan = 'free', read_only_since = null, grace_ends_at = null, custom_domain_verified_at = null
     where deleted_at is null
       and subscription_status is null
       and plan_override is null

@@ -162,7 +162,7 @@ Storage cap
 
 Custom domain
 - [x] 9.14 `settings/domain` add/verify actions: `requireEntitlement(customDomain)`.
-- [ ] 9.15 `proxy.ts` custom-domain lookup: treat a Free studio's custom domain as inactive (serve subdomain, do not 404 the subdomain).
+- [x] 9.15 `proxy.ts` custom-domain lookup: treat a Free studio's custom domain as inactive (serve subdomain, do not 404 the subdomain).
 
 Sending domain / email
 - [x] 9.16 `sending-domains` create/verify actions: `requireEntitlement(sendingDomain)`.
@@ -174,12 +174,12 @@ Pro-only workflow features
 - [x] 9.20 Booking: gate booking-settings enable + public booking route with `requireEntitlement(booking)`.
 - [x] 9.21 Import: gate `imports.createImport` with `requireEntitlement(imports)`.
 - [x] 9.22 Session planning: gate `planning.*` mutations with `requireEntitlement(sessionPlanning)`.
-- [ ] 9.23 Referral reward: confirm `referrals.onFirstPaidInvoice` only fires for Pro (paid invoice) — add an explicit guard/test that Free never accrues.
+- [x] 9.23 Referral reward: confirm `referrals.onFirstPaidInvoice` only fires for Pro (paid invoice) — add an explicit guard/test that Free never accrues.
 
 Branding
-- [ ] 9.24 Gallery footer renders "Powered by {APP_NAME}" unless `entitlements.removeBranding`.
-- [ ] 9.25 Public site footer renders the badge unless `entitlements.removeBranding`.
-- [ ] 9.26 Badge links to the marketing site with the studio's `?ref=` referral code.
+- [x] 9.24 Gallery footer renders "Powered by {APP_NAME}" unless `entitlements.removeBranding`.
+- [x] 9.25 Public site footer renders the badge unless `entitlements.removeBranding`.
+- [x] 9.26 Badge links to the marketing site with the studio's `?ref=` referral code.
 
 ## Phase 10 — Sidebar / navigation gating (UI reveal)
 
