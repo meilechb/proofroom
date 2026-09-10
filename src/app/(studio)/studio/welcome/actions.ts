@@ -128,7 +128,8 @@ export async function saveEmailSenderAction(_prev: ActionState, formData: FormDa
   next(6);
 }
 
-export async function createWizardTokenAction(_prev: ActionState, _formData: FormData): Promise<ActionState> {
+export async function createWizardTokenAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  void formData;
   const { studio, user } = await requireWritableStudio("admin");
   const created = await createApiToken(studio.id, user.id, `Lightroom (${user.name.split(" ")[0] || "setup"})`);
   await audit({ studioId: studio.id, actorUserId: user.id, action: "api_token.created", targetType: "api_token", targetId: created.id });
