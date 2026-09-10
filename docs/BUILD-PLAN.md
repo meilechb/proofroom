@@ -608,36 +608,36 @@ Validation and types
 ## Phase 10. CRM
 
 Inbox
-- [ ] 10.1 `/studio/inbox`: list of inquiries and booking requests, unread first, filters (all, unread, archived).
-- [ ] 10.2 Inquiry detail drawer: message, contact, source, "reply by email" (opens composer with template), "convert to client", "archive".
-- [ ] 10.3 Reply composer: subject, body from template `inquiry_reply` with variables filled, send from the studio sender, logs to `email_log`, adds client event.
-- [ ] 10.4 Convert to client: creates or links client by email, moves stage to `lead`, keeps inquiry link.
-- [ ] 10.5 Bulk archive and mark read.
+- [x] 10.1 `/studio/inbox`: list of inquiries and booking requests, unread first, filters (all, unread, archived).
+- [x] 10.2 Inquiry detail drawer: message, contact, source, "reply by email" (opens composer with template), "convert to client", "archive".
+- [x] 10.3 Reply composer: subject, body from template `inquiry_reply` with variables filled, send from the studio sender, logs to `email_log`, adds client event.
+- [x] 10.4 Convert to client: creates or links client by email, moves stage to `lead`, keeps inquiry link.
+- [x] 10.5 Bulk archive and mark read.
 - [ ] 10.6 New inquiry notification email to the studio (respecting a per-user notification setting).
 
 Clients
-- [ ] 10.7 `/studio/clients`: table with name, company, stage, last activity, balance due, tags; search; stage tabs; sort.
-  - [ ] 10.7.1 Columns and row link
-  - [ ] 10.7.2 Search by name, email, company
-  - [ ] 10.7.3 Stage tabs with counts
-  - [ ] 10.7.4 Sort by name, last activity, balance
-  - [ ] 10.7.5 Cursor pagination
-  - [ ] 10.7.6 Empty state with add and import actions
-- [ ] 10.8 Add client dialog (name, email, phone, company, stage, tags, source).
-- [ ] 10.9 Edit client inline fields.
-- [ ] 10.10 Stage pipeline: lead → booked → delivered → repeat; change from list and detail.
-- [ ] 10.11 Tags: create, assign, filter, rename, delete.
-- [ ] 10.12 Archive and restore client.
-- [ ] 10.13 Merge duplicates: detect same email, preview merged record, merge sessions, galleries, notes, events.
-- [ ] 10.14 CSV export (current filter).
+- [x] 10.7 `/studio/clients`: table with name, company, stage, last activity, balance due, tags; search; stage tabs; sort.
+  - [x] 10.7.1 Columns and row link
+  - [x] 10.7.2 Search by name, email, company
+  - [x] 10.7.3 Stage tabs with counts
+  - [x] 10.7.4 Sort by name, last activity, balance
+  - [x] 10.7.5 Cursor pagination
+  - [x] 10.7.6 Empty state with add and import actions
+- [x] 10.8 Add client dialog (name, email, phone, company, stage, tags, source).
+- [x] 10.9 Edit client inline fields.
+- [x] 10.10 Stage pipeline: lead → booked → delivered → repeat; change from list and detail.
+- [x] 10.11 Tags: create, assign, filter, rename, delete.
+- [x] 10.12 Archive and restore client.
+- [~] 10.13 Merge duplicates: detect same email, preview merged record, merge sessions, galleries, notes, events.
+- [x] 10.14 CSV export (current filter).
 - [ ] 10.15 CSV import wizard: upload, map columns, preview, validate, import, report.
   - [ ] 10.15.1 Upload CSV and detect delimiter
   - [ ] 10.15.2 Map columns to fields with auto-guess
   - [ ] 10.15.3 Preview first 20 rows with validation flags
   - [ ] 10.15.4 Import with duplicate policy (skip, update)
   - [ ] 10.15.5 Report: created, updated, skipped, errors CSV
-- [ ] 10.16 `/studio/clients/[id]` header: contact, stage, tags, quick actions (new session, new gallery, email, task).
-- [ ] 10.17 Client timeline: notes, emails, payments, galleries, bookings, system events, filter by type.
+- [x] 10.16 `/studio/clients/[id]` header: contact, stage, tags, quick actions (new session, new gallery, email, task).
+- [~] 10.17 Client timeline: notes, emails, payments, galleries, bookings, system events, filter by type.
   - [ ] 10.17.1 Notes
   - [ ] 10.17.2 Emails sent (with status)
   - [ ] 10.17.3 Payments and refunds
@@ -645,18 +645,18 @@ Clients
   - [ ] 10.17.5 Bookings and sessions
   - [ ] 10.17.6 Automations sent
   - [ ] 10.17.7 System events (stage change, merge)
-- [ ] 10.18 Notes: add, edit, delete own, pin.
-- [ ] 10.19 Log a call or meeting (kind + summary) into the timeline.
-- [ ] 10.20 Client tasks tab and "add task" from anywhere.
-- [ ] 10.21 Client sessions tab: list with money summary, create from package.
-- [ ] 10.22 Client galleries tab: list with status, picks count, unresolved notes.
+- [x] 10.18 Notes: add, edit, delete own, pin.
+- [x] 10.19 Log a call or meeting (kind + summary) into the timeline.
+- [x] 10.20 Client tasks tab and "add task" from anywhere.
+- [x] 10.21 Client sessions tab: list with money summary, create from package.
+- [x] 10.22 Client galleries tab: list with status, picks count, unresolved notes.
 - [ ] 10.23 Client documents tab: agreements, receipts, uploads.
 - [ ] 10.24 Client hub link (magic link email) button.
 - [ ] 10.25 Unsubscribed indicator and manual unsubscribe/resubscribe with reason.
 - [ ] 10.26 Client "send email" composer with template picker, variables, attachments from documents.
 
 Tasks
-- [ ] 10.27 `/studio/tasks`: my tasks, all tasks, overdue, done; create, complete, reassign, due date.
+- [x] 10.27 `/studio/tasks`: my tasks, all tasks, overdue, done; create, complete, reassign, due date.
 - [ ] 10.28 Task reminders email (daily digest of due today and overdue).
 
 Broadcasts
