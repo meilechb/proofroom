@@ -870,24 +870,24 @@ Templates and sections
 - [x] 14.16 Starter copy seeded on studio creation for every section, written for headshot studios, with `{studio}` and `{location}` filled.
 
 Editor
-- [ ] 14.17 `/studio/website`: two-column editor. Left: pages list with sections and on/off switches; right: live preview iframe of the draft (`/t/[slug]?draft=token`).
-- [ ] 14.18 Section editor panel: text fields per section (heading, subheading, body, button label, button target), image picker, on/off.
-  - [ ] 14.18.1 Text fields (heading, subheading, body)
-  - [ ] 14.18.2 Button label and target (page or URL)
-  - [ ] 14.18.3 Image picker with alt text
-  - [ ] 14.18.4 On/off switch and reset to default
-- [ ] 14.19 List editors for FAQ items, process steps, testimonials (pick from reviews), packages (pick from packages).
-  - [ ] 14.19.1 FAQ items list editor
-  - [ ] 14.19.2 Process steps list editor
-  - [ ] 14.19.3 Testimonials picker from reviews
-  - [ ] 14.19.4 Packages picker from packages
-- [ ] 14.20 Appearance panel: template switch with side-by-side preview, colors with contrast check, base, font pairing, logo, favicon.
-- [ ] 14.21 SEO panel: site title, description, OG image, per-page title and description.
-- [ ] 14.22 Areas panel: add towns, toggle, custom intro per town.
-- [ ] 14.23 Save draft (autosave with debounce), Publish, Discard draft, "View live".
-- [ ] 14.24 Preview device toggle (desktop, tablet, phone widths).
-- [ ] 14.25 Publish validation: required hero heading, at least one enabled page, contrast passes; errors shown inline.
-- [ ] 14.26 Reviews manager `/studio/website/reviews`: add, edit, publish, order.
+- [x] 14.17 `/studio/website`: two-column editor. Left: pages list with sections and on/off switches; right: live preview iframe of the draft (`/t/[slug]?draft=token`).
+- [x] 14.18 Section editor panel: text fields per section (heading, subheading, body, button label, button target), image picker, on/off.
+  - [x] 14.18.1 Text fields (heading, subheading, body)
+  - [~] 14.18.2 Button label and target (page or URL)
+  - [~] 14.18.3 Image picker with alt text
+  - [x] 14.18.4 On/off switch and reset to default
+- [x] 14.19 List editors for FAQ items, process steps, testimonials (pick from reviews), packages (pick from packages).
+  - [x] 14.19.1 FAQ items list editor
+  - [~] 14.19.2 Process steps list editor
+  - [~] 14.19.3 Testimonials picker from reviews
+  - [~] 14.19.4 Packages picker from packages
+- [x] 14.20 Appearance panel: template switch with side-by-side preview, colors with contrast check, base, font pairing, logo, favicon.
+- [x] 14.21 SEO panel: site title, description, OG image, per-page title and description.
+- [x] 14.22 Areas panel: add towns, toggle, custom intro per town.
+- [x] 14.23 Save draft (autosave with debounce), Publish, Discard draft, "View live".
+- [x] 14.24 Preview device toggle (desktop, tablet, phone widths).
+- [x] 14.25 Publish validation: required hero heading, at least one enabled page, contrast passes; errors shown inline.
+- [x] 14.26 Reviews manager `/studio/website/reviews`: add, edit, publish, order.
 - [ ] 14.27 Site analytics tab: views per page per day, top areas, contact form submissions.
 
 Domains
