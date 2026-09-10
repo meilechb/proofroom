@@ -1078,13 +1078,13 @@ Import
 - [ ] 21.8 Tests: folder mapping, CSV attach, resume after failure.
 
 Booking
-- [ ] 21.9 `/studio/settings/bookings`: enable, weekly hours grid, buffer minutes, lead time, max per day, packages bookable, deposit required to confirm, cancellation policy text.
-  - [ ] 21.9.1 Enable switch
-  - [ ] 21.9.2 Weekly hours grid
-  - [ ] 21.9.3 Buffer and lead time
-  - [ ] 21.9.4 Max per day
-  - [ ] 21.9.5 Bookable packages and deposit rule
-  - [ ] 21.9.6 Cancellation policy text
+- [x] 21.9 `/studio/settings/bookings`: enable, weekly hours grid, buffer minutes, lead time, max per day, packages bookable, deposit required to confirm, cancellation policy text.
+  - [x] 21.9.1 Enable switch
+  - [x] 21.9.2 Weekly hours grid
+  - [x] 21.9.3 Buffer and lead time
+  - [x] 21.9.4 Max per day
+  - [x] 21.9.5 Bookable packages and deposit rule
+  - [x] 21.9.6 Cancellation policy text
 - [ ] 21.10 Tenant `/book`: pick package, pick date (calendar with available days), pick time, enter details, agree to policy, hold slot, pay deposit (Checkout on the studio's account) or confirm without payment when not required.
   - [ ] 21.10.1 Pick package
   - [ ] 21.10.2 Calendar with available days
