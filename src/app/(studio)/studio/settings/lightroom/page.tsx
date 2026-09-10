@@ -18,9 +18,10 @@ export default async function LightroomSettingsPage() {
         <h2 className="font-medium mb-1">Lightroom plugin</h2>
         <p className="text-sm text-ink-2 mb-4">Publish galleries straight from Lightroom. Install the plugin, then paste a token below into its settings to connect it to your studio.</p>
         <div className="flex flex-wrap gap-2">
-          <a href={`${appUrl()}/lightroom`} className="btn-secondary btn-sm">Download plugin</a>
+          <a href="/api/plugin/download" className="btn-secondary btn-sm">Download plugin (.zip)</a>
           <a href={`${appUrl()}/lightroom`} target="_blank" rel="noreferrer" className="btn-ghost btn-sm">Install guide</a>
         </div>
+        <p className="mt-2 text-xs text-muted">Plugin version 1.0. The download is pre-configured with your site URL; paste a token below to connect it.</p>
       </Card>
       <Card>
         <h2 className="font-medium mb-1">Connection tokens</h2>

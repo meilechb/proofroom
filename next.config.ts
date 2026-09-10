@@ -6,7 +6,10 @@ const nextConfig: NextConfig = {
   // Pin the Turbopack root so module and PostCSS resolution stay inside saas/.
   turbopack: { root: path.join(__dirname) },
   // /changelog reads CHANGELOG.md at build time; make sure tracing keeps the file.
-  outputFileTracingIncludes: { "/changelog": ["./CHANGELOG.md"] },
+  outputFileTracingIncludes: {
+    "/changelog": ["./CHANGELOG.md"],
+    "/api/plugin/download": ["./lightroom/proofroom.lrplugin/**"],
+  },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },

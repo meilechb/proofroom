@@ -996,25 +996,25 @@ API
 - [x] 18.11 Tests: token auth, rate limit, ownership on every route.
 
 Plugin
-- [ ] 18.12 Rename plugin files and ids to the placeholder; config reads site URL stamped by the zip script.
-- [ ] 18.13 Publish service: create collection → gallery mapping, choose client and kind, upload with progress, retries.
-  - [ ] 18.13.1 Collection to gallery mapping dialog
-  - [ ] 18.13.2 Client picker (search, create)
-  - [ ] 18.13.3 Kind picker (proofs, finals)
-  - [ ] 18.13.4 Upload loop with begin/complete
-  - [ ] 18.13.5 Progress and summary
-- [ ] 18.14 Republish changed photos in place; delete removed ones.
-- [ ] 18.15 Sync favorites: flag or color label, and comments into the photo's metadata field; configurable.
-  - [ ] 18.15.1 Favorites → flag or color label (setting)
-  - [ ] 18.15.2 Comments → metadata field
-  - [ ] 18.15.3 Sync on demand and on publish
-- [ ] 18.16 Keyword tagging of published photos with gallery name.
-- [ ] 18.17 "Open gallery in browser" and "Open studio" menu items.
-- [ ] 18.18 Token entry dialog with validation against `ping`.
-- [ ] 18.19 Error dialogs with plain-language messages and a log file location.
-- [ ] 18.20 Plugin version check against the API's minimum; update prompt.
-- [ ] 18.21 Manual test script in `docs/LIGHTROOM-TESTING.md` (publish, republish, delete, feedback) run on Lightroom Classic current version before release.
-- [ ] 18.22 Download route `/api/plugin/download` (requires login), version shown in settings.
+- [x] 18.12 Rename plugin files and ids to the placeholder; config reads site URL stamped by the zip script.
+- [x] 18.13 Publish service: create collection → gallery mapping, choose client and kind, upload with progress, retries.
+  - [x] 18.13.1 Collection to gallery mapping dialog
+  - [x] 18.13.2 Client picker (search, create)
+  - [x] 18.13.3 Kind picker (proofs, finals)
+  - [x] 18.13.4 Upload loop with begin/complete
+  - [x] 18.13.5 Progress and summary
+- [x] 18.14 Republish changed photos in place; delete removed ones.
+- [x] 18.15 Sync favorites: flag or color label, and comments into the photo's metadata field; configurable.
+  - [x] 18.15.1 Favorites → flag or color label (setting)
+  - [x] 18.15.2 Comments → metadata field
+  - [x] 18.15.3 Sync on demand and on publish
+- [x] 18.16 Keyword tagging of published photos with gallery name.
+- [x] 18.17 "Open gallery in browser" and "Open studio" menu items.
+- [x] 18.18 Token entry dialog with validation against `ping`.
+- [x] 18.19 Error dialogs with plain-language messages and a log file location.
+- [x] 18.20 Plugin version check against the API's minimum; update prompt.
+- [x] 18.21 Manual test script in `docs/LIGHTROOM-TESTING.md` (publish, republish, delete, feedback) run on Lightroom Classic current version before release.
+- [x] 18.22 Download route `/api/plugin/download` (requires login), version shown in settings.
 
 ## Phase 19. Platform admin (`/admin`)
 
