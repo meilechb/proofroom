@@ -874,7 +874,7 @@ Editor
 - [x] 14.18 Section editor panel: text fields per section (heading, subheading, body, button label, button target), image picker, on/off.
   - [x] 14.18.1 Text fields (heading, subheading, body)
   - [x] 14.18.2 Button label and target (page or URL)
-  - [~] 14.18.3 Image picker with alt text
+  - [x] 14.18.3 Image picker with alt text
   - [x] 14.18.4 On/off switch and reset to default
 - [x] 14.19 List editors for FAQ items, process steps, testimonials (pick from reviews), packages (pick from packages).
   - [x] 14.19.1 FAQ items list editor

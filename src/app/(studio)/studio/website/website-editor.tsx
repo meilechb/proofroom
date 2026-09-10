@@ -6,12 +6,13 @@ import { TEMPLATES, FONT_PAIRINGS } from "@/lib/site/schema";
 import { discardDraftAction, publishSiteAction, saveDraftAction } from "./actions";
 import { useActionState } from "react";
 import { initialActionState } from "@/lib/action-state";
+import { ImagePicker, type PickerAsset } from "./image-picker";
 
 type Panel = "home" | "pages" | "appearance" | "seo" | "contact";
 type Device = "desktop" | "tablet" | "phone";
 const WIDTHS: Record<Device, number> = { desktop: 1280, tablet: 768, phone: 375 };
 
-export function WebsiteEditor({ initialDraft, hasDraft, liveUrl }: { initialDraft: Site; hasDraft: boolean; liveUrl: string }) {
+export function WebsiteEditor({ initialDraft, hasDraft, liveUrl, assets }: { initialDraft: Site; hasDraft: boolean; liveUrl: string; assets: PickerAsset[] }) {
   const [draft, setDraft] = useState(initialDraft);
   const [panel, setPanel] = useState<Panel>("home");
   const [device, setDevice] = useState<Device>("desktop");
@@ -70,8 +71,8 @@ export function WebsiteEditor({ initialDraft, hasDraft, liveUrl }: { initialDraf
           ) : null}
           {pubState.ok ? <div className="rounded-lg border border-success/20 bg-success-bg p-3 text-sm text-success">{pubState.message}</div> : null}
 
-          {panel === "home" ? <HomePanel draft={draft} set={set} /> : null}
-          {panel === "pages" ? <PagesPanel draft={draft} set={set} /> : null}
+          {panel === "home" ? <HomePanel draft={draft} set={set} assets={assets} /> : null}
+          {panel === "pages" ? <PagesPanel draft={draft} set={set} assets={assets} /> : null}
           {panel === "appearance" ? <AppearancePanel draft={draft} set={set} /> : null}
           {panel === "seo" ? <SeoPanel draft={draft} set={set} /> : null}
           {panel === "contact" ? <ContactPanel draft={draft} set={set} /> : null}
@@ -193,7 +194,7 @@ function ListEditor({ items, placeholder, max, onChange }: { items: string[]; pl
 
 type SetFn = (updater: (d: Site) => Site) => void;
 
-function HomePanel({ draft, set }: { draft: Site; set: SetFn }) {
+function HomePanel({ draft, set, assets }: { draft: Site; set: SetFn; assets: PickerAsset[] }) {
   const h = draft.home;
   return (
     <div className="space-y-6">
@@ -201,12 +202,14 @@ function HomePanel({ draft, set }: { draft: Site; set: SetFn }) {
         <legend className="text-xs font-semibold uppercase tracking-wide text-muted">Hero</legend>
         <Field label="Headline" value={h.hero.heading} onChange={(v) => set((d) => { d.home.hero.heading = v; return d; })} />
         <Field label="Subheading" value={h.hero.subheading} onChange={(v) => set((d) => { d.home.hero.subheading = v; return d; })} textarea />
+        <ImagePicker label="Hero image" value={h.hero.imageAssetId} assets={assets} onChange={(id) => set((d) => { d.home.hero.imageAssetId = id; return d; })} />
         <ButtonEditor label="Primary button" value={h.hero.button} onChange={(v) => set((d) => { d.home.hero.button = v; return d; })} />
         <ButtonEditor label="Secondary button" value={h.hero.secondaryButton} onChange={(v) => set((d) => { d.home.hero.secondaryButton = v; return d; })} />
       </fieldset>
       <SectionBlock title="Intro" enabled={h.intro.enabled} onToggle={(v) => set((d) => { d.home.intro.enabled = v; return d; })}>
         <Field label="Heading" value={h.intro.heading} onChange={(v) => set((d) => { d.home.intro.heading = v; return d; })} />
         <Field label="Body" value={h.intro.body} onChange={(v) => set((d) => { d.home.intro.body = v; return d; })} textarea />
+        <ImagePicker label="Intro image" value={h.intro.imageAssetId} assets={assets} onChange={(id) => set((d) => { d.home.intro.imageAssetId = id; return d; })} />
       </SectionBlock>
       <SectionBlock title="Packages" enabled={h.packages.enabled} onToggle={(v) => set((d) => { d.home.packages.enabled = v; return d; })}>
         <Field label="Heading" value={h.packages.heading} onChange={(v) => set((d) => { d.home.packages.heading = v; return d; })} />
@@ -228,6 +231,7 @@ function HomePanel({ draft, set }: { draft: Site; set: SetFn }) {
       <SectionBlock title="Closing call to action" enabled={h.cta.enabled} onToggle={(v) => set((d) => { d.home.cta.enabled = v; return d; })}>
         <Field label="Heading" value={h.cta.heading} onChange={(v) => set((d) => { d.home.cta.heading = v; return d; })} />
         <Field label="Body" value={h.cta.body} onChange={(v) => set((d) => { d.home.cta.body = v; return d; })} textarea />
+        <ImagePicker label="Background image" value={h.cta.imageAssetId} assets={assets} onChange={(id) => set((d) => { d.home.cta.imageAssetId = id; return d; })} />
         <ButtonEditor label="Button" value={h.cta.button} onChange={(v) => set((d) => { d.home.cta.button = v; return d; })} />
       </SectionBlock>
     </div>
@@ -261,7 +265,7 @@ function FaqEditor({ items, onChange }: { items: { q: string; a: string }[]; onC
   );
 }
 
-function PagesPanel({ draft, set }: { draft: Site; set: SetFn }) {
+function PagesPanel({ draft, set, assets }: { draft: Site; set: SetFn; assets: PickerAsset[] }) {
   return (
     <div className="space-y-6">
       <fieldset className="space-y-1">
@@ -280,6 +284,7 @@ function PagesPanel({ draft, set }: { draft: Site; set: SetFn }) {
           <legend className="text-xs font-semibold uppercase tracking-wide text-muted">About page</legend>
           <Field label="About heading" value={draft.about.bio.heading} onChange={(v) => set((d) => { d.about.bio.heading = v; return d; })} />
           <Field label="Your story" value={draft.about.bio.body} onChange={(v) => set((d) => { d.about.bio.body = v; return d; })} textarea hint="A few sentences about you and how you work." />
+          <ImagePicker label="Portrait" value={draft.about.bio.portraitAssetId} assets={assets} onChange={(id) => set((d) => { d.about.bio.portraitAssetId = id; return d; })} />
           <div>
             <p className="text-sm font-medium mb-1">How a session works</p>
             <StepsEditor items={draft.about.steps.items} onChange={(items) => set((d) => { d.about.steps.items = items; return d; })} />
