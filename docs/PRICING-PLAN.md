@@ -247,10 +247,10 @@ Branding
 ## Phase 15 — Docs & changelog
 
 - [ ] 15.1 `ARCHITECTURE.md`: add a "Plans & entitlements" subsection (two tiers, effectivePlan, gate points).
-- [ ] 15.2 `SETUP.md`: Stripe section — create the `pro_seat_monthly` price, set `STRIPE_PRICE_PRO_SEAT_MONTHLY`.
-- [ ] 15.3 `SETUP.md`: note the per-seat quantity model and portal cancel → Free behavior.
-- [ ] 15.4 `BUILD-PLAN.md`: add a note that Revision 4's single-plan decision is superseded by this doc (link).
-- [ ] 15.5 `CHANGELOG.md`: one line per shipped phase.
+- [x] 15.2 `SETUP.md`: Stripe section — create the `pro_seat_monthly` price, set `STRIPE_PRICE_PRO_SEAT_MONTHLY`.
+- [x] 15.3 `SETUP.md`: note the per-seat quantity model and portal cancel → Free behavior.
+- [x] 15.4 `BUILD-PLAN.md`: add a note that Revision 4's single-plan decision is superseded by this doc (link).
+- [x] 15.5 `CHANGELOG.md`: one line per shipped phase.
 - [ ] 15.6 Update `docs/INFRASTRUCTURE.md` cost model note if Free-tier storage assumptions change egress math.
 
 ## Phase 16 — Verification & rollout
