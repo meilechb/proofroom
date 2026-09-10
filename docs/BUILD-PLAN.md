@@ -923,14 +923,14 @@ SEO and quality
 ## Phase 16. Emails, automations, sending domains
 
 Templates and sending
-- [ ] 16.1 `/studio/emails`: templates list with key, subject, last edited, "reset to default".
-- [ ] 16.2 Template editor: subject, body (plain text with variables, light formatting), variables list with insert buttons, live preview with sample data, test send to me.
-  - [ ] 16.2.1 Subject field with variables
-  - [ ] 16.2.2 Body editor with variables and insert buttons
-  - [ ] 16.2.3 Live preview with sample data
-  - [ ] 16.2.4 Test send to me
-  - [ ] 16.2.5 Reset to default
-- [ ] 16.3 Sender identity settings: display name, from local part, reply-to, signature block.
+- [x] 16.1 `/studio/emails`: templates list with key, subject, last edited, "reset to default".
+- [x] 16.2 Template editor: subject, body (plain text with variables, light formatting), variables list with insert buttons, live preview with sample data, test send to me.
+  - [x] 16.2.1 Subject field with variables
+  - [x] 16.2.2 Body editor with variables and insert buttons
+  - [x] 16.2.3 Live preview with sample data
+  - [x] 16.2.4 Test send to me
+  - [x] 16.2.5 Reset to default
+- [x] 16.3 Sender identity settings: display name, from local part, reply-to, signature block.
 - [ ] 16.4 Email log `/studio/emails/log`: filters by status and template, search by recipient, detail with rendered body, resend.
 - [ ] 16.5 Resend webhook `POST /api/resend/webhook`: verify signature, map `email.delivered|opened|clicked|bounced|complained` to `email_log`, add suppressions on hard bounce and complaint, `domain.updated` to `sending_domains`.
 - [ ] 16.6 Suppression list page with manual add and remove.
