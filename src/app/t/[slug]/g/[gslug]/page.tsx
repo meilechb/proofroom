@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { studioBySlug, galleryBySlug } from "@/lib/tenant-data";
 import { hasGalleryAccess, unlockMethod, sharingAllowed, downloadGate } from "@/lib/gallery-access";
+import { verifyLink } from "@/lib/tenant-tokens";
 import { db, one, rows } from "@/lib/db";
 import { listPhotos } from "@/lib/photos";
 import { getOrder } from "@/lib/orders";
@@ -12,23 +13,26 @@ import { UnlockForm } from "./unlock-form";
 
 export const metadata = { robots: { index: false, follow: false } };
 
-export default async function TenantGalleryPage({ params }: PageProps<"/t/[slug]/g/[gslug]">) {
+export default async function TenantGalleryPage({ params, searchParams }: PageProps<"/t/[slug]/g/[gslug]">) {
   const { slug, gslug } = await params;
+  const sp = await searchParams;
+  const previewToken = typeof sp.preview === "string" ? sp.preview : null;
   const studio = await studioBySlug(slug);
   if (!studio) notFound();
   const gallery = await galleryBySlug(studio.id, gslug);
   if (!gallery) notFound();
+  const previewing = Boolean(previewToken) && verifyLink("preview", previewToken) === gallery.id;
 
   // Closed or expired.
-  if (gallery.status !== "published") {
+  if (gallery.status !== "published" && !previewing) {
     return <Centered title="This gallery is not available" body={`Please contact ${studio.name} for the link.`} />;
   }
-  if (gallery.expires_at && new Date(gallery.expires_at) < new Date()) {
+  if (!previewing && gallery.expires_at && new Date(gallery.expires_at) < new Date()) {
     return <Centered title="This gallery has expired" body={`Contact ${studio.name} at ${studio.email} if you still need these photos.`} />;
   }
 
   const method = unlockMethod(gallery);
-  const unlocked = method === "open" || (await hasGalleryAccess(gallery.id));
+  const unlocked = previewing || method === "open" || (await hasGalleryAccess(gallery.id));
   if (!unlocked) {
     return (
       <Centered title={gallery.title} body="Enter the code or password from your email to open this gallery.">
@@ -80,6 +84,7 @@ export default async function TenantGalleryPage({ params }: PageProps<"/t/[slug]
             pinRequired: Boolean(gallery.download_pin_hash),
           }}
           shareUrl={sharingAllowed(gallery) ? galleryUrl(studio, gallery.slug) : null}
+          previewToken={previewing ? previewToken : null}
         />
       )}
     </div>

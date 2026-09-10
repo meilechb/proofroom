@@ -4,6 +4,7 @@ import { getGallery } from "@/lib/galleries";
 import { listPhotos } from "@/lib/photos";
 import { db, one, rows } from "@/lib/db";
 import { galleryUrl } from "@/lib/tenant";
+import { signLink } from "@/lib/tenant-tokens";
 import { galleryKindLabels, type Client } from "@/lib/types";
 import { PageHeader, Card, Badge, cx } from "@/components/ui";
 import { CopyButton } from "@/components/forms/copy-button";
@@ -87,7 +88,7 @@ export default async function GalleryDetailPage({ params }: PageProps<"/studio/g
                 <form action={regenerateCodeAction}><input type="hidden" name="id" value={gallery.id} /><button className="text-xs text-muted hover:text-ink">Regenerate</button></form>
               </div>
             ) : null}
-            {published ? <a href={`${url}?preview=1`} target="_blank" rel="noopener" className="mt-3 inline-block text-sm underline">Preview as client</a> : null}
+            <a href={`${url}?preview=${signLink("preview", gallery.id)}`} target="_blank" rel="noopener" className="mt-3 inline-block text-sm underline">Preview as client</a>
           </Card>
 
           {gallery.kind === "proof" ? (

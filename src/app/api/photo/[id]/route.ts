@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db, one } from "@/lib/db";
 import { getPrivateBlob } from "@/lib/storage";
 import { hasGalleryAccess, unlockMethod, downloadGate, verifyDownloadPin } from "@/lib/gallery-access";
+import { verifyLink } from "@/lib/tenant-tokens";
 import { listPayments } from "@/lib/payments";
 import { getOrder } from "@/lib/orders";
 import type { Gallery, Photo } from "@/lib/types";
@@ -16,11 +17,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const gallery = one<Gallery>(await db()`select * from galleries where id = ${photo.gallery_id}`);
   if (!gallery) return new NextResponse(null, { status: 404 });
 
+  const previewing = verifyLink("preview", request.nextUrl.searchParams.get("preview")) === gallery.id;
   const open = unlockMethod(gallery) === "open" && gallery.status === "published";
-  const unlocked = open || (await hasGalleryAccess(gallery.id));
+  const unlocked = previewing || open || (await hasGalleryAccess(gallery.id));
   if (!unlocked) return new NextResponse(null, { status: 403 });
 
-  if (size === "full") {
+  if (size === "full" && !previewing) {
     if (!verifyDownloadPin(request.nextUrl.searchParams.get("pin") ?? "", gallery)) return new NextResponse(null, { status: 401 });
     const order = gallery.order_id ? await getOrder(gallery.studio_id, gallery.order_id) : null;
     const payments = gallery.order_id ? await listPayments(gallery.order_id) : [];

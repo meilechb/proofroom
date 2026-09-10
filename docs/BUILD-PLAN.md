@@ -768,7 +768,7 @@ Quality
 ## Phase 13. Tenant client surfaces (`/t/[slug]`)
 
 - [x] 13.1 Tenant `layout.tsx`: theme CSS variables from the studio's site settings, logo, nav from enabled pages, footer, "Powered by" line (small, always on for now).
-- [~] 13.2 Tenant `not-found` and `error` pages branded.
+- [x] 13.2 Tenant `not-found` and `error` pages branded.
 - [x] 13.3 `/g`: enter access code page.
 - [x] 13.4 `/g/[slug]` locked state: code or password form, rate limited, lockout message.
 - [x] 13.5 `/g/[slug]` gallery: header (title, welcome, counts), grid with lazy thumbs, lightbox.
@@ -804,7 +804,7 @@ Quality
 - [x] 13.20 `/u/[token]` unsubscribe.
 - [x] 13.21 `GET /api/photo/[id]?size=`: access check (grant cookie or preview token), pay-gate check for full size, ETag, `Cache-Control: private`, streams from Blob.
   - [x] 13.21.1 Grant cookie check per gallery
-  - [ ] 13.21.2 Preview token check for studio preview
+  - [x] 13.21.2 Preview token check for studio preview
   - [x] 13.21.3 Pay-gate check for full size
   - [x] 13.21.4 ETag and 304 handling
   - [x] 13.21.5 Streaming from Blob with correct content type

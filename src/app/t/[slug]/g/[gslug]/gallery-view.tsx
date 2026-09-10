@@ -16,6 +16,7 @@ export function GalleryView({
   favoritesLimit,
   download,
   shareUrl,
+  previewToken,
 }: {
   galleryId: string;
   photos: ClientPhoto[];
@@ -23,6 +24,7 @@ export function GalleryView({
   favoritesLimit: number | null;
   download: DownloadOptions;
   shareUrl: string | null;
+  previewToken: string | null;
 }) {
   const [photos, setPhotos] = useState(initial);
   const [index, setIndex] = useState<number | null>(null);
@@ -46,6 +48,7 @@ export function GalleryView({
   const shown = onlyFavorites ? photos.filter((p) => p.favorite) : photos;
   const anyDownload = download.web || download.full;
   const pinQuery = download.pinRequired && pin ? `&pin=${encodeURIComponent(pin)}` : "";
+  const pv = previewToken ? `&preview=${encodeURIComponent(previewToken)}` : "";
 
   const toggle = (photoId: string) => {
     setPhotos((list) => list.map((p) => (p.id === photoId ? { ...p, favorite: !p.favorite } : p)));
@@ -53,7 +56,7 @@ export function GalleryView({
     startTransition(() => { void toggleFavoriteAction(galleryId, photoId, next); });
   };
 
-  const lightboxPhotos: LightboxPhoto[] = shown.map((p) => ({ id: p.id, src: `/api/photo/${p.id}?size=web`, alt: p.filename, width: p.width, height: p.height }));
+  const lightboxPhotos: LightboxPhoto[] = shown.map((p) => ({ id: p.id, src: `/api/photo/${p.id}?size=web${pv}`, alt: p.filename, width: p.width, height: p.height }));
 
   return (
     <div>
@@ -91,7 +94,7 @@ export function GalleryView({
           <li key={p.id} className="relative group">
             <button type="button" onClick={() => setIndex(i)} className="block w-full aspect-square overflow-hidden rounded-lg bg-[var(--site-bg-2)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/api/photo/${p.id}?size=thumb`} alt={p.filename} loading="lazy" className="h-full w-full object-cover" />
+              <img src={`/api/photo/${p.id}?size=thumb${pv}`} alt={p.filename} loading="lazy" className="h-full w-full object-cover" />
             </button>
             {allowComments ? (
               <button type="button" onClick={() => toggle(p.id)} aria-pressed={p.favorite} aria-label={p.favorite ? "Remove favorite" : "Add favorite"} className="absolute top-2 right-2 text-lg drop-shadow">
@@ -112,7 +115,7 @@ export function GalleryView({
           <div className="flex flex-col gap-2 w-full max-w-md">
             {allowComments ? <NoteBox galleryId={galleryId} photoId={photo.id} favorite={photos.find((p) => p.id === photo.id)?.favorite ?? false} onToggle={() => toggle(photo.id)} /> : null}
             {download.full || download.web ? (
-              <a href={`/api/photo/${photo.id}?size=${download.full ? "full" : "web"}${pinQuery}`} className="self-start rounded-full bg-white text-black px-3 py-1 text-sm font-medium">Download this photo</a>
+              <a href={`/api/photo/${photo.id}?size=${download.full ? "full" : "web"}${pinQuery}${pv}`} className="self-start rounded-full bg-white text-black px-3 py-1 text-sm font-medium">Download this photo</a>
             ) : null}
           </div>
         )}
