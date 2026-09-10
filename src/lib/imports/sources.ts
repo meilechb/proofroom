@@ -79,6 +79,11 @@ export function proposeGalleries(entries: ZipEntryInfo[], zipName: string): Prop
   return [...groups.values()].sort((a, b) => a.title.localeCompare(b.title));
 }
 
+/** Photos still to import across galleries; drives chunking and resume (plan 21.3). */
+export function remainingCount(galleries: { include: boolean; files: string[]; done?: string[] }[]): number {
+  return galleries.filter((g) => g.include).reduce((n, g) => n + g.files.filter((f) => !(g.done ?? []).includes(f)).length, 0);
+}
+
 export function humanize(name: string) {
   return name.replace(/[_-]+/g, " ").replace(/\s+/g, " ").replace(/\b(\d{4})(\d{2})(\d{2})\b/, "$1-$2-$3").trim().replace(/^\w/, (c) => c.toUpperCase()).slice(0, 120) || "Imported gallery";
 }

@@ -21,7 +21,7 @@ export default async function DataSettingsPage() {
 
       <Card>
         <h2 className="font-medium mb-1">Import</h2>
-        <p className="text-sm text-ink-2">Moving from another tool? Import brings in your clients and sessions. It lives under <Link href="/studio/clients" className="underline">Clients</Link> and the import tools.</p>
+        <p className="text-sm text-ink-2">Moving from another tool? <Link href="/studio/import" className="underline">Import</Link> brings in your galleries and clients from Pixieset, Pic-Time, ShootProof, plain zips or a contacts CSV.</p>
       </Card>
 
       <Card>

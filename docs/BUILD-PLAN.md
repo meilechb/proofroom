@@ -1064,18 +1064,18 @@ Plugin
 ## Phase 21. Import, booking, session planning
 
 Import
-- [ ] 21.1 `/studio/import`: choose source (Pixieset, Pic-Time, ShootProof, plain zip), instructions for exporting from that tool, upload zips (multi, resumable), optional client CSV.
-- [ ] 21.2 Scan step: list of detected galleries (from folder names) with photo counts; edit titles; assign or create clients; choose kind and status (draft by default).
-  - [ ] 21.2.1 Detected galleries list from folders
-  - [ ] 21.2.2 Edit titles and kinds
-  - [ ] 21.2.3 Assign or create clients
-  - [ ] 21.2.4 Choose status (draft default)
-- [ ] 21.3 Run step: background processing in cron `frequent` (chunks), progress bar, per-file errors.
-- [ ] 21.4 Finish: summary, "open galleries", email `import_finished`.
-- [ ] 21.5 Duplicate handling by sha256 within a gallery.
-- [ ] 21.6 Import log retained 30 days; zips deleted after success.
-- [ ] 21.7 Docs page per source with the exact export steps as verified against each vendor's help pages (mark unverified where not confirmed).
-- [ ] 21.8 Tests: folder mapping, CSV attach, resume after failure.
+- [x] 21.1 `/studio/import`: choose source (Pixieset, Pic-Time, ShootProof, plain zip), instructions for exporting from that tool, upload zips (multi, resumable), optional client CSV.
+- [x] 21.2 Scan step: list of detected galleries (from folder names) with photo counts; edit titles; assign or create clients; choose kind and status (draft by default).
+  - [x] 21.2.1 Detected galleries list from folders
+  - [x] 21.2.2 Edit titles and kinds
+  - [x] 21.2.3 Assign or create clients
+  - [x] 21.2.4 Choose status (draft default)
+- [x] 21.3 Run step: background processing in cron `frequent` (chunks), progress bar, per-file errors.
+- [x] 21.4 Finish: summary, "open galleries", email `import_finished`.
+- [x] 21.5 Duplicate handling by sha256 within a gallery.
+- [x] 21.6 Import log retained 30 days; zips deleted after success.
+- [x] 21.7 Docs page per source with the exact export steps as verified against each vendor's help pages (mark unverified where not confirmed).
+- [x] 21.8 Tests: folder mapping, CSV attach, resume after failure.
 
 Booking
 - [x] 21.9 `/studio/settings/bookings`: enable, weekly hours grid, buffer minutes, lead time, max per day, packages bookable, deposit required to confirm, cancellation policy text.

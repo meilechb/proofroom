@@ -9,7 +9,7 @@ import { blobToken } from "@/lib/storage";
 import { addBytes } from "@/lib/usage";
 import { createGallery } from "@/lib/galleries";
 import { createClient } from "@/lib/clients";
-import { isImageEntry, proposeGalleries, type ImportSource, type ProposedGallery, type ZipEntryInfo } from "@/lib/imports/sources";
+import { isImageEntry, proposeGalleries, remainingCount, type ImportSource, type ProposedGallery, type ZipEntryInfo } from "@/lib/imports/sources";
 import { log } from "@/lib/logger";
 
 /**
@@ -140,7 +140,7 @@ export async function processChunk(studioId: string, importId: string, chunk = C
     g.done = [...done];
     if (processed >= chunk) break;
   }
-  const remaining = mapping.galleries.filter((g) => g.include).reduce((n, g) => n + g.files.filter((f) => !(g.done ?? []).includes(f)).length, 0);
+  const remaining = remainingCount(mapping.galleries);
   await db()`update imports set mapping = ${JSON.stringify(mapping)}::jsonb, processed_count = processed_count + ${processed} where id = ${importId}`;
   if (remaining === 0) await finishImport(importId);
   return { done: remaining === 0, processed };
@@ -209,9 +209,45 @@ async function appendLog(importId: string, line: string) {
   await db()`update imports set log = log || ${JSON.stringify([`${new Date().toISOString()} ${line}`])}::jsonb where id = ${importId}`;
 }
 
+/** Creates clients from an uploaded contacts CSV (plan 21.1, 21.2). Returns counts. */
+export async function importClientsFromCsv(studioId: string, source: ImportSource, text: string) {
+  const { parseClientsCsv } = await import("@/lib/imports/csv");
+  const parsed = parseClientsCsv(text);
+  let created = 0;
+  let existing = 0;
+  for (const c of parsed.clients) {
+    const res = await createClient(studioId, { name: c.name, email: c.email, phone: c.phone || null, company: c.company || null, source: `import:${source}` });
+    if (res.created) created++;
+    else existing++;
+  }
+  return { created, existing, skipped: parsed.skipped, total: parsed.total };
+}
+
+export async function listImports(studioId: string, limit = 20) {
+  return rows<ImportRow>(await db()`select * from imports where studio_id = ${studioId} order by created_at desc limit ${limit}`);
+}
+
 export async function finishImport(importId: string) {
-  await db()`update imports set status = 'done', finished_at = now() where id = ${importId}`;
+  const imp = one<ImportRow>(await db()`update imports set status = 'done', finished_at = now() where id = ${importId} returning *`);
   log.info("import.finished", { import: importId });
+  if (imp) await notifyImportFinished(imp).catch((e) => log.warn("import.notify_failed", { error: e instanceof Error ? e.message : String(e) }));
+}
+
+/** Emails the studio the import_finished template with a summary (plan 21.4). */
+async function notifyImportFinished(imp: ImportRow) {
+  const { getTemplate } = await import("@/lib/email-templates-server");
+  const { renderTemplate } = await import("@/lib/email-templates");
+  const { sendStudioEmail } = await import("@/lib/email");
+  const { appUrl } = await import("@/lib/env");
+  const { IMPORT_SOURCES } = await import("@/lib/imports/sources");
+  const studio = one<{ id: string; name: string; email: string }>(await db()`select id, name, email from studios where id = ${imp.studio_id} and deleted_at is null`);
+  if (!studio) return;
+  const errors = imp.log.filter((l) => /could not|skipped|failed/i.test(l));
+  const summary = errors.length ? `${errors.length} issue${errors.length === 1 ? "" : "s"}:\n${errors.slice(0, 20).join("\n")}` : "No errors.";
+  const galleriesUrl = `${appUrl()}/studio/galleries`;
+  const vars = { source: IMPORT_SOURCES[imp.source]?.name ?? imp.source, gallery_count: String(imp.gallery_count), photo_count: String(imp.processed_count), summary, galleries_url: galleriesUrl };
+  const tmpl = await getTemplate(studio.id, "import_finished");
+  await sendStudioEmail(studio, { to: studio.email, subject: renderTemplate(tmpl.values.subject, vars), text: renderTemplate(tmpl.values.body, vars), cta: tmpl.values.cta_label ? { label: tmpl.values.cta_label, url: galleriesUrl } : undefined, kind: "import_finished", templateKey: "import_finished" });
 }
 
 export async function cancelImport(studioId: string, importId: string) {
