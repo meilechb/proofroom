@@ -6,7 +6,6 @@ import { listOrders } from "@/lib/orders";
 import { formatDate, formatMoney, orderStatusLabels, type Client, type OrderStatus } from "@/lib/types";
 import { PageHeader, Card, Stat, ButtonLink, Badge } from "@/components/ui";
 import { Tabs } from "@/components/ui/tabs";
-import { StageBadge } from "../clients-table";
 import { EditClientButton, StageSelect, TimelineComposer } from "./client-forms";
 import { archiveClientAction } from "../actions";
 

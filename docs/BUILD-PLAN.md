@@ -679,21 +679,21 @@ CRM quality
 - [x] 11.1 `/studio/packages`: list with price, deposit, finals included, active, on-site; drag to reorder.
 - [x] 11.2 Package form: name, description, price, deposit (fixed or percent), included finals, extra final price, duration, active, show on site.
 - [x] 11.3 Package archive (kept for existing orders).
-- [ ] 11.4 `/studio/sessions`: tabs upcoming, unpaid, past, all; columns date, client, package, total, paid, balance, agreement.
-- [ ] 11.5 New session dialog: client (search or create), package, date and time (studio timezone), location, notes; creates order with next number.
-- [ ] 11.6 `/studio/sessions/[id]`: header (order number, client, date, status), money card (total, deposit, paid, balance), agreement card, galleries card, plan card (Phase 21), timeline.
-  - [ ] 11.6.1 Header card
-  - [ ] 11.6.2 Money card
-  - [ ] 11.6.3 Agreement card
-  - [ ] 11.6.4 Galleries card
-  - [ ] 11.6.5 Plan card (Phase 21)
-  - [ ] 11.6.6 Timeline
-- [ ] 11.7 Edit session: reschedule, change package (recompute totals unless payments exist, then warn), discount, notes.
-- [ ] 11.8 Cancel session with reason; keeps payments history.
-- [ ] 11.9 Payment link: copy, email (template `payment_link`), QR code (SVG) for in person.
-- [ ] 11.10 Manual payment dialog: amount, method (cash, transfer, other), note; undo within 24 hours.
-- [ ] 11.11 Payments list on the session with statuses and Stripe links (see 7.21).
-- [ ] 11.12 Agreement: view rendered text, signed copy with name, time, ip; resend link; regenerate if unsigned and template changed.
+- [x] 11.4 `/studio/sessions`: tabs upcoming, unpaid, past, all; columns date, client, package, total, paid, balance, agreement.
+- [x] 11.5 New session dialog: client (search or create), package, date and time (studio timezone), location, notes; creates order with next number.
+- [x] 11.6 `/studio/sessions/[id]`: header (order number, client, date, status), money card (total, deposit, paid, balance), agreement card, galleries card, plan card (Phase 21), timeline.
+  - [x] 11.6.1 Header card
+  - [x] 11.6.2 Money card
+  - [x] 11.6.3 Agreement card
+  - [x] 11.6.4 Galleries card
+  - [~] 11.6.5 Plan card (Phase 21)
+  - [x] 11.6.6 Timeline
+- [x] 11.7 Edit session: reschedule, change package (recompute totals unless payments exist, then warn), discount, notes.
+- [x] 11.8 Cancel session with reason; keeps payments history.
+- [x] 11.9 Payment link: copy, email (template `payment_link`), QR code (SVG) for in person.
+- [x] 11.10 Manual payment dialog: amount, method (cash, transfer, other), note; undo within 24 hours.
+- [x] 11.11 Payments list on the session with statuses and Stripe links (see 7.21).
+- [~] 11.12 Agreement: view rendered text, signed copy with name, time, ip; resend link; regenerate if unsigned and template changed.
 - [ ] 11.13 `/studio/settings/agreement`: template editor (Markdown), variables list, preview, save as new version.
 - [ ] 11.14 Printable invoice `/t/[slug]/invoice/[token]` and receipt `/t/[slug]/receipt/[token]` (client-facing, token in email).
 - [ ] 11.15 `/studio/calendar`: month and week views of sessions and confirmed bookings; click to open; today marker.

@@ -4,6 +4,7 @@ Newest first. One line per meaningful change; phase numbers refer to docs/BUILD-
 
 ## Unreleased
 
+- Phase 11: packages management; sessions list, new-session flow and session detail (money, pay link, manual payments, agreement status, galleries, edit, cancel).
 - Phase 10: clients CRM (list, detail, timeline, stages, tags, merge, CSV export), inbox (reply, convert, archive) and tasks.
 - Phase 9: onboarding wizard (/studio/welcome) with brand, template, packages, Stripe connect, email sender and Lightroom token steps; API token library.
 - Phase 8: marketing site: layout with mobile nav, home, pricing, eight feature pages, five comparison pages, Lightroom install guide, security, legal pages (terms, privacy, cookies, DPA, referral terms, fair use), contact form, changelog, sitemap, robots, Open Graph image, JSON-LD, page-view beacon. Health route.
