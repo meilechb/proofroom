@@ -983,17 +983,17 @@ Sending domains
 ## Phase 18. Lightroom API and plugin
 
 API
-- [ ] 18.1 `withApi()` wrapper: bearer token → studio, JSON errors with codes, per-token rate limit, revoked and read-only checks, `last_used_at`.
-- [ ] 18.2 `GET /api/lr/ping` (studio name, plugin min version).
-- [ ] 18.3 `GET /api/lr/clients?q=` and `POST /api/lr/clients`.
-- [ ] 18.4 `GET /api/lr/galleries?client=` and `POST /api/lr/galleries` (kind, title, client).
-- [ ] 18.5 `POST /api/lr/photos/begin` (filename, size, sha256) → upload URL and photo id; duplicate detection returns existing id.
-- [ ] 18.6 `POST /api/lr/photos/complete` → variants, usage.
-- [ ] 18.7 `DELETE /api/lr/photos/[id]` and `PATCH` for replace (republish keeps id and order).
-- [ ] 18.8 `GET /api/lr/galleries/[id]/feedback` → favorites and comments since a timestamp.
-- [ ] 18.9 `POST /api/lr/galleries/[id]/publish` and `/unpublish`.
-- [ ] 18.10 API versioning header and a changelog section.
-- [ ] 18.11 Tests: token auth, rate limit, ownership on every route.
+- [x] 18.1 `withApi()` wrapper: bearer token → studio, JSON errors with codes, per-token rate limit, revoked and read-only checks, `last_used_at`.
+- [x] 18.2 `GET /api/lr/ping` (studio name, plugin min version).
+- [x] 18.3 `GET /api/lr/clients?q=` and `POST /api/lr/clients`.
+- [x] 18.4 `GET /api/lr/galleries?client=` and `POST /api/lr/galleries` (kind, title, client).
+- [x] 18.5 `POST /api/lr/photos/begin` (filename, size, sha256) → upload URL and photo id; duplicate detection returns existing id.
+- [x] 18.6 `POST /api/lr/photos/complete` → variants, usage.
+- [x] 18.7 `DELETE /api/lr/photos/[id]` and `PATCH` for replace (republish keeps id and order).
+- [x] 18.8 `GET /api/lr/galleries/[id]/feedback` → favorites and comments since a timestamp.
+- [x] 18.9 `POST /api/lr/galleries/[id]/publish` and `/unpublish`.
+- [x] 18.10 API versioning header and a changelog section.
+- [x] 18.11 Tests: token auth, rate limit, ownership on every route.
 
 Plugin
 - [ ] 18.12 Rename plugin files and ids to the placeholder; config reads site URL stamped by the zip script.
