@@ -905,18 +905,18 @@ SEO and quality
 
 ## Phase 15. Portfolio and asset library
 
-- [ ] 15.1 `/studio/assets`: upload many, grid with thumbnails, search by filename and tag, filter by kind (portfolio, site, logo, reference), sort.
-  - [ ] 15.1.1 Multi-upload with progress
-  - [ ] 15.1.2 Grid with thumbnails
-  - [ ] 15.1.3 Search by filename and tag
-  - [ ] 15.1.4 Filter by kind
-  - [ ] 15.1.5 Sort by date, name, size
-- [ ] 15.2 Asset detail drawer: alt text, tags, dimensions, size, where used (site sections, portfolio, mood boards), replace file, delete (blocked when in use, with the list of uses).
-- [ ] 15.3 Bulk tag and bulk delete.
-- [ ] 15.4 Variants generated on upload (thumb 480, web 1600, original kept); public store for site use.
+- [x] 15.1 `/studio/assets`: upload many, grid with thumbnails, search by filename and tag, filter by kind (portfolio, site, logo, reference), sort.
+  - [x] 15.1.1 Multi-upload with progress
+  - [x] 15.1.2 Grid with thumbnails
+  - [x] 15.1.3 Search by filename and tag
+  - [x] 15.1.4 Filter by kind
+  - [x] 15.1.5 Sort by date, name, size
+- [x] 15.2 Asset detail drawer: alt text, tags, dimensions, size, where used (site sections, portfolio, mood boards), replace file, delete (blocked when in use, with the list of uses).
+- [x] 15.3 Bulk tag and bulk delete.
+- [x] 15.4 Variants generated on upload (thumb 480, web 1600, original kept); public store for site use.
 - [ ] 15.5 `/studio/portfolio`: pick assets, order (drag), categories (create, rename), captions, featured flag, publish toggle.
 - [ ] 15.6 Import from gallery: pick a finished gallery, select photos, copy into assets as portfolio items; requires the client consent checkbox recorded on the order.
-- [ ] 15.7 Storage accounting includes assets and documents; usage shown on billing and assets pages.
+- [x] 15.7 Storage accounting includes assets and documents; usage shown on billing and assets pages.
 - [ ] 15.8 Orphan cleanup job: blobs without rows older than 7 days are deleted (cron, logged).
 - [ ] 15.9 Tests: usage count maintenance, delete blocked when in use.
 

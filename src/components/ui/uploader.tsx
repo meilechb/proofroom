@@ -12,9 +12,10 @@ import { Icon } from "@/components/ui/icons";
 export type UploadTicket = { id: string; pathname: string; token: string; duplicateOf?: string | null };
 export type UploadItem = { key: string; file: File; status: "queued" | "uploading" | "processing" | "done" | "failed" | "duplicate"; progress: number; error?: string; attempts: number };
 
-export function Uploader({ accept = "image/jpeg,image/png,image/webp,image/tiff,image/heic", maxBytes = 200 * 1024 * 1024, begin, complete, onAllDone, hint }: {
+export function Uploader({ accept = "image/jpeg,image/png,image/webp,image/tiff,image/heic", maxBytes = 200 * 1024 * 1024, access = "private", begin, complete, onAllDone, hint }: {
   accept?: string;
   maxBytes?: number;
+  access?: "public" | "private";
   begin: (file: File, sha256: string | null) => Promise<UploadTicket>;
   complete: (ticket: UploadTicket, url: string) => Promise<void>;
   onAllDone?: (doneCount: number) => void;
@@ -39,7 +40,7 @@ export function Uploader({ accept = "image/jpeg,image/png,image/webp,image/tiff,
       }
       const { put } = await import("@vercel/blob/client");
       const blob = await put(ticket.pathname, item.file, {
-        access: "private",
+        access,
         token: ticket.token,
         contentType: item.file.type || "application/octet-stream",
         onUploadProgress: (e) => update(item.key, { progress: e.percentage }),
@@ -51,7 +52,7 @@ export function Uploader({ accept = "image/jpeg,image/png,image/webp,image/tiff,
       const message = error instanceof Error ? error.message : "Upload failed";
       update(item.key, { status: "failed", error: message, attempts: item.attempts + 1 });
     }
-  }, [begin, complete]);
+  }, [begin, complete, access]);
 
   const run = useCallback(async (queue: UploadItem[]) => {
     if (running.current) return;
