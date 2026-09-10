@@ -40,3 +40,24 @@ describe("downloadGate", () => {
     expect(sharingAllowed({ status: "draft", allow_sharing: true })).toBe(false);
   });
 });
+
+describe("download PIN and secrets", () => {
+  it("has no PIN gate when none is set, and enforces one when set", async () => {
+    const { hashGallerySecret, verifyDownloadPin } = await import("@/lib/gallery-access");
+    expect(verifyDownloadPin("", { download_pin_hash: null })).toBe(true);
+    const hash = hashGallerySecret("2468");
+    expect(verifyDownloadPin("2468", { download_pin_hash: hash })).toBe(true);
+    expect(verifyDownloadPin("0000", { download_pin_hash: hash })).toBe(false);
+    expect(verifyDownloadPin("", { download_pin_hash: hash })).toBe(false);
+  });
+
+  it("verifyUnlock accepts the code or password and rejects the wrong one", async () => {
+    const { hashGallerySecret, verifyUnlock } = await import("@/lib/gallery-access");
+    expect(verifyUnlock({ access_code: "ABC234", password_hash: null }, "abc-234")).toBe(true);
+    expect(verifyUnlock({ access_code: "ABC234", password_hash: null }, "WRONG1")).toBe(false);
+    const pw = hashGallerySecret("hunter2");
+    expect(verifyUnlock({ access_code: null, password_hash: pw }, "hunter2")).toBe(true);
+    expect(verifyUnlock({ access_code: null, password_hash: pw }, "nope")).toBe(false);
+    expect(verifyUnlock({ access_code: null, password_hash: null }, "")).toBe(true); // open gallery
+  });
+});

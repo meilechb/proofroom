@@ -811,7 +811,7 @@ Quality
 - [x] 13.22 `GET /api/gallery/[id]/zip?size=`: access and PIN check, streaming, filename sanitization.
 - [x] 13.23 `POST /api/track`: page and gallery views, downloads; visitor hash from ip + user agent + day salt.
 - [x] 13.24 `noindex` on all gallery, pay, hub pages; `index` on website pages.
-- [ ] 13.25 Tests: access grant cookie scope per gallery, PIN, pay gate, zip filename dedupe.
+- [x] 13.25 Tests: access grant cookie scope per gallery, PIN, pay gate, zip filename dedupe.
 - [x] 13.26 Accessibility: lightbox keyboard trap, alt text from filename, focus return.
 
 ## Phase 14. Tenant public website (two templates)
