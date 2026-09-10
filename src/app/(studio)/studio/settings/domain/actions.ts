@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { audit } from "@/lib/audit";
-import { requireStudio } from "@/lib/auth";
+import { requireStudio, requireEntitledStudio } from "@/lib/auth";
 import { setCustomDomain, checkCustomDomain, clearCustomDomain } from "@/lib/domains";
 import { str, type ActionState } from "@/lib/action-state";
 
 /** Enter a domain and register it with Vercel (plan 14.28). */
 export async function saveDomainAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const { studio, user } = await requireStudio("admin");
+  const { studio, user } = await requireEntitledStudio("customDomain", "admin");
   const input = str(formData, "domain", 253);
   if (!input) return { error: "Enter your domain.", fields: { domain: "Enter your domain." } };
   try {
@@ -24,7 +24,7 @@ export async function saveDomainAction(_prev: ActionState, formData: FormData): 
 
 /** Re-check DNS and ownership now (plan 14.29). */
 export async function checkDomainAction(): Promise<void> {
-  const { studio } = await requireStudio("admin");
+  const { studio } = await requireEntitledStudio("customDomain", "admin");
   await checkCustomDomain(studio.id);
   revalidatePath("/studio/settings/domain");
 }

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireWritableStudio } from "@/lib/auth";
+import { requireWritableStudio, requireEntitledStudio } from "@/lib/auth";
 import { createImport, registerFile, scanImport, startImport, cancelImport, getImport, importClientsFromCsv } from "@/lib/imports";
 import { clientUploadToken, safeFilename } from "@/lib/storage";
 import { IMPORT_SOURCES, type ImportSource } from "@/lib/imports/sources";
@@ -12,7 +12,7 @@ const MAX_ZIP_BYTES = 5 * 1024 * 1024 * 1024;
 
 /** Start a new import of the chosen source and open its wizard (plan 21.1). */
 export async function newImportAction(formData: FormData) {
-  const { studio, user } = await requireWritableStudio();
+  const { studio, user } = await requireEntitledStudio("imports");
   const source = str(formData, "source", 20) as ImportSource;
   if (!(source in IMPORT_SOURCES)) return;
   const imp = await createImport(studio.id, source, user.id);

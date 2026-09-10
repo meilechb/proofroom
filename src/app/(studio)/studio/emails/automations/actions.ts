@@ -1,14 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireWritableStudio } from "@/lib/auth";
+import { requireEntitledStudio } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { AUTOMATION_RULES, type AutomationSettings } from "@/lib/automations-shared";
 import { bool, int, type ActionState } from "@/lib/action-state";
 
 /** Save the per-rule enabled/delay settings and the pause switch (plan 16.7, 16.10). */
 export async function saveAutomationsAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const { studio } = await requireWritableStudio("admin");
+  const { studio } = await requireEntitledStudio("automations", "admin");
   const automations = {} as AutomationSettings;
   for (const def of AUTOMATION_RULES) {
     automations[def.rule] = {

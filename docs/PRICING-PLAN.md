@@ -161,19 +161,19 @@ Storage cap
 - [x] 9.13 Existing content stays served when over cap (no read gate) — verify gallery/asset reads are untouched.
 
 Custom domain
-- [ ] 9.14 `settings/domain` add/verify actions: `requireEntitlement(customDomain)`.
+- [x] 9.14 `settings/domain` add/verify actions: `requireEntitlement(customDomain)`.
 - [ ] 9.15 `proxy.ts` custom-domain lookup: treat a Free studio's custom domain as inactive (serve subdomain, do not 404 the subdomain).
 
 Sending domain / email
-- [ ] 9.16 `sending-domains` create/verify actions: `requireEntitlement(sendingDomain)`.
-- [ ] 9.17 `email.senderFor(studio)`: when `!entitlements.sendingDomain`, force the platform default sender regardless of a stored verified domain.
+- [x] 9.16 `sending-domains` create/verify actions: `requireEntitlement(sendingDomain)`.
+- [x] 9.17 `email.senderFor(studio)`: when `!entitlements.sendingDomain`, force the platform default sender regardless of a stored verified domain.
 
 Pro-only workflow features
-- [ ] 9.18 Automations: gate the automation-enable/run entry actions with `requireEntitlement(automations)`.
-- [ ] 9.19 Broadcasts: gate compose/send with `requireEntitlement(automations)`.
-- [ ] 9.20 Booking: gate booking-settings enable + public booking route with `requireEntitlement(booking)`.
-- [ ] 9.21 Import: gate `imports.createImport` with `requireEntitlement(imports)`.
-- [ ] 9.22 Session planning: gate `planning.*` mutations with `requireEntitlement(sessionPlanning)`.
+- [x] 9.18 Automations: gate the automation-enable/run entry actions with `requireEntitlement(automations)`.
+- [-] 9.19 Broadcasts: gate compose/send with `requireEntitlement(automations)`. *(no broadcast send action built yet — table/schema only; gate when built.)*
+- [x] 9.20 Booking: gate booking-settings enable + public booking route with `requireEntitlement(booking)`.
+- [x] 9.21 Import: gate `imports.createImport` with `requireEntitlement(imports)`.
+- [x] 9.22 Session planning: gate `planning.*` mutations with `requireEntitlement(sessionPlanning)`.
 - [ ] 9.23 Referral reward: confirm `referrals.onFirstPaidInvoice` only fires for Pro (paid invoice) — add an explicit guard/test that Free never accrues.
 
 Branding

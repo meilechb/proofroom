@@ -1,14 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireStudio, requireWritableStudio } from "@/lib/auth";
+import { requireStudio, requireWritableStudio, requireEntitledStudio } from "@/lib/auth";
 import { createDomain, verifyDomain, removeDomain, setFromLocalPart } from "@/lib/sending-domains";
 import { sendStudioEmail } from "@/lib/email";
 import { audit } from "@/lib/audit";
 import { str, type ActionState } from "@/lib/action-state";
 
 export async function addEmailDomainAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const { studio, user } = await requireWritableStudio("admin");
+  const { studio, user } = await requireEntitledStudio("sendingDomain", "admin");
   const domain = str(formData, "domain", 253);
   try {
     await createDomain(studio.id, domain);
@@ -22,13 +22,13 @@ export async function addEmailDomainAction(_prev: ActionState, formData: FormDat
 }
 
 export async function checkEmailDomainAction(): Promise<void> {
-  const { studio } = await requireWritableStudio("admin");
+  const { studio } = await requireEntitledStudio("sendingDomain", "admin");
   await verifyDomain(studio.id).catch(() => {});
   revalidatePath("/studio/settings/email-domain");
 }
 
 export async function setFromLocalPartAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const { studio } = await requireWritableStudio("admin");
+  const { studio } = await requireEntitledStudio("sendingDomain", "admin");
   try {
     await setFromLocalPart(studio.id, str(formData, "local_part", 64));
   } catch (error) {

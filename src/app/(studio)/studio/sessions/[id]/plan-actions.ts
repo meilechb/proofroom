@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireWritableStudio } from "@/lib/auth";
+import { requireEntitledStudio } from "@/lib/auth";
 import { db, one, isUuid, rows } from "@/lib/db";
 import { upsertPlan, getPlan, planHasContent, type ShotItem } from "@/lib/planning";
 import { getOrder } from "@/lib/orders";
@@ -27,7 +27,7 @@ async function ownedAssets(studioId: string, ids: string[]) {
 }
 
 export async function savePlanAction(orderId: string, input: PlanInput): Promise<ActionState> {
-  const { studio } = await requireWritableStudio();
+  const { studio } = await requireEntitledStudio("sessionPlanning");
   if (!isUuid(orderId) || !(await getOrder(studio.id, orderId))) return { error: "Session not found." };
   const notes = String(input.notes_md ?? "").slice(0, 20000);
   const shots: ShotItem[] = Array.isArray(input.shot_list)
@@ -41,7 +41,7 @@ export async function savePlanAction(orderId: string, input: PlanInput): Promise
 
 /** Marks the plan visible to the client and emails them the link (plan 21.18). */
 export async function sharePlanAction(orderId: string): Promise<ActionState> {
-  const { studio } = await requireWritableStudio();
+  const { studio } = await requireEntitledStudio("sessionPlanning");
   const order = await getOrder(studio.id, orderId);
   if (!order) return { error: "Session not found." };
   const plan = await getPlan(studio.id, orderId);

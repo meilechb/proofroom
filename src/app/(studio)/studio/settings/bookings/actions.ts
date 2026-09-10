@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireWritableStudio } from "@/lib/auth";
+import { requireEntitledStudio } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { DEFAULT_BOOKING, type BookingSettings, type WeeklyHours } from "@/lib/booking-shared";
 import type { ActionState } from "@/lib/action-state";
@@ -34,7 +34,7 @@ function cleanOverrides(raw: unknown): Record<string, { start: string; end: stri
 
 /** Save booking availability settings (plan 21.9). */
 export async function saveBookingSettingsAction(input: BookingSettings): Promise<ActionState> {
-  const { studio } = await requireWritableStudio("admin");
+  const { studio } = await requireEntitledStudio("booking", "admin");
   const clean: BookingSettings = {
     enabled: Boolean(input.enabled),
     weekly: cleanWeekly(input.weekly),
