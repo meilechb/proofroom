@@ -975,9 +975,9 @@ Sending domains
   - [x] 17.4.5 Pending invites: resend, revoke
   - [x] 17.4.6 Owner transfer
 - [ ] 17.5 Per-user notification settings: new inquiry, new note, payment received, booking made, daily digest.
-- [ ] 17.6 Lightroom tab: tokens list (name, created, last used), create (shown once), revoke, plugin download, install guide.
-- [ ] 17.7 Data tab: export everything (JSON + CSV zip, emailed when ready), import (link to Phase 21), delete studio (type name to confirm; cancels subscription, disconnects Stripe, schedules purge).
-- [ ] 17.8 Audit log viewer with filters (user, action, date).
+- [x] 17.6 Lightroom tab: tokens list (name, created, last used), create (shown once), revoke, plugin download, install guide.
+- [x] 17.7 Data tab: export everything (JSON + CSV zip, emailed when ready), import (link to Phase 21), delete studio (type name to confirm; cancels subscription, disconnects Stripe, schedules purge).
+- [x] 17.8 Audit log viewer with filters (user, action, date).
 - [ ] 17.9 Tests: role checks on every settings action (member cannot invite; admin cannot delete studio).
 
 ## Phase 18. Lightroom API and plugin

@@ -11,7 +11,7 @@ import { classifyHost } from "@/lib/tenant";
  */
 
 const SESSION_COOKIE = "pr_session";
-const ROOT_ONLY_PREFIXES = ["/studio", "/admin", "/login", "/signup", "/api/billing", "/api/stripe", "/api/lr", "/api/connect", "/api/cron", "/api/health", "/api/resend"];
+const ROOT_ONLY_PREFIXES = ["/studio", "/admin", "/login", "/signup", "/api/billing", "/api/stripe", "/api/lr", "/api/connect", "/api/cron", "/api/health", "/api/resend", "/api/data"];
 
 // Custom-domain lookups are cached per instance for a minute.
 const domainCache = new Map<string, { slug: string | null; until: number }>();
