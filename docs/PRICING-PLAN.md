@@ -132,14 +132,14 @@ Naming: keep `pro` / `free` as the `PlanId` values; Stripe per-seat price lookup
 
 ## Phase 8 — `auth.ts`: entitlements in context + gate helper
 
-- [ ] 8.1 Extend the studio context type with `entitlements: Entitlements`.
-- [ ] 8.2 In `getStudioContext`, compute `entitlements(billing.effectivePlan)` and attach.
-- [ ] 8.3 Add `class UpgradeRequiredError extends Error` with `feature: keyof Entitlements` and a user message.
-- [ ] 8.4 Add `requireEntitlement(ctx, feature: keyof Entitlements)` — throws `UpgradeRequiredError` when the flag is false/`maxSeats` exceeded.
-- [ ] 8.5 Keep `requireWritableStudio` semantics (suspended-only hard gate now); confirm ~40 call sites still compile.
-- [ ] 8.6 Add `requireEntitledStudio(feature, minRole?)` convenience wrapper (writable + entitled) for server actions.
-- [ ] 8.7 Map `UpgradeRequiredError` in the server-action error boundary/`action-state` to a typed `{ upgrade: true, feature }` result.
-- [ ] 8.8 Impersonation path: platform admin viewing a studio still sees real entitlements (read-only already forced).
+- [x] 8.1 Extend the studio context type with `entitlements: Entitlements`.
+- [x] 8.2 In `getStudioContext`, compute `entitlements(billing.effectivePlan)` and attach.
+- [x] 8.3 Add `class UpgradeRequiredError extends Error` with `feature: keyof Entitlements` and a user message.
+- [x] 8.4 Add `requireEntitlement(ctx, feature: keyof Entitlements)` — throws `UpgradeRequiredError` when the flag is false/`maxSeats` exceeded.
+- [x] 8.5 Keep `requireWritableStudio` semantics (suspended-only hard gate now); confirm ~40 call sites still compile.
+- [x] 8.6 Add `requireEntitledStudio(feature, minRole?)` convenience wrapper (writable + entitled) for server actions.
+- [x] 8.7 Map `UpgradeRequiredError` in the server-action error boundary/`action-state` to a typed `{ upgrade: true, feature }` result.
+- [x] 8.8 Impersonation path: platform admin viewing a studio still sees real entitlements (read-only already forced).
 
 ## Phase 9 — Gating enforcement (one sub-phase per feature)
 
