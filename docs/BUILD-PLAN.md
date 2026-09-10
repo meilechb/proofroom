@@ -1114,7 +1114,7 @@ Session planning
 ## Phase 22. Quality, security, launch
 
 Tests and checks
-- [ ] 22.1 Unit test coverage report in CI; threshold 80% for `lib/`.
+- [x] 22.1 Unit test coverage report in CI; threshold 80% for `lib/`.
 - [ ] 22.2 Route tests for every API route: auth required, tenant scoping, method not allowed.
 - [ ] 22.3 Playwright smoke: signup → onboarding → create client → create gallery → upload → publish → open as client → favorite → pay (test mode) → see paid.
   - [ ] 22.3.1 Signup and verify
@@ -1129,23 +1129,23 @@ Tests and checks
   - [ ] 22.3.10 Paid state reflected in studio
 - [ ] 22.4 Playwright: website editor publish and view; template switch keeps content.
 - [ ] 22.5 Playwright: Lightroom API flow with a fake plugin client.
-- [ ] 22.6 `typecheck`, `lint`, `test`, `build` green in CI on every push.
+- [x] 22.6 `typecheck`, `lint`, `test`, `build` green in CI on every push.
 
 Security
-- [ ] 22.7 Security review of every Server Action and route for tenant scoping (`assertOwned`) with a checklist file listing each.
-  - [ ] 22.7.1 Auth and account actions
-  - [ ] 22.7.2 Clients and inquiries
-  - [ ] 22.7.3 Sessions, packages, payments
-  - [ ] 22.7.4 Galleries and photos
-  - [ ] 22.7.5 Website and assets
-  - [ ] 22.7.6 Emails and sending domains
-  - [ ] 22.7.7 Billing and Stripe connection
-  - [ ] 22.7.8 Lightroom API
-  - [ ] 22.7.9 Referrals
-  - [ ] 22.7.10 Platform admin
-- [ ] 22.8 CSRF: Server Actions origin check confirmed for tenant hosts; API routes require bearer or same-origin.
-- [ ] 22.9 Secrets never logged; log redaction test.
-- [ ] 22.10 Upload validation: content sniffing, size caps, filename sanitization, no SVG in galleries.
+- [x] 22.7 Security review of every Server Action and route for tenant scoping (`assertOwned`) with a checklist file listing each.
+  - [x] 22.7.1 Auth and account actions
+  - [x] 22.7.2 Clients and inquiries
+  - [x] 22.7.3 Sessions, packages, payments
+  - [x] 22.7.4 Galleries and photos
+  - [x] 22.7.5 Website and assets
+  - [x] 22.7.6 Emails and sending domains
+  - [x] 22.7.7 Billing and Stripe connection
+  - [x] 22.7.8 Lightroom API
+  - [x] 22.7.9 Referrals
+  - [x] 22.7.10 Platform admin
+- [x] 22.8 CSRF: Server Actions origin check confirmed for tenant hosts; API routes require bearer or same-origin.
+- [x] 22.9 Secrets never logged; log redaction test.
+- [x] 22.10 Upload validation: content sniffing, size caps, filename sanitization, no SVG in galleries.
 - [ ] 22.11 Rate limits verified with a script.
 - [ ] 22.12 Dependency audit (`npm audit`) clean or documented.
 - [ ] 22.13 Headers verified with a scanner (HSTS, CSP report-only first, then enforce).
@@ -1158,8 +1158,8 @@ Performance
 
 Docs and launch
 - [ ] 22.18 `docs/SETUP.md` complete and followed once from scratch on a fresh Vercel project.
-- [ ] 22.19 `docs/ARCHITECTURE.md` complete.
-- [ ] 22.20 `docs/LAUNCH-CHECKLIST.md`: legal pages reviewed, Stripe live keys, Connect platform profile approved for live, webhooks live, Resend production domain, DNS, backups, monitoring, support email, status page.
+- [x] 22.19 `docs/ARCHITECTURE.md` complete.
+- [x] 22.20 `docs/LAUNCH-CHECKLIST.md`: legal pages reviewed, Stripe live keys, Connect platform profile approved for live, webhooks live, Resend production domain, DNS, backups, monitoring, support email, status page.
   - [ ] 22.20.1 Legal pages reviewed
   - [ ] 22.20.2 Stripe live keys and price
   - [ ] 22.20.3 Connect platform profile complete in live mode

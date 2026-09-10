@@ -1,6 +1,6 @@
 # Architecture
 
-Short descriptions of how the pieces fit. Sections marked "to write" are filled in as their phase is built.
+Short descriptions of how the pieces fit.
 
 ## Tenancy and host routing
 
@@ -21,21 +21,40 @@ Short descriptions of how the pieces fit. Sections marked "to write" are filled 
 - One plan. `src/lib/plans.ts` exports `PLAN` and `billingState(studio)`, which derives `trialing | active | past_due | read_only | locked` from the studio row. `canWrite` gates mutations; `publicLive` gates galleries and the website.
 - The platform's only money is the $40/month subscription (Phase 6).
 
-## Client payments (to write in full)
+## Client payments
 
-- Each studio connects its own Stripe account (OAuth for existing accounts, Account Links for new ones). Charges are created on that account with the `Stripe-Account` header, no application fee. We mirror status from the connected-accounts webhook. See BUILD-PLAN Decision 0.8.
+- Each studio connects its **own** Stripe account (OAuth for existing accounts, hosted onboarding / Account Links for new ones; `src/lib/connect.ts`). `canTakeCardPayments(studio)` gates checkout on `charges_enabled`.
+- Charges are **direct charges** on the connected account via the `Stripe-Account` header (`onAccount`) with **no application fee** — the client's money never touches the platform. `createOrderCheckout` builds a Checkout Session for a deposit, balance or full amount and records a pending `payments` row; `amountForKind` + `orderMoney` compute what's due from the order and prior payments.
+- The connected-accounts webhook (`/api/stripe/webhook`, signature-verified, idempotent via `stripe_events`) mirrors `checkout.session.completed` → paid, `charge.refunded` → refund state, `charge.dispute.created` → dispute state, and re-syncs the order (`syncOrderPaymentState`). Refunds and disputes are handled by the studio in its own dashboard; a reversed first invoice voids a referral reward.
+- The platform's only charge is the $40/month subscription on the platform account (Phase 6), separate from client payments.
 
-## Storage and images (to write in full)
+## Storage and images
 
-- Vercel Blob, two stores. Originals private; previews and thumbnails generated with sharp; site assets public.
+- Vercel Blob, two stores (`src/lib/storage.ts`): **galleries** (private) for originals, previews and thumbnails; **assets** (public) for site images and logos. `blobToken(store)` selects the read/write token.
+- Browser uploads go **direct to Blob**: the server issues a short-lived client token bound to one pathname, a size cap and an allow-list of content types (`clientUploadToken`); the shared `Uploader` puts the bytes and reports completion, and the server then generates variants.
+- Images are processed with sharp (`src/lib/images.ts`): a ~1600px web preview and a ~480px thumbnail, EXIF capture time, and a sha256 for per-gallery dedup. Private originals and previews are streamed through signed app routes with ETag/304 and a pay-gate check; full-size is gated until paid.
 
-## Email and sending domains (to write in full)
+## Email and sending domains
 
-- Resend. Platform mail from our domain; studio mail from the studio's verified subdomain when present, else our domain with the studio's name and reply-to.
+- Resend over its HTTP API (`src/lib/email.ts`); without `RESEND_API_KEY` every send is a logged no-op so the UI can fall back to copyable links. Every attempt is written to `email_log`.
+- Platform mail (login, billing) leaves from the platform domain. Studio mail leaves from the studio's **own** verified subdomain when present (`sending_domains`), else from the platform domain as "Studio via App" with the studio's address as reply-to (`senderFor`/`sendStudioEmail`).
+- Templates are per-studio overrides of built-in defaults (`email-templates.ts` + `email-templates-server.ts`); automations claim each due target in `automation_sends` so a rule fires at most once. The Resend webhook (`/api/resend/webhook`, Svix-signed) mirrors delivery events and suppresses hard bounces and complaints.
 
-## Lightroom API and plugin (to write in full)
+## Lightroom API and plugin
 
-- Bearer tokens per studio (`api_tokens`). Publish, republish, delete, and feedback (favorites, comments) back into Lightroom.
+- A bearer-token API under `/api/lr/**`; `withApi` maps a token (`api_tokens`) to one studio, rate-limits 120/min per token, blocks writes for read-only tokens, and returns JSON errors with an `X-LR-Api-Version` header.
+- The Lightroom Classic publish plugin (`lightroom/`) uploads photos (begin → PUT bytes → ingest, with sha256 dedup), republishes in place, deletes, and pulls favorites and comments back into Lightroom's ratings and Comments panel. It is served login-gated from `/api/plugin/download`, zipped on the fly with the studio's site URL stamped in.
+
+## Booking, imports and planning
+
+- **Booking:** availability is pure slot math (`booking-shared.ts`) over weekly hours, buffers, lead time, blocked dates and one-off overrides, DST-correct via `Intl`. A public `/book` flow holds a slot (a Postgres exclusion constraint prevents double-booking), creates the client, order and confirmed slot, and optionally sends the client to a deposit Checkout. Clients reschedule/cancel from the portal within a policy window; the frequent cron releases expired holds.
+- **Imports:** zip exports upload to Blob and are scanned by streaming (`fflate`, no zip held in memory) into proposed galleries by folder; after a review/mapping step the frequent cron processes photos in chunks (idempotent via a per-gallery `done` list), dedupes by sha256, and emails `import_finished`. A CSV path creates clients matched by email.
+- **Session planning:** `session_plans` holds Markdown notes, a shot list, and mood-board asset references per order, with a client-visibility flag; shared plans appear in the client portal and print from a chrome-free page.
+
+## Observability
+
+- Structured JSON logging (`src/lib/logger.ts`) for the log drain; every payload passes through `redact()` so secrets never reach logs.
+- Two cron endpoints (`/api/cron/{frequent,daily}`) run holds release, domain re-checks, import chunks, automations, orphan-blob cleanup and the platform digest.
 
 ## Tables
 
