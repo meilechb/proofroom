@@ -31,6 +31,17 @@ describe("slotsForDate", () => {
     expect(slots).toContain("2026-09-09T13:30:00.000Z"); // 09:30-10:30 ends before 10:45 buffer start
     expect(slots).toContain("2026-09-09T16:30:00.000Z"); // 12:30 starts after the 12:15 buffer end
   });
+  it("hides a slot another client is already holding (the race, availability side)", () => {
+    // One client holds 10:00-11:00 local (14:00-15:00Z). The next client must not see it,
+    // and the buffer keeps the neighbours clear. The database exclusion constraint is the
+    // final guard if two people submit at once; this is what the second person sees first.
+    const held = [{ starts_at: "2026-09-09T14:00:00Z", ends_at: "2026-09-09T15:00:00Z" }];
+    const seen = slotsForDate("2026-09-09", tz, settings, 60, held, now).map((d) => d.toISOString());
+    expect(seen).not.toContain("2026-09-09T14:00:00.000Z"); // the held slot itself
+    expect(seen).not.toContain("2026-09-09T14:30:00.000Z"); // starts inside the held block
+    expect(seen).not.toContain("2026-09-09T15:00:00.000Z"); // ends 16:00, inside the 15-min buffer
+    expect(seen).toContain("2026-09-09T15:30:00.000Z"); // first slot clear of the block and its buffer
+  });
   it("lets a one-off override replace the weekly hours for a date", () => {
     // Wednesday is normally open; close it with an empty override.
     expect(slotsForDate("2026-09-09", tz, { ...settings, overrides: { "2026-09-09": [] } }, 60, [], now)).toHaveLength(0);

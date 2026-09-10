@@ -1098,7 +1098,7 @@ Booking
 - [x] 21.13 Reschedule and cancel links in the client hub within policy; studio can override.
 - [x] 21.14 Booking reminders (automation) and no-show marking.
 - [x] 21.15 Blocked dates (holidays) and one-off overrides.
-- [ ] 21.16 Tests: availability math, hold race (two clients same slot), policy enforcement.
+- [x] 21.16 Tests: availability math, hold race (two clients same slot), policy enforcement.
 
 Session planning
 - [ ] 21.17 Session plan card on the session page: notes (Markdown), shot list (checklist with add, reorder, check), mood board (asset picker plus upload), "share with client" toggle.
