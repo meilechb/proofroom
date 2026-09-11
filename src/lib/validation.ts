@@ -91,6 +91,14 @@ export const storeSettingsSchema = z.object({
   manualPaymentLink: z.string().trim().url("Enter a full URL.").max(500).optional().or(z.literal("")),
 });
 
+export const storeDiscountSchema = z.object({
+  code: z.string().trim().min(2, "Enter a code of at least 2 characters.").max(40).regex(/^[A-Za-z0-9_-]+$/, "Use letters, numbers, - and _ only."),
+  kind: z.enum(["percent", "fixed", "free_ship"]),
+  value: z.coerce.number().int().min(0).max(10_000_000),
+  minSubtotalCents: z.coerce.number().int().min(0).max(10_000_000).optional(),
+  maxUses: z.coerce.number().int().min(1).max(1_000_000).optional(),
+});
+
 export const orderSchema = z.object({
   clientId: z.string().uuid(),
   packageId: z.string().uuid().optional().or(z.literal("")),

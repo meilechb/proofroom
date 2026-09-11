@@ -35,6 +35,7 @@ export default async function StorePage() {
         actions={
           <div className="flex gap-2">
             <ButtonLink href="/studio/store/orders" variant="secondary">Orders</ButtonLink>
+            <ButtonLink href="/studio/store/discounts" variant="secondary">Discounts</ButtonLink>
             <ButtonLink href="/studio/store/settings" variant="secondary">Settings</ButtonLink>
             <ProductDialog trigger="add" assets={pickerAssets} />
           </div>

@@ -6,6 +6,7 @@ import { normalizeSlug } from "@/lib/slug";
 import { hmac } from "@/lib/tokens";
 import { requireEnv } from "@/lib/env";
 import type {
+  DiscountCode,
   DownloadGrant,
   ProductPrice,
   Sale,
@@ -153,6 +154,61 @@ export async function createCollection(studioId: string, input: CollectionInput)
 
 export async function listCollectionItems(studioId: string, collectionId: string) {
   return rows<StoreCollectionItem>(await db()`select * from store_collection_items where studio_id = ${studioId} and collection_id = ${collectionId} order by sort_order, created_at`);
+}
+
+// --- Discount codes ---------------------------------------------------------
+
+export type DiscountInput = {
+  code: string;
+  kind: "percent" | "fixed" | "free_ship";
+  value: number;
+  minSubtotalCents?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  maxUses?: number | null;
+};
+
+export async function listDiscounts(studioId: string) {
+  return rows<DiscountCode>(await db()`select * from discount_codes where studio_id = ${studioId} order by created_at desc`);
+}
+
+export async function createDiscount(studioId: string, input: DiscountInput) {
+  return one<DiscountCode>(
+    await db()`
+      insert into discount_codes (studio_id, code, kind, value, min_subtotal_cents, starts_at, ends_at, max_uses)
+      values (${studioId}, ${input.code.trim().toUpperCase()}, ${input.kind}, ${input.value}, ${input.minSubtotalCents ?? null}, ${input.startsAt ?? null}, ${input.endsAt ?? null}, ${input.maxUses ?? null})
+      on conflict (studio_id, code) do update set kind = excluded.kind, value = excluded.value, min_subtotal_cents = excluded.min_subtotal_cents, starts_at = excluded.starts_at, ends_at = excluded.ends_at, max_uses = excluded.max_uses, is_active = true, updated_at = now()
+      returning *`
+  );
+}
+
+export async function setDiscountActive(studioId: string, id: string, active: boolean) {
+  return one<DiscountCode>(await db()`update discount_codes set is_active = ${active} where id = ${id} and studio_id = ${studioId} returning *`);
+}
+
+/** A code that is active, within its window, under its cap and meets the minimum, else null. */
+export async function findValidDiscount(studioId: string, code: string, subtotalCents: number, now = new Date()) {
+  const dc = one<DiscountCode>(await db()`select * from discount_codes where studio_id = ${studioId} and upper(code) = upper(${code.trim()}) and is_active limit 1`);
+  if (!dc) return null;
+  if (dc.starts_at && new Date(dc.starts_at) > now) return null;
+  if (dc.ends_at && new Date(dc.ends_at) < now) return null;
+  if (dc.max_uses != null && dc.uses >= dc.max_uses) return null;
+  if (dc.min_subtotal_cents != null && subtotalCents < dc.min_subtotal_cents) return null;
+  return dc;
+}
+
+export async function recordRedemption(studioId: string, codeId: string, saleId: string, amountCents: number) {
+  await db()`insert into discount_redemptions (studio_id, code_id, sale_id, amount_cents) values (${studioId}, ${codeId}, ${saleId}, ${amountCents})`;
+  await db()`update discount_codes set uses = uses + 1 where id = ${codeId}`;
+}
+
+/** Records a paid sale's discount against its code (idempotent per sale via a unique redemption). */
+export async function recordSaleRedemption(sale: Pick<Sale, "id" | "studio_id" | "discount_code" | "discount_cents">) {
+  if (!sale.discount_code || sale.discount_cents <= 0) return;
+  const already = await db()`select 1 from discount_redemptions where sale_id = ${sale.id} limit 1`;
+  if (already.length > 0) return;
+  const dc = one<{ id: string }>(await db()`select id from discount_codes where studio_id = ${sale.studio_id} and upper(code) = upper(${sale.discount_code}) limit 1`);
+  if (dc) await recordRedemption(sale.studio_id, dc.id, sale.id, sale.discount_cents);
 }
 
 // --- Fast path: sell an existing gallery photo or portfolio asset -----------

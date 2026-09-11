@@ -5,7 +5,7 @@ import { env } from "@/lib/env";
 import { db, one } from "@/lib/db";
 import { applyAccountSnapshot, clearConnection, studioIdForAccount } from "@/lib/connect";
 import { recordCheckoutFailed, recordCheckoutPaid, recordDispute, recordRefund } from "@/lib/payments";
-import { markSalePaid, mintGrants, recordStoreDisputeByCharge, recordStoreRefundByCharge } from "@/lib/store";
+import { markSalePaid, mintGrants, recordSaleRedemption, recordStoreDisputeByCharge, recordStoreRefundByCharge } from "@/lib/store";
 import { storeSettings } from "@/lib/store-shared";
 import { signLink } from "@/lib/tenant-tokens";
 import { storeLibraryUrl } from "@/lib/tenant";
@@ -76,6 +76,7 @@ async function handleStorePaid(session: Stripe.Checkout.Session) {
   if (!studio) return;
   const settings = storeSettings(studio.settings ?? {});
   await mintGrants(sale, { maxDownloads: settings.downloadMaxCount, windowHours: settings.downloadWindowHours });
+  await recordSaleRedemption(sale).catch(() => undefined);
   const url = storeLibraryUrl(studio, signLink("download", sale.id));
   const amount = formatMoney(sale.total_cents, sale.currency);
   await sendStoreDeliveryEmail({ id: studio.id, name: studio.name, email: studio.email }, { to: sale.buyer_email, buyerName: sale.buyer_name, amount, orderNumber: sale.order_number, url }).catch(() => undefined);

@@ -4,8 +4,8 @@ import { createStoreCheckout } from "@/lib/payments";
 import { canTakeCardPayments } from "@/lib/connect";
 import { clientIp, limited } from "@/lib/rate-limit";
 import { billingState, entitlements } from "@/lib/plans";
-import { selectPrice, storeSettings } from "@/lib/store-shared";
-import { attachSaleSession, createSale, getProduct, listProductPrices } from "@/lib/store";
+import { discountAmount, selectPrice, storeSettings } from "@/lib/store-shared";
+import { attachSaleSession, createSale, findValidDiscount, getProduct, listProductPrices } from "@/lib/store";
 import { createClient } from "@/lib/clients";
 import { storeLicenseLabels, storeResolutionLabels, type StoreLicense, type StoreResolution, type Studio } from "@/lib/types";
 import { studioBaseUrl } from "@/lib/tenant";
@@ -46,6 +46,19 @@ export async function POST(request: NextRequest) {
   const amount = selectPrice(await listProductPrices(studio.id, productId), resolution, license);
   if (amount == null || amount <= 0) return new NextResponse("That option is not for sale.", { status: 409 });
 
+  // Optional discount code.
+  const codeStr = String(form.get("code") ?? "").trim();
+  let discountCents = 0;
+  let discountCode: string | null = null;
+  if (codeStr) {
+    const dc = await findValidDiscount(studio.id, codeStr, amount);
+    if (!dc) return new NextResponse("That code is not valid for this order.", { status: 409 });
+    discountCents = discountAmount(amount, { kind: dc.kind, value: dc.value, min_subtotal_cents: dc.min_subtotal_cents });
+    discountCode = dc.code;
+  }
+  const charged = Math.max(0, amount - discountCents);
+  if (charged <= 0) return new NextResponse("That code makes this order free — please contact the studio to arrange it.", { status: 409 });
+
   const { client } = await createClient(studio.id, { name: name || email.split("@")[0], email, source: "store" });
 
   const sale = await createSale(studio.id, {
@@ -54,6 +67,8 @@ export async function POST(request: NextRequest) {
     buyerClientId: client.id,
     currency: studio.currency,
     paymentMode: "connected",
+    discountCents,
+    discountCode,
     items: [{ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution, license, qty: 1, unitAmountCents: amount, amountCents: amount }],
   });
 
@@ -63,7 +78,7 @@ export async function POST(request: NextRequest) {
     const { url, sessionId } = await createStoreCheckout(
       studio,
       sale,
-      [{ name: `${storeResolutionLabels[resolution]} — ${product.title}`, description: storeLicenseLabels[license], amountCents: amount, quantity: 1 }],
+      [{ name: `${storeResolutionLabels[resolution]} — ${product.title}`, description: discountCode ? `${storeLicenseLabels[license]} · code ${discountCode}` : storeLicenseLabels[license], amountCents: charged, quantity: 1 }],
       email,
       urls
     );

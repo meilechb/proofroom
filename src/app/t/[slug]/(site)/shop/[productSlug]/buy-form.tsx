@@ -44,6 +44,11 @@ export function BuyForm({ slug, productId, prices, currency, cancelled }: { slug
         <input type="email" name="email" required placeholder="you@example.com" className="w-full rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 h-11 text-sm" />
       </label>
 
+      <label className="block">
+        <span className="block text-sm mb-1 text-[var(--site-ink-2)]">Promo code (optional)</span>
+        <input type="text" name="code" autoCapitalize="characters" placeholder="CODE" className="w-full rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 h-11 text-sm uppercase" />
+      </label>
+
       <button type="submit" className="inline-flex items-center justify-center rounded-lg bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-4 h-11 text-sm font-medium w-full">
         Buy{chosen ? ` — ${formatMoney(chosen.amount_cents, currency)}` : ""}
       </button>

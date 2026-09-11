@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireEntitledStudio } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { archiveProduct, createProduct, replaceProductPrices, updateProduct, type ProductPriceInput } from "@/lib/store";
-import { fieldErrors, storePriceRowSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
-import { str, type ActionState } from "@/lib/action-state";
+import { archiveProduct, createDiscount, createProduct, replaceProductPrices, setDiscountActive, updateProduct, type ProductPriceInput } from "@/lib/store";
+import { fieldErrors, storeDiscountSchema, storePriceRowSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
+import { cents, int, str, type ActionState } from "@/lib/action-state";
 import type { StoreProductKind } from "@/lib/types";
 
 const KINDS: StoreProductKind[] = ["image", "bundle", "gallery_unlock", "collection_unlock", "gift_card", "voucher", "digital", "print"];
@@ -102,4 +102,36 @@ export async function saveStoreSettingsAction(_prev: ActionState, formData: Form
   await db()`update studios set settings = settings || ${JSON.stringify({ store })}::jsonb, updated_at = now() where id = ${studio.id}`;
   revalidatePath("/studio/store/settings");
   return { ok: true, message: "Store settings saved." };
+}
+
+export async function saveDiscountAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const kind = str(formData, "kind", 20);
+  const amount = Number(str(formData, "amount", 20).replace(/[^0-9.]/g, "")) || 0;
+  const value = kind === "percent" ? Math.round(amount) : kind === "fixed" ? Math.round(amount * 100) : 0;
+  const parsed = storeDiscountSchema.safeParse({
+    code: str(formData, "code", 40),
+    kind,
+    value,
+    minSubtotalCents: cents(formData, "minSubtotal") || undefined,
+    maxUses: int(formData, "maxUses") || undefined,
+  });
+  if (!parsed.success) return { error: "Please fix the highlighted fields.", fields: fieldErrors(parsed.error) };
+  if (parsed.data.kind === "percent" && parsed.data.value > 100) return { error: "A percentage cannot be more than 100.", fields: { amount: "Between 0 and 100." } };
+  await createDiscount(studio.id, {
+    code: parsed.data.code,
+    kind: parsed.data.kind,
+    value: parsed.data.value,
+    minSubtotalCents: parsed.data.minSubtotalCents ?? null,
+    maxUses: parsed.data.maxUses ?? null,
+  });
+  revalidatePath("/studio/store/discounts");
+  return { ok: true, message: "Code saved." };
+}
+
+export async function toggleDiscountAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const id = str(formData, "id", 64);
+  await setDiscountActive(studio.id, id, str(formData, "active", 5) === "true");
+  revalidatePath("/studio/store/discounts");
 }
