@@ -6,14 +6,15 @@
 
 ## Status — built so far (branch `claude/photographer-asset-sales-hg938i`, PR #19)
 
-Shipped and green (typecheck + lint + 165 tests, each its own commit):
+Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S1** schema/types/OwnedTable · **S2** Pro `store` entitlement · **S3** pricing/licence maths + catalog data layer
 - **S4** store settings · **S5/S8** catalog admin (products with image picker, resolution×licence price rows, orders view)
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
-- **S18** discount codes · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** net revenue + orders view
+- **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
+- **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** net revenue + orders view · **S27 (partial)** buyer licence / print-release document
 
-Remaining phases: S6 price sheets · S7 rights-managed matrix + generated licence documents · S10 favorites · S13 marketplace-collect + Stripe Tax · S17 buyer accounts/history · S19 gift cards · S20 bundles / whole-gallery unlock (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S6 price sheets · S7 rights-managed matrix · S10 favorites · S13 marketplace-collect + Stripe Tax · S17 buyer accounts/history · S20 bundles / pick-N (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -388,11 +389,11 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S18.6 Tests: code shape, discount math, max-uses race, scoped eligibility.
 
 ### Phase S19 — Gift cards & store credit
-- [ ] S19.1 `gift_cards` + `gift_card_txns` ledger; hashed codes (`code_hash`, `code_last4`).
-- [ ] S19.2 Sell a gift card (product `kind="gift_card"`); issue balance on paid.
-- [ ] S19.3 Redeem at checkout via `store-shared.applyGiftCard` (partial spend, ledger entries, remaining balance).
-- [ ] S19.4 Expiry + balance display; studio issue/adjust in admin.
-- [ ] S19.5 Tests: partial redemption, balance ledger integrity, expiry.
+- [x] S19.1 `gift_cards` + `gift_card_txns` ledger; hashed codes (keyed `code_hash`, `code_last4`); issue/list/adjust/toggle + `spendGiftCard` (guarded, never below zero) + `recordSaleGiftCard` in `store.ts`.
+- [x] S19.2 Sell a gift card (product `kind="gift_card"`): `issueSoldGiftCards` on paid (idempotent via `gift_cards.sale_item_id`), emails the code (`sendGiftCardEmail`); grants/library skip gift-card lines.
+- [x] S19.3 Redeem at checkout (`findUsableGiftCard` + `giftCardSpend`): recorded on the sale, drawn down at fulfilment; a fully-covered order skips Stripe and settles straight to the library.
+- [x] S19.4 Expiry + balance display; studio issue/adjust/deactivate in `/studio/store/gift-cards`.
+- [x] S19.5 Tests: `normalizeGiftCode`; `giftCardSpend` (existing); schema guard for the new sale/gift columns.
 
 ### Phase S20 — Bundles, volume pricing, gallery/collection unlock
 - [ ] S20.1 Product `kind="bundle"` with pick-N (`min_pick`/`max_pick`) selection UI on the storefront.
