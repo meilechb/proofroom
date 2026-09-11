@@ -39,15 +39,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   // Cheap filename lookup (no rendering) so the archive's name list is ready at stream start.
   const photoIds = usable.map((g) => items.get(g.sale_item_id!)!.photo_id).filter((x): x is string => !!x);
   const assetIds = usable.map((g) => items.get(g.sale_item_id!)!.asset_id).filter((x): x is string => !!x);
+  const fileIds = usable.map((g) => g.file_id).filter((x): x is string => !!x);
   const names = new Map<string, string>();
   if (photoIds.length) for (const r of rows<{ id: string; filename: string }>(await db()`select id, filename from photos where studio_id = ${sale.studio_id} and id = any(${photoIds}::uuid[])`)) names.set(r.id, r.filename);
   if (assetIds.length) for (const r of rows<{ id: string; filename: string }>(await db()`select id, filename from assets where studio_id = ${sale.studio_id} and id = any(${assetIds}::uuid[])`)) names.set(r.id, r.filename);
+  const fileNames = new Map<string, string>();
+  if (fileIds.length) for (const r of rows<{ id: string; filename: string }>(await db()`select id, filename from digital_files where studio_id = ${sale.studio_id} and id = any(${fileIds}::uuid[])`)) fileNames.set(r.id, r.filename);
 
   const meta = { ip: clientIp(request.headers), ua: request.headers.get("user-agent") };
   const entries = usable.map((g) => {
     const item = items.get(g.sale_item_id!) as SaleItem;
     return {
-      name: entryName(names.get(item.photo_id ?? item.asset_id ?? ""), g.resolution),
+      // Digital files keep their real name (no .jpg forcing); images use the tier-aware name.
+      name: g.file_id ? safeFilename(fileNames.get(g.file_id) ?? "download", "download") : entryName(names.get(item.photo_id ?? item.asset_id ?? ""), g.resolution),
       read: async () => {
         const file = await resolveGrantFile(g, item);
         if (!file) throw new Error("missing file");

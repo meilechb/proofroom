@@ -668,6 +668,14 @@ export async function listDigitalFiles(studioId: string, productId: string) {
   return rows<DigitalFile>(await db()`select * from digital_files where product_id = ${productId} and studio_id = ${studioId} and url not like 'pending:%' order by created_at`);
 }
 
+/** Filenames for a set of digital files, keyed by id — for labelling library download rows. */
+export async function digitalFileNames(studioId: string, ids: string[]) {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return new Map<string, string>();
+  const r = rows<{ id: string; filename: string }>(await db()`select id, filename from digital_files where studio_id = ${studioId} and id = any(${unique}::uuid[])`);
+  return new Map(r.map((x) => [x.id, x.filename]));
+}
+
 /** Remove a digital file and its blob; free the storage it counted for. */
 export async function deleteDigitalFile(studioId: string, fileId: string) {
   const file = one<DigitalFile>(await db()`select * from digital_files where id = ${fileId} and studio_id = ${studioId}`);
@@ -700,6 +708,21 @@ export async function mintGrants(sale: Pick<Sale, "id" | "studio_id">, opts: { m
   const items = await listSaleItems(sale.id);
   for (const it of items) {
     if (it.kind === "gift_card" || it.kind === "voucher") continue; // nothing to download
+    if (it.kind === "digital") {
+      // A digital product delivers its uploaded files, one grant each (no
+      // resolution tiers): the file is served as-is from the private store.
+      const files = it.product_id ? await listDigitalFiles(sale.studio_id, it.product_id) : [];
+      for (const f of files) {
+        const grant = one<DownloadGrant>(
+          await db()`
+            insert into download_grants (studio_id, sale_id, sale_item_id, file_id, resolution, token_hash, expires_at, max_downloads)
+            values (${sale.studio_id}, ${sale.id}, ${it.id}, ${f.id}, 'original', ${"pending"}, now() + (${opts.windowHours} || ' hours')::interval, ${opts.maxDownloads})
+            returning *`
+        );
+        if (grant) await db()`update download_grants set token_hash = ${sha256Hex(grantToken(grant.id))} where id = ${grant.id}`;
+      }
+      continue;
+    }
     const grant = one<DownloadGrant>(
       await db()`
         insert into download_grants (studio_id, sale_id, sale_item_id, photo_id, resolution, token_hash, expires_at, max_downloads)

@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { signLink, verifyLink } from "@/lib/tenant-tokens";
-import { getSaleById, grantToken, listGrantsForSale, listPaidSalesForBuyer, listSaleItems } from "@/lib/store";
-import { formatDate, formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
+import { digitalFileNames, getSaleById, grantToken, listGrantsForSale, listPaidSalesForBuyer, listSaleItems } from "@/lib/store";
+import { formatDate, formatMoney, storeLicenseLabels, storeResolutionLabels, type DownloadGrant } from "@/lib/types";
 import { ResendForm } from "../resend-form";
 
 export const metadata = { robots: { index: false, follow: false } };
@@ -25,7 +25,14 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
 
   const items = (await listSaleItems(sale.id)).filter((it) => it.kind !== "gift_card" && it.kind !== "voucher");
   const grants = await listGrantsForSale(sale.id);
-  const grantByItem = new Map(grants.map((g) => [g.sale_item_id, g]));
+  // A digital product mints one grant per file, so group grants by item rather
+  // than assuming one each; image/photo items still have exactly one.
+  const grantsByItem = new Map<string, DownloadGrant[]>();
+  for (const g of grants) {
+    if (!g.sale_item_id) continue;
+    (grantsByItem.get(g.sale_item_id) ?? grantsByItem.set(g.sale_item_id, []).get(g.sale_item_id)!).push(g);
+  }
+  const fileNames = await digitalFileNames(studio.id, grants.map((g) => g.file_id).filter((x): x is string => !!x));
   const cur = sale.currency;
   const otherOrders = (await listPaidSalesForBuyer(studio.id, sale.buyer_email)).filter((s) => s.id !== sale.id);
 
@@ -47,14 +54,35 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
         <p className="mt-6 text-[var(--site-ink-2)]">We&apos;re still confirming your payment. Refresh in a moment — your files appear here once it clears.</p>
       ) : (
         <>
-          {items.length > 1 ? (
+          {grants.length > 1 ? (
             <p className="mt-6">
               <a href={`/api/store/library/${token}/zip`} className="inline-flex items-center rounded-lg border border-[var(--site-line)] px-3 h-9 text-sm hover:bg-[var(--site-bg-2)]">Download all (ZIP)</a>
             </p>
           ) : null}
           <ul className="mt-4 divide-y divide-[var(--site-line)] border-y border-[var(--site-line)]">
           {items.map((it) => {
-            const g = grantByItem.get(it.id);
+            const gs = grantsByItem.get(it.id) ?? [];
+            // Digital: one downloadable row per uploaded file, labelled by filename.
+            if (it.kind === "digital") {
+              return gs.map((g) => {
+                const left = Math.max(0, g.max_downloads - g.downloads_used);
+                const href = left > 0 ? `/api/store/download/${grantToken(g.id)}` : null;
+                return (
+                  <li key={g.id} className="flex items-center justify-between gap-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm truncate">{(g.file_id && fileNames.get(g.file_id)) || "Download"}</p>
+                      <p className="text-xs text-[var(--site-ink-2)]">{left} download{left === 1 ? "" : "s"} left</p>
+                    </div>
+                    {href ? (
+                      <a href={href} className="inline-flex items-center rounded-lg bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-3 h-9 text-sm">Download</a>
+                    ) : (
+                      <span className="text-xs text-[var(--site-ink-2)]">Limit reached</span>
+                    )}
+                  </li>
+                );
+              });
+            }
+            const g = gs[0];
             const left = g ? Math.max(0, g.max_downloads - g.downloads_used) : 0;
             const href = g && left > 0 ? `/api/store/download/${grantToken(g.id)}` : null;
             return (
