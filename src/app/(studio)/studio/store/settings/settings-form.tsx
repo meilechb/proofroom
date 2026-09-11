@@ -21,24 +21,12 @@ export function StoreSettingsForm({ settings, stripeReady }: { settings: StoreSe
 
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked={settings.enabled} className="h-4 w-4" /> Show the shop on my website</label>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="How buyers pay" htmlFor="ss-mode">
-          <Select id="ss-mode" name="paymentMode" defaultValue={settings.paymentMode}>
-            <option value="connected">My own Stripe (0% commission)</option>
-            <option value="marketplace">Platform collects (commission + tax handled)</option>
-            <option value="manual">Manual / off-platform</option>
-          </Select>
-        </Field>
-        <Field label="Commission (%)" htmlFor="ss-comm" hint="Only used in platform-collect mode." error={state.fields?.commissionBps}>
-          <Input id="ss-comm" name="commissionPercent" type="number" min={0} max={100} step={0.5} defaultValue={settings.commissionBps / 100} />
-        </Field>
-        <Field label="Sales tax" htmlFor="ss-tax" hint="Stripe Tax applies in platform-collect mode.">
-          <Select id="ss-tax" name="taxMode" defaultValue={settings.taxMode}>
-            <option value="off">Off</option>
-            <option value="stripe">Stripe Tax</option>
-          </Select>
-        </Field>
-      </div>
+      <Field label="How buyers pay" htmlFor="ss-mode" hint="Card payments go straight into your own Stripe. Choose Manual to arrange payment off-platform.">
+        <Select id="ss-mode" name="paymentMode" defaultValue={settings.paymentMode === "marketplace" ? "connected" : settings.paymentMode}>
+          <option value="connected">My own Stripe (0% commission)</option>
+          <option value="manual">Manual / off-platform</option>
+        </Select>
+      </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Download limit" htmlFor="ss-max" hint="How many times a purchased file can be downloaded." error={state.fields?.downloadMaxCount}>

@@ -38,8 +38,10 @@ export async function POST(request: NextRequest) {
   const bs = billingState(studio);
   if (!bs.publicLive) return new NextResponse("This store is not open right now.", { status: 403 });
   if (!entitlements(bs.effectivePlan).store) return new NextResponse("Store not available.", { status: 403 });
-  if (!storeSettings((studio.settings ?? {}) as Record<string, unknown>).enabled) return new NextResponse("This store is not open.", { status: 403 });
-  if (!canTakeCardPayments(studio)) return new NextResponse("This store does not take card payments online.", { status: 409 });
+  const settings = storeSettings((studio.settings ?? {}) as Record<string, unknown>);
+  if (!settings.enabled) return new NextResponse("This store is not open.", { status: 403 });
+  const manual = settings.paymentMode === "manual";
+  if (!manual && !canTakeCardPayments(studio)) return new NextResponse("This store does not take card payments online.", { status: 409 });
 
   const product = await getProduct(studio.id, productId);
   if (!product || !product.is_active) return new NextResponse("Not found", { status: 404 });
@@ -66,13 +68,15 @@ export async function POST(request: NextRequest) {
     buyerName: name || null,
     buyerClientId: client.id,
     currency: studio.currency,
-    paymentMode: "connected",
+    paymentMode: manual ? "manual" : "connected",
     discountCents,
     discountCode,
     items: [{ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution, license, qty: 1, unitAmountCents: amount, amountCents: amount }],
   });
 
   const base = studioBaseUrl(studio);
+  if (manual) return NextResponse.redirect(`${base}/store/pending?sale=${sale.id}`, { status: 303 });
+
   const urls = { successUrl: `${base}/store/success?session_id={CHECKOUT_SESSION_ID}`, cancelUrl: `${base}/shop/${product.slug}?cancelled=1` };
   try {
     const { url, sessionId } = await createStoreCheckout(

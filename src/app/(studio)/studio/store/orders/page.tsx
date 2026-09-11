@@ -1,8 +1,9 @@
 import { requireStudioPage } from "@/lib/auth";
-import { listSales, storeRevenueCents } from "@/lib/store";
+import { listPendingManualSales, listSales, storeRevenueCents } from "@/lib/store";
 import { formatDate, formatMoney, type SaleStatus } from "@/lib/types";
 import { Badge, ButtonLink, EmptyState, PageHeader, Stat } from "@/components/ui";
 import { UpgradeLock } from "@/components/studio/upgrade-lock";
+import { markManualPaidAction } from "../actions";
 
 export const metadata = { title: "Store orders" };
 
@@ -26,6 +27,7 @@ export default async function StoreOrdersPage() {
     );
   }
   const sales = await listSales(ctx.studio.id);
+  const pending = await listPendingManualSales(ctx.studio.id);
   const revenue = await storeRevenueCents(ctx.studio.id);
   const cur = ctx.studio.currency;
 
@@ -36,6 +38,25 @@ export default async function StoreOrdersPage() {
         <Stat label="Net revenue" value={formatMoney(revenue, cur)} />
         <Stat label="Orders" value={String(sales.filter((s) => s.status === "paid" || s.status === "partially_refunded").length)} />
       </div>
+      {pending.length > 0 ? (
+        <section className="mb-6">
+          <h2 className="text-sm font-medium mb-2">Awaiting manual payment</h2>
+          <ul className="space-y-2">
+            {pending.map((s) => (
+              <li key={s.id} className="card card-pad flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <span className="font-medium">#{s.order_number}</span>
+                  <p className="text-xs text-muted truncate">{s.buyer_email} · {formatDate(s.created_at)} · {formatMoney(s.total_cents, cur)}</p>
+                </div>
+                <form action={markManualPaidAction}>
+                  <input type="hidden" name="id" value={s.id} />
+                  <button className="btn-secondary btn-sm">Mark paid</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {sales.length === 0 ? (
         <EmptyState title="No orders yet" description="Sales from your store show up here — with the buyer, amount and status." />
       ) : (

@@ -5,12 +5,9 @@ import { env } from "@/lib/env";
 import { db, one } from "@/lib/db";
 import { applyAccountSnapshot, clearConnection, studioIdForAccount } from "@/lib/connect";
 import { recordCheckoutFailed, recordCheckoutPaid, recordDispute, recordRefund } from "@/lib/payments";
-import { markSalePaid, mintGrants, recordSaleRedemption, recordStoreDisputeByCharge, recordStoreRefundByCharge } from "@/lib/store";
-import { storeSettings } from "@/lib/store-shared";
-import { signLink } from "@/lib/tenant-tokens";
-import { storeLibraryUrl } from "@/lib/tenant";
+import { fulfillPaidStoreSale, markSalePaid, recordStoreDisputeByCharge, recordStoreRefundByCharge } from "@/lib/store";
 import { recordClientEvent } from "@/lib/clients";
-import { sendReceiptEmail, sendStoreDeliveryEmail } from "@/lib/emails/studio";
+import { sendReceiptEmail } from "@/lib/emails/studio";
 import { sendPlatformEmail } from "@/lib/email";
 import { APP_NAME, appUrl } from "@/lib/env";
 import { formatMoney } from "@/lib/types";
@@ -69,17 +66,9 @@ async function handleStorePaid(session: Stripe.Checkout.Session) {
   const pi = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
   const result = await markSalePaid(saleId, { paymentIntentId: pi });
   if (!result || !result.firstTime) return;
-  const { sale } = result;
-  const studio = one<{ id: string; slug: string; name: string; email: string; custom_domain: string | null; custom_domain_verified_at: string | null; settings: Record<string, unknown> }>(
-    await db()`select id, slug, name, email, custom_domain, custom_domain_verified_at, settings from studios where id = ${sale.studio_id}`
-  );
-  if (!studio) return;
-  const settings = storeSettings(studio.settings ?? {});
-  await mintGrants(sale, { maxDownloads: settings.downloadMaxCount, windowHours: settings.downloadWindowHours });
-  await recordSaleRedemption(sale).catch(() => undefined);
-  const url = storeLibraryUrl(studio, signLink("download", sale.id));
-  const amount = formatMoney(sale.total_cents, sale.currency);
-  await sendStoreDeliveryEmail({ id: studio.id, name: studio.name, email: studio.email }, { to: sale.buyer_email, buyerName: sale.buyer_name, amount, orderNumber: sale.order_number, url }).catch(() => undefined);
+  const done = await fulfillPaidStoreSale(saleId);
+  if (!done) return;
+  const { sale, amount } = done;
   await notifyStudio(sale.studio_id, `New sale: ${amount}`, `${sale.buyer_email} bought from your store (order #${sale.order_number}, ${amount}). It is in your Stripe account.`);
   if (sale.buyer_client_id) await recordClientEvent(sale.studio_id, sale.buyer_client_id, "store.order_placed", "sale", sale.id, `Bought ${amount} from the store (order #${sale.order_number})`).catch(() => undefined);
 }

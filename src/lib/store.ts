@@ -5,6 +5,11 @@ import { db, one, rows } from "@/lib/db";
 import { normalizeSlug } from "@/lib/slug";
 import { hmac } from "@/lib/tokens";
 import { requireEnv } from "@/lib/env";
+import { formatMoney } from "@/lib/types";
+import { storeSettings } from "@/lib/store-shared";
+import { signLink } from "@/lib/tenant-tokens";
+import { storeLibraryUrl } from "@/lib/tenant";
+import { sendStoreDeliveryEmail } from "@/lib/emails/studio";
 import type {
   DiscountCode,
   DownloadGrant,
@@ -293,6 +298,10 @@ export async function listSales(studioId: string, limit = 200) {
   return rows<Sale>(await db()`select * from sales where studio_id = ${studioId} and status <> 'pending' order by created_at desc limit ${limit}`);
 }
 
+export async function listPendingManualSales(studioId: string) {
+  return rows<Sale>(await db()`select * from sales where studio_id = ${studioId} and status = 'pending' and payment_mode = 'manual' order by created_at desc limit 100`);
+}
+
 export async function storeRevenueCents(studioId: string) {
   const r = one<{ n: number }>(await db()`select coalesce(sum(total_cents - refunded_cents), 0)::int as n from sales where studio_id = ${studioId} and status in ('paid', 'partially_refunded')`);
   return r?.n ?? 0;
@@ -375,6 +384,38 @@ export async function recordGrantDownload(grant: Pick<DownloadGrant, "id" | "stu
 
 export async function revokeGrantsForSale(saleId: string) {
   await db()`update download_grants set revoked = true where sale_id = ${saleId}`;
+}
+
+/**
+ * Fulfils a paid sale once: mints download grants, records any discount
+ * redemption, and emails the buyer their library link. Shared by the Stripe
+ * webhook and the manual "mark paid" action. Returns the studio + amount for
+ * the caller's own studio notification, or null if the sale isn't payable.
+ */
+export async function fulfillPaidStoreSale(saleId: string) {
+  const sale = await getSaleById(saleId);
+  if (!sale || sale.status !== "paid") return null;
+  const studio = one<{ id: string; slug: string; name: string; email: string; custom_domain: string | null; custom_domain_verified_at: string | null; settings: Record<string, unknown> }>(
+    await db()`select id, slug, name, email, custom_domain, custom_domain_verified_at, settings from studios where id = ${sale.studio_id}`
+  );
+  if (!studio) return null;
+  const settings = storeSettings(studio.settings ?? {});
+  await mintGrants(sale, { maxDownloads: settings.downloadMaxCount, windowHours: settings.downloadWindowHours });
+  await recordSaleRedemption(sale).catch(() => undefined);
+  const amount = formatMoney(sale.total_cents, sale.currency);
+  const url = storeLibraryUrl(studio, signLink("download", sale.id));
+  await sendStoreDeliveryEmail({ id: studio.id, name: studio.name, email: studio.email }, { to: sale.buyer_email, buyerName: sale.buyer_name, amount, orderNumber: sale.order_number, url }).catch(() => undefined);
+  return { sale, studio, amount };
+}
+
+/** Studio records an off-platform (manual) payment: mark paid and fulfil. */
+export async function markManualSalePaid(studioId: string, saleId: string) {
+  const owned = await getSale(studioId, saleId);
+  if (!owned || owned.payment_mode !== "manual") return null;
+  const result = await markSalePaid(saleId, {});
+  if (!result || !result.firstTime) return result?.sale ?? null;
+  await fulfillPaidStoreSale(saleId);
+  return result.sale;
 }
 
 /** charge.refunded on a store sale: record the refund and revoke downloads once fully refunded. */

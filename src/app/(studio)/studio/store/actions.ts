@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireEntitledStudio } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { archiveProduct, createDiscount, createProduct, replaceProductPrices, setDiscountActive, updateProduct, type ProductPriceInput } from "@/lib/store";
+import { archiveProduct, createDiscount, createProduct, markManualSalePaid, replaceProductPrices, setDiscountActive, updateProduct, type ProductPriceInput } from "@/lib/store";
 import { fieldErrors, storeDiscountSchema, storePriceRowSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
 import { cents, int, str, type ActionState } from "@/lib/action-state";
 import type { StoreProductKind } from "@/lib/types";
@@ -134,4 +134,11 @@ export async function toggleDiscountAction(formData: FormData) {
   const id = str(formData, "id", 64);
   await setDiscountActive(studio.id, id, str(formData, "active", 5) === "true");
   revalidatePath("/studio/store/discounts");
+}
+
+export async function markManualPaidAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const id = str(formData, "id", 64);
+  await markManualSalePaid(studio.id, id);
+  revalidatePath("/studio/store/orders");
 }
