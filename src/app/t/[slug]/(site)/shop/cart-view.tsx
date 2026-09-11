@@ -11,13 +11,19 @@ function usageSummary(usage: Record<string, string> | undefined): string {
   return RM_DIMENSIONS.map((d) => d.options.find((o) => o.value === usage[d.key])?.label).filter(Boolean).join(" · ");
 }
 
-export function CartView({ slug, currency, manual, cancelled }: { slug: string; currency: string; manual?: boolean; cancelled?: boolean }) {
+/** A cross-sell candidate shown under the cart. */
+export type Suggestion = { id: string; slug: string; title: string; from: number; img: string | null };
+
+export function CartView({ slug, currency, manual, cancelled, suggestions = [] }: { slug: string; currency: string; manual?: boolean; cancelled?: boolean; suggestions?: Suggestion[] }) {
   const [items, setItems] = useState<CartItem[]>([]);
   useEffect(() => {
     const update = () => setItems(readCart(slug));
     update();
     return onCartChange(update);
   }, [slug]);
+
+  const inCart = new Set(items.map((i) => i.productId));
+  const crossSell = suggestions.filter((s) => !inCart.has(s.id)).slice(0, 4);
 
   const subtotal = items.reduce((s, i) => s + (Number.isFinite(i.priceCents) ? i.priceCents : 0), 0);
   const cartJson = JSON.stringify(items.map((i) => ({ productId: i.productId, resolution: i.resolution, license: i.license, ...(i.usage ? { usage: i.usage } : {}) })));
@@ -83,6 +89,26 @@ export function CartView({ slug, currency, manual, cancelled }: { slug: string; 
             </button>
             <p className="text-xs text-[var(--site-ink-2)]">Promo codes and gift cards apply at checkout. Your download link is emailed after payment.</p>
           </form>
+
+          {crossSell.length > 0 ? (
+            <section className="mt-12">
+              <h2 className="text-sm font-semibold text-[var(--site-ink-2)]">You might also like</h2>
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {crossSell.map((s) => (
+                  <Link key={s.id} href={`/shop/${s.slug}`} className="group block">
+                    <div className="aspect-[4/5] overflow-hidden rounded-xl bg-[var(--site-bg-2)]">
+                      {s.img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.img} alt={s.title} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
+                      ) : null}
+                    </div>
+                    <p className="mt-2 text-sm font-medium">{s.title}</p>
+                    <p className="text-xs text-[var(--site-ink-2)]">From {formatMoney(s.from, currency)}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </>
       )}
     </div>
