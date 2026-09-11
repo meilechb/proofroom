@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { billingState, entitlements } from "@/lib/plans";
 import { effectivePrice, storeSettings } from "@/lib/store-shared";
-import { listFavoriteProductIds, listProductPrices, listProducts } from "@/lib/store";
+import { listFavoriteProductIds, listProductPrices, listProducts, listPublicCollections } from "@/lib/store";
 import { readBuyerKey } from "@/lib/store-buyer";
 import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
@@ -39,6 +39,7 @@ export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) 
   const cur = studio.currency;
   const buyerKey = await readBuyerKey();
   const favorites = buyerKey ? await listFavoriteProductIds(studio.id, buyerKey) : new Set<string>();
+  const collections = await listPublicCollections(studio.id);
 
   return (
     <div className="py-12 sm:py-16">
@@ -75,6 +76,28 @@ export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) 
             ))}
           </div>
         )}
+
+        {collections.length > 0 ? (
+          <section className="mt-14 sm:mt-20">
+            <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>Collections</h2>
+            <div className="mt-5 grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+              {collections.map((c) => (
+                <Link key={c.id} href={`/shop/collection/${c.slug}`} className="group block">
+                  <div className="aspect-[4/5] overflow-hidden rounded-xl bg-[var(--site-bg-2)]">
+                    {c.cover_thumb ?? c.cover_web ?? c.cover_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={(c.cover_thumb ?? c.cover_web ?? c.cover_url) as string} alt={c.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
+                    ) : null}
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-sm font-medium">{c.title}</p>
+                    <p className="text-xs text-[var(--site-ink-2)]">{c.count} image{c.count === 1 ? "" : "s"}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </Container>
     </div>
   );

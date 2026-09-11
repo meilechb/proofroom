@@ -259,6 +259,27 @@ export async function getCollectionBySlug(studioId: string, slug: string) {
   return one<StoreCollection>(await db()`select * from store_collections where slug = ${slug} and studio_id = ${studioId}`);
 }
 
+/** The active collection-unlock product selling a given collection, if any (for a buy CTA). */
+export async function getCollectionUnlockProduct(studioId: string, collectionId: string) {
+  return one<StoreProduct>(
+    await db()`select * from store_products where studio_id = ${studioId} and collection_id = ${collectionId} and kind = 'collection_unlock' and is_active order by created_at limit 1`
+  );
+}
+
+/** Public collections that have at least one ready image, for the shop's collections strip. */
+export async function listPublicCollections(studioId: string) {
+  const cs = rows<{ id: string; slug: string; title: string; description: string | null; count: number; cover_thumb: string | null; cover_web: string | null; cover_url: string | null }>(
+    await db()`
+      select c.id, c.slug, c.title, c.description,
+        (select count(*)::int from store_collection_items ci join assets a on a.id = ci.asset_id and a.studio_id = ci.studio_id where ci.collection_id = c.id and a.url not like 'pending:%') as count,
+        a.thumb_url as cover_thumb, a.web_url as cover_web, a.url as cover_url
+      from store_collections c left join assets a on a.id = c.cover_asset_id and a.studio_id = c.studio_id
+      where c.studio_id = ${studioId} and c.visibility = 'public'
+      order by c.sort_order, c.created_at`
+  );
+  return cs.filter((c) => c.count > 0);
+}
+
 export async function updateCollection(studioId: string, id: string, input: CollectionInput) {
   return one<StoreCollection>(
     await db()`
