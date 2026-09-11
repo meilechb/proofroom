@@ -6,9 +6,18 @@ import { formatMoney } from "@/lib/types";
 import { Badge, ButtonLink, EmptyState, PageHeader, Select } from "@/components/ui";
 import { UpgradeLock } from "@/components/studio/upgrade-lock";
 import type { PickerAsset } from "../website/image-picker";
+import { productUrl } from "@/lib/tenant";
 import { ProductDialog } from "./product-dialog";
 import { DigitalFilesDialog } from "./digital-files-dialog";
+import { ProductEmbed } from "./product-embed";
 import { applyPriceSheetAction, archiveProductAction } from "./actions";
+
+const escHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+
+/** A pasteable deep-link "Buy" button for one product. */
+function embedSnippet(url: string, title: string) {
+  return `<a href="${url}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#111;color:#fff;font:600 14px system-ui,sans-serif;text-decoration:none">Buy ${escHtml(title).slice(0, 50)}</a>`;
+}
 
 export const metadata = { title: "Store" };
 
@@ -86,6 +95,7 @@ export default async function StorePage() {
                     </form>
                   ) : null}
                   {p.kind === "digital" ? <DigitalFilesDialog productId={p.id} files={digitalFiles.get(p.id) ?? []} /> : null}
+                  {p.is_active ? <ProductEmbed url={productUrl(ctx.studio, p.slug)} snippet={embedSnippet(productUrl(ctx.studio, p.slug), p.title)} /> : null}
                   <ProductDialog product={p} prices={rows} trigger="edit" assets={pickerAssets} galleries={galleryList} />
                   <form action={archiveProductAction}>
                     <input type="hidden" name="id" value={p.id} />
