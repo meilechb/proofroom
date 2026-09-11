@@ -487,7 +487,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [x] S32.1 Marketing feature page `/features/store` (added to `features-content.ts`, cross-linked from Payments): sell photos/licences/gift cards, 0% commission, watermark-until-paid delivery, buyer library.
 - [~] S32.2 `features-content.ts` covers the store & 0% story; the `pricing`/`compare` pages still need the Pro-store line.
 - [ ] S32.3 Help docs / setup runbook (connect Stripe, mark sellable, set licenses, delivery policy).
-- [ ] S32.4 `CHANGELOG.md` entries per shipped phase.
+- [x] S32.4 `CHANGELOG.md` "Unreleased" entry for the store.
 
 ### Phase S33 — Testing, QA, launch checklist, rollout
 - [ ] S33.1 Unit: all `store-shared` math (bundles, discounts, gift cards, RM), license resolver, grant cap/expiry.
