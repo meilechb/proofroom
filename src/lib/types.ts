@@ -461,6 +461,35 @@ export type PriceSheetRow = {
   created_at: string;
 };
 
+export type BroadcastStatus = "draft" | "scheduled" | "sending" | "sent" | "cancelled";
+
+export type Broadcast = {
+  id: string;
+  studio_id: string;
+  subject: string;
+  body: string;
+  filter: Record<string, unknown>;
+  status: BroadcastStatus;
+  scheduled_at: string | null;
+  sent_at: string | null;
+  recipient_count: number;
+  sent_count: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BroadcastRecipient = {
+  id: string;
+  studio_id: string;
+  broadcast_id: string;
+  client_id: string | null;
+  email: string;
+  status: "pending" | "sent" | "skipped" | "failed";
+  sent_at: string | null;
+  created_at: string;
+};
+
 export type DigitalFile = {
   id: string;
   studio_id: string;

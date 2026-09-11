@@ -172,7 +172,8 @@ export type OwnedTable =
   | "agreement_templates" | "site_areas" | "broadcasts" | "imports" | "booking_slots" | "session_plans" | "referrals"
   | "store_collections" | "store_collection_items" | "store_products" | "product_prices" | "price_sheets" | "price_sheet_rows"
   | "digital_files" | "print_products" | "print_variants" | "sales" | "sale_items" | "download_grants" | "download_events"
-  | "discount_codes" | "discount_redemptions" | "gift_cards" | "gift_card_txns" | "store_favorites" | "carts";
+  | "discount_codes" | "discount_redemptions" | "gift_cards" | "gift_card_txns" | "store_favorites" | "carts"
+  | "broadcast_recipients";
 
 export async function assertOwned(table: OwnedTable, id: string, studioId: string) {
   if (!/^[a-z_]+$/.test(table)) throw new Error("Bad table");

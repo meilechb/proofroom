@@ -1279,3 +1279,19 @@ create unique index if not exists gift_cards_sale_item_idx on gift_cards (sale_i
 -- Pick-N bundles can price per photo by volume: a jsonb array of
 -- {min, unitAmountCents} tiers, applied server-side (see store-shared.bundleTotal).
 alter table product_prices add column if not exists volume_tiers jsonb;
+
+-- Per-recipient ledger for a broadcast, so a large send fired in chunks reaches
+-- each address exactly once (S22.5). Declared after broadcasts exists.
+create table if not exists broadcast_recipients (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  broadcast_id uuid not null references broadcasts (id) on delete cascade,
+  client_id uuid references clients (id) on delete set null,
+  email text not null,
+  status text not null default 'pending' check (status in ('pending', 'sent', 'skipped', 'failed')),
+  sent_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (broadcast_id, email)
+);
+
+create index if not exists broadcast_recipients_pending_idx on broadcast_recipients (broadcast_id, status);
