@@ -20,7 +20,7 @@ export function AdminNav() {
       {items.map((i) => {
         const active = i.exact ? pathname === i.href : pathname === i.href || pathname.startsWith(`${i.href}/`);
         return (
-          <Link key={i.href} href={i.href} aria-current={active ? "page" : undefined} className={cx("rounded-md px-3 py-2 text-sm whitespace-nowrap", active ? "bg-surface text-ink font-medium" : "text-ink-2 hover:bg-surface hover:text-ink")}>
+          <Link key={i.href} href={i.href} aria-current={active ? "page" : undefined} className={cx("rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-colors", active ? "bg-brand/10 text-brand font-medium" : "text-ink-2 hover:bg-surface hover:text-ink")}>
             {i.label}
           </Link>
         );
