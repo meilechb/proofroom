@@ -1,50 +1,83 @@
 @import "tailwindcss";
 
 @theme {
-  /* Marketing + app: light, neutral, one accent. Tenant pages override --brand. */
-  --color-paper: #fafaf9;
+  /* Design system (handoff): "Pine" green primary + terracotta/gold accents,
+     authored in OKLCH. Tenant pages override --brand with the studio's color. */
+  --color-paper: oklch(0.98 0.008 130);      /* marketing / card ground */
+  --color-app: oklch(0.96 0.01 135);         /* studio app ground */
   --color-surface: #ffffff;
-  --color-surface-2: #f4f4f3;
-  --color-ink: #111111;
-  --color-ink-2: #4b4b4b;
-  --color-muted: #7a7a7a;
-  --color-line: #e6e5e2;
-  --color-line-2: #d4d3cf;
-  --color-brand: var(--brand, #111111);
-  --color-brand-ink: var(--brand-ink, #ffffff);
-  --color-accent: #2f5bff;
-  --color-success: #15803d;
-  --color-warning: #b45309;
-  --color-danger: #b91c1c;
-  --color-success-bg: #ecfdf3;
-  --color-warning-bg: #fffbeb;
-  --color-danger-bg: #fef2f2;
+  --color-surface-2: oklch(0.97 0.01 130);
+  --color-ink: oklch(0.28 0.02 150);
+  --color-ink-2: oklch(0.44 0.02 150);
+  --color-muted: oklch(0.55 0.02 150);
+  --color-line: oklch(0.9 0.012 130);
+  --color-line-2: oklch(0.82 0.02 130);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Pine family */
+  --color-pine: oklch(0.42 0.06 150);        /* primary */
+  --color-pine-dark: oklch(0.36 0.05 155);   /* sidebar / dark panels */
+  --color-pine-deep: oklch(0.24 0.02 155);   /* footer */
+  --color-pine-hover: oklch(0.32 0.05 150);
+  --color-brand: var(--brand, oklch(0.42 0.06 150));
+  --color-brand-ink: var(--brand-ink, #ffffff);
+  --color-brand-hover: var(--brand-hover, oklch(0.32 0.05 150));
+
+  /* Accents */
+  --color-accent: oklch(0.55 0.11 45);       /* terracotta: eyebrows, accent CTA */
+  --color-accent-2: oklch(0.32 0.05 150);    /* pine hover for links */
+  --color-gold: oklch(0.7 0.11 45);          /* badges on dark, checkmarks */
+
+  --color-success: oklch(0.45 0.09 155);
+  --color-warning: oklch(0.5 0.1 70);
+  --color-danger: oklch(0.5 0.13 35);
+  --color-info: oklch(0.42 0.1 250);
+
+  /* Status badge grounds (bg) paired with the *-fg text tokens below */
+  --color-success-bg: oklch(0.9 0.05 150);
+  --color-warning-bg: oklch(0.92 0.05 90);
+  --color-danger-bg: oklch(0.93 0.05 40);
+  --color-info-bg: oklch(0.9 0.04 240);
+  --color-success-fg: oklch(0.4 0.08 155);
+  --color-warning-fg: oklch(0.42 0.09 70);
+  --color-danger-fg: oklch(0.5 0.13 35);
+  --color-info-fg: oklch(0.42 0.1 250);
+
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  --radius-card: 14px;
-  --shadow-card: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 24px -12px rgba(17, 17, 17, 0.12);
+  --radius-card: 15px;
+  --shadow-card: 0 1px 2px rgba(31, 52, 43, 0.04), 0 12px 30px -18px rgba(31, 52, 43, 0.16);
+  --shadow-lift: 0 16px 34px -18px rgba(40, 55, 40, 0.45);
+  --shadow-modal: 0 40px 90px -30px rgba(30, 42, 32, 0.55);
 }
 
 /* Dark variant for client galleries (tenant pages default to dark for photos). */
 [data-theme="dark"] {
-  --color-paper: #0e0e0f;
-  --color-surface: #161617;
-  --color-surface-2: #1e1e20;
-  --color-ink: #f5f5f4;
-  --color-ink-2: #b5b5b3;
-  --color-muted: #7d7d7b;
+  --color-paper: oklch(0.16 0.008 155);
+  --color-app: oklch(0.16 0.008 155);
+  --color-surface: oklch(0.21 0.01 155);
+  --color-surface-2: oklch(0.25 0.012 155);
+  --color-ink: oklch(0.96 0.008 130);
+  --color-ink-2: oklch(0.78 0.012 140);
+  --color-muted: oklch(0.62 0.012 145);
   --color-line: rgba(255, 255, 255, 0.12);
   --color-line-2: rgba(255, 255, 255, 0.2);
-  --color-success-bg: rgba(21, 128, 61, 0.15);
-  --color-warning-bg: rgba(180, 83, 9, 0.15);
-  --color-danger-bg: rgba(185, 28, 28, 0.15);
+  --color-brand: var(--brand, oklch(0.62 0.08 150));
+  --color-brand-hover: var(--brand-hover, oklch(0.7 0.08 150));
+  --color-success-bg: rgba(60, 122, 94, 0.22);
+  --color-warning-bg: rgba(180, 130, 40, 0.22);
+  --color-danger-bg: rgba(176, 71, 46, 0.22);
+  --color-info-bg: rgba(70, 110, 200, 0.22);
+  --color-success-fg: oklch(0.82 0.09 150);
+  --color-warning-fg: oklch(0.82 0.1 85);
+  --color-danger-fg: oklch(0.75 0.13 35);
+  --color-info-fg: oklch(0.78 0.09 250);
 }
 
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 /* Visible focus for keyboard users on every interactive element (plan 8.23). */
-:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
 body {
   background: var(--color-paper);
   color: var(--color-ink);
@@ -53,17 +86,40 @@ body {
   overflow-x: clip;
 }
 
+/* Headings are the serif display face across every surface (design handoff). */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+.font-sans-ui { font-family: var(--font-sans); letter-spacing: normal; }
+/* Terracotta uppercase eyebrow (design handoff). */
+.eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--color-accent);
+  font-family: var(--font-sans);
+}
+a.link, .link { color: var(--color-brand); }
+a.link:hover, .link:hover { color: var(--color-accent-2); }
+
 /* Primitives shared by every surface. Components in src/components/ui wrap these. */
 /* Base primitives are @utility so other classes below can @apply them (Tailwind 4 cannot @apply plain CSS classes). */
-@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 h-10 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none; }
-.btn-primary { @apply btn bg-brand text-brand-ink hover:opacity-90; }
-.btn-secondary { @apply btn bg-surface text-ink border border-line-2 hover:bg-surface-2; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-4 h-10 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none; }
+.btn-primary { @apply btn bg-brand text-brand-ink hover:bg-brand-hover; }
+.btn-secondary { @apply btn bg-surface text-ink border-[1.5px] border-line-2 hover:bg-surface-2 hover:border-brand/40; }
 .btn-ghost { @apply btn text-ink-2 hover:bg-surface-2 hover:text-ink; }
+.btn-accent { @apply btn bg-accent text-white hover:opacity-90; }
 .btn-danger { @apply btn bg-danger text-white hover:opacity-90; }
-.btn-sm { @apply h-8 px-3 text-[13px] rounded-md; }
+.btn-sm { @apply h-8 px-3 text-[13px] rounded-lg; }
 .btn-lg { @apply h-12 px-6 text-base rounded-xl; }
+.btn-pill { @apply rounded-full; }
 
-@utility input { @apply w-full h-10 rounded-lg border border-line-2 bg-surface px-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent disabled:opacity-60; }
+@utility input { @apply w-full h-10 rounded-[10px] border border-line-2 bg-surface px-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand/25 focus:border-brand disabled:opacity-60; }
 .textarea { @apply input h-auto py-2 min-h-24 resize-y; }
 .select { @apply input pr-8; }
 .label { @apply block text-sm font-medium text-ink mb-1.5; }
@@ -73,12 +129,14 @@ body {
 .card { @apply bg-surface border border-line rounded-[var(--radius-card)] shadow-[var(--shadow-card)]; }
 .card-pad { @apply p-5 sm:p-6; }
 
-@utility badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border; }
+@utility badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border border-transparent; }
 .badge-neutral { @apply badge bg-surface-2 text-ink-2 border-line; }
-.badge-success { @apply badge bg-success-bg text-success border-success/20; }
-.badge-warning { @apply badge bg-warning-bg text-warning border-warning/20; }
-.badge-danger { @apply badge bg-danger-bg text-danger border-danger/20; }
-.badge-brand { @apply badge bg-brand text-brand-ink border-transparent; }
+.badge-success { @apply badge bg-success-bg text-success-fg; }
+.badge-warning { @apply badge bg-warning-bg text-warning-fg; }
+.badge-danger { @apply badge bg-danger-bg text-danger-fg; }
+.badge-info { @apply badge bg-info-bg text-info-fg; }
+.badge-brand { @apply badge bg-brand text-brand-ink; }
+.badge-gold { @apply badge bg-gold/25 text-warning-fg; }
 
 .prose-plain p { @apply mb-3 leading-relaxed; }
 .container-x { @apply mx-auto w-full max-w-6xl px-5 sm:px-8; }

@@ -52,7 +52,7 @@ export function Card({ className, children, pad = true }: { className?: string; 
   return <div className={cx("card", pad && "card-pad", className)}>{children}</div>;
 }
 
-export function Badge({ tone = "neutral", children, className }: { tone?: "neutral" | "success" | "warning" | "danger" | "brand"; children: ReactNode; className?: string }) {
+export function Badge({ tone = "neutral", children, className }: { tone?: "neutral" | "success" | "warning" | "danger" | "info" | "brand" | "gold"; children: ReactNode; className?: string }) {
   return <span className={cx(`badge-${tone}`, className)}>{children}</span>;
 }
 
@@ -60,8 +60,8 @@ export function PageHeader({ title, description, actions, eyebrow }: { title: st
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
       <div>
-        {eyebrow ? <p className="text-xs font-medium uppercase tracking-wide text-muted mb-1">{eyebrow}</p> : null}
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        {eyebrow ? <p className="eyebrow mb-1.5">{eyebrow}</p> : null}
+        <h1 className="text-[32px] leading-tight font-normal">{title}</h1>
         {description ? <p className="mt-1 text-sm text-ink-2 max-w-2xl">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
@@ -109,7 +109,7 @@ export function Stat({ label, value, hint }: { label: string; value: ReactNode; 
   return (
     <div className="card card-pad">
       <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
+      <p className="mt-1 font-display text-[28px] leading-tight font-normal">{value}</p>
       {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
     </div>
   );
