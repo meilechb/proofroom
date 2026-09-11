@@ -12,7 +12,7 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
-- **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25** sales analytics + storefront funnel (revenue, AOV, top products/buyers, plus shop/product views, cart adds, checkouts, purchases and conversion) · **S27 (partial)** buyer licence / print-release document · **S21** digital products (sell presets/LUTs/e-books: private-store upload, `digital` product kind, per-file download grants, admin file manager)
+- **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25** sales analytics + storefront funnel (revenue, AOV, top products/buyers, plus shop/product views, cart adds, checkouts, purchases and conversion) · **S27 (partial)** buyer licence / print-release document · **S21** digital products (sell presets/LUTs/e-books: private-store upload, `digital` product kind, per-file download grants, admin file manager) · **S5/S20.3** collections (curate library/portfolio assets into a set, sell as a `collection_unlock` SKU that grants every image)
 
 Remaining phases: S13 marketplace-collect + Stripe Tax · S22 automations + broadcasts · S23 upsell · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
@@ -253,7 +253,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S5.2 "Sell" affordance in portfolio admin (`studio/portfolio`).
 - [ ] S5.3 Bulk "mark sellable" across a gallery/collection with a chosen price sheet.
 - [ ] S5.4 Product create/edit for each `kind` (image, bundle, gallery_unlock, collection_unlock, gift_card, voucher, digital, print).
-- [ ] S5.5 Collection create/edit + add/remove items + reorder + cover image.
+- [x] S5.5 Collection create/edit + add/remove asset items + cover image + visibility (`/studio/store/collections`). _(Photo items and drag reorder: later; items add in picked order.)_
 - [ ] S5.6 Product visibility/active/featured toggles; archive (never hard-delete when a sale references it).
 - [ ] S5.7 SEO fields per product/collection (title, description, share image).
 - [ ] S5.8 Validation schemas (`productSchema`, `collectionSchema`) + `fieldErrors`.
@@ -289,7 +289,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S8.6 `archiveProductAction` / `reorderProductsAction` (plain FormData actions, re-guarded, soft-archive never delete).
 - [ ] S8.7 "Sell this photo/gallery/portfolio image" entry points wired from `studio/galleries/[id]` and `studio/portfolio` → `markSellable`.
 - [ ] S8.8 Bulk "mark sellable" with a chosen price sheet across a gallery/collection.
-- [ ] S8.9 Collections manager (create/edit/reorder/cover) modeled on `portfolio-manager.tsx` typed-arg actions.
+- [x] S8.9 Collections manager (`/studio/store/collections`): create/edit/delete, cover + visibility, add/remove images via the shared image picker; linked from the store header.
 - [ ] S8.10 Image source picker reusing the website `image-picker.tsx`/asset library (avoid a new upload path for image products).
 - [ ] S8.11 Sales list page `/studio/store/orders` (`DataTable`, `Badge` status, cursor `Pagination`, `SearchInput`).
 - [ ] S8.12 Sale detail page (line items, buyer, license, downloads, refund/resend actions — see S24).
@@ -305,7 +305,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S9.5 `ShopGrid` + `ProductCard` sections in `src/components/site/sections.tsx` modeled on `PackagesSection`, styled with `var(--site-*)` tokens, linking to the product/buy route.
 - [ ] S9.6 Route `t/[slug]/(site)/shop/page.tsx` mirroring `pricing/page.tsx` (`studioBySlug` → `notFound` → `loadSiteData` → `page.enabled` → sections); `generateMetadata` from `site.seo`.
 - [ ] S9.7 Product detail route `t/[slug]/(site)/shop/[productSlug]/page.tsx` (gallery of watermarked previews, resolution/license selector, price, add-to-cart).
-- [ ] S9.8 Collection detail route `t/[slug]/(site)/shop/collection/[slug]/page.tsx`.
+- [~] S9.8 Collection contents surface on the collection-unlock product page (a "What's included" grid of every image). _(A standalone `/shop/collection/[slug]` browse route is still to come.)_
 - [ ] S9.9 Watermarked previews served via the public `assets` store (for portfolio images) or a `preview`-signed `/api/photo/[id]` (for private gallery photos); never expose originals.
 - [ ] S9.10 "Buy" affordances embedded inside the client gallery view (`t/[slug]/(app)/g/[gslug]`) for sellable gallery photos.
 - [ ] S9.11 Search / filter / sort / "featured"/"new" on the shop grid; related products on product pages.
@@ -398,7 +398,7 @@ _(The atomic numbered items for each phase are appended below.)_
 ### Phase S20 — Bundles, volume pricing, gallery/collection unlock
 - [x] S20.1 Product `kind="bundle"` (from a gallery) with a pick-N selection UI (`BundlePicker`): watermarked previews via `/api/photo/[id]?size=thumb` (authorized for a gallery that backs an active bundle — never full-size), min/max enforced, running total; checkout re-validates gallery membership + count and re-prices server-side (per-photo × count), one download grant per picked photo.
 - [x] S20.2 Volume/tier pricing via `store-shared.bundleTotal`: a `product_prices.volume_tiers` jsonb ({min, unitAmountCents}) edited per bundle price row ("from N photos, each $X"); the storefront picker previews the tiered total live and checkout recomputes the per-photo unit server-side (`bundleTotal ÷ count`). `parseVolumeTiers` is unit-tested; the flat "from" price is the fallback below the lowest tier.
-- [x] S20.3 `kind="gallery_unlock"` → one SKU that grants every photo (mints a grant for all). _(collection_unlock: with collections admin.)_
+- [x] S20.3 `kind="gallery_unlock"` → one SKU that grants every photo, and `kind="collection_unlock"` → one SKU that grants every asset in a collection (checkout expands to one priced line + zero-priced lines; delivered via the asset grant path). Unlocks are buy-now only (kept out of the per-line cart).
 - [ ] S20.4 Reuse `photo_selections` for in-gallery "buy these N" — future.
 - [ ] S20.5 Tests: pick-N bounds, tier boundaries — with the S33 store test suite.
 
