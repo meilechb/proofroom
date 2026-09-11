@@ -35,11 +35,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     if (item.asset_id) {
-      // Portfolio assets are shown clean publicly, so their web_url is not watermarked.
+      // Portfolio assets are clean (never watermarked); render web/standard from
+      // the original so the buyer gets the resolution tier they paid for.
       const asset = await assetById(grant.studio_id, item.asset_id);
-      if (asset) {
-        streamUrl = grant.resolution === "original" ? asset.url : asset.web_url ?? asset.url;
+      if (asset && !asset.url.startsWith("pending:")) {
         filename = safeFilename(asset.filename, "photo.jpg");
+        if (grant.resolution === "original") {
+          streamUrl = asset.url;
+        } else {
+          const original = await downloadBlob(asset.url, "assets");
+          rendered = (await makeWebVersion(original, STORE_EDGE[grant.resolution] ?? STORE_EDGE.standard)).buffer;
+          filename = `${filename.replace(/\.[^.]+$/, "")}.jpg`;
+        }
       }
     } else if (item.photo_id) {
       const photo = one<{ original_url: string; filename: string }>(
