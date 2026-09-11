@@ -26,6 +26,8 @@ async function referencedUrls(store: Store): Promise<Set<string>> {
   };
   if (store === "galleries") {
     add((await db()`select original_url, preview_url, thumb_url from photos`) as Array<Record<string, unknown>>, ["original_url", "preview_url", "thumb_url"]);
+    // Sold digital files also live in the private galleries store (S21); never sweep them.
+    add((await db()`select url from digital_files`) as Array<Record<string, unknown>>, ["url"]);
   } else {
     add((await db()`select url, web_url, thumb_url from assets`) as Array<Record<string, unknown>>, ["url", "web_url", "thumb_url"]);
     add((await db()`select url from documents`) as Array<Record<string, unknown>>, ["url"]);
