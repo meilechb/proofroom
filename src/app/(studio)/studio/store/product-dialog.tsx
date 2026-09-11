@@ -39,7 +39,7 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(saveProductAction, initialActionState);
   const [assetId, setAssetId] = useState<string | null>(product?.asset_id ?? null);
-  const [kind, setKind] = useState<string>(product?.kind === "gallery_unlock" ? "gallery_unlock" : product?.kind === "bundle" ? "bundle" : "image");
+  const [kind, setKind] = useState<string>(product?.kind === "gallery_unlock" ? "gallery_unlock" : product?.kind === "bundle" ? "bundle" : product?.kind === "digital" ? "digital" : "image");
   const [galleryId, setGalleryId] = useState<string>(product?.gallery_id ?? "");
   const [rows, setRows] = useState<Row[]>(
     prices && prices.length
@@ -103,6 +103,7 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
                 <option value="image">A single image</option>
                 <option value="gallery_unlock">A whole gallery (unlock)</option>
                 <option value="bundle">A pick-any bundle (from a gallery)</option>
+                <option value="digital">A digital file (preset, LUT, e-book)</option>
               </Select>
             </Field>
             {kind === "gallery_unlock" || kind === "bundle" ? (
@@ -115,7 +116,8 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
             ) : null}
           </div>
           <Field label="Description" htmlFor="s-desc"><Textarea id="s-desc" name="description" rows={2} defaultValue={product?.description ?? ""} /></Field>
-          <ImagePicker label={kind === "gallery_unlock" ? "Cover image" : "Image"} value={assetId} assets={assets} onChange={setAssetId} />
+          <ImagePicker label={kind === "gallery_unlock" || kind === "digital" ? "Cover image" : "Image"} value={assetId} assets={assets} onChange={setAssetId} />
+          {kind === "digital" ? <p className="text-xs text-muted">Save the product, then use “Files” on it to upload the downloads buyers receive.</p> : null}
 
           <div>
             <div className="flex items-center justify-between">

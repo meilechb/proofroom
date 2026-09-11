@@ -1,12 +1,13 @@
 import { requireStudioPage } from "@/lib/auth";
 import { db, rows as sqlRows } from "@/lib/db";
-import { listPriceSheets, listProductPrices, listProducts } from "@/lib/store";
+import { listDigitalFiles, listPriceSheets, listProductPrices, listProducts } from "@/lib/store";
 import { isReady, listAssets } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
 import { Badge, ButtonLink, EmptyState, PageHeader, Select } from "@/components/ui";
 import { UpgradeLock } from "@/components/studio/upgrade-lock";
 import type { PickerAsset } from "../website/image-picker";
 import { ProductDialog } from "./product-dialog";
+import { DigitalFilesDialog } from "./digital-files-dialog";
 import { applyPriceSheetAction, archiveProductAction } from "./actions";
 
 export const metadata = { title: "Store" };
@@ -25,6 +26,9 @@ export default async function StorePage() {
   const products = await listProducts(ctx.studio.id);
   const priceRows = await Promise.all(products.map(async (p) => [p.id, await listProductPrices(ctx.studio.id, p.id)] as const));
   const prices = new Map(priceRows);
+  const digitalFiles = new Map(
+    await Promise.all(products.filter((p) => p.kind === "digital").map(async (p) => [p.id, await listDigitalFiles(ctx.studio.id, p.id)] as const))
+  );
   const pickerAssets: PickerAsset[] = (await listAssets(ctx.studio.id)).filter(isReady).map((a) => ({ id: a.id, thumb: a.thumb_url ?? a.web_url ?? a.url, filename: a.filename, alt: a.alt }));
   const galleryList = sqlRows<{ id: string; title: string }>(await db()`select id, title from galleries where studio_id = ${ctx.studio.id} and parent_id is null order by created_at desc`);
   const sheets = await listPriceSheets(ctx.studio.id);
@@ -81,6 +85,7 @@ export default async function StorePage() {
                       <button className="text-xs text-muted hover:text-ink">Apply</button>
                     </form>
                   ) : null}
+                  {p.kind === "digital" ? <DigitalFilesDialog productId={p.id} files={digitalFiles.get(p.id) ?? []} /> : null}
                   <ProductDialog product={p} prices={rows} trigger="edit" assets={pickerAssets} galleries={galleryList} />
                   <form action={archiveProductAction}>
                     <input type="hidden" name="id" value={p.id} />

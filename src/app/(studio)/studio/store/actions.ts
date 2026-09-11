@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireEntitledStudio } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { adjustGiftCard, applyPriceSheetToProduct, archiveProduct, createDiscount, createProduct, createPriceSheet, deletePriceSheet, issueGiftCard, markManualSalePaid, replaceProductPrices, replacePriceSheetRows, resendSaleLibraryLink, setDiscountActive, setGiftCardActive, updateProduct, type ProductPriceInput } from "@/lib/store";
+import { adjustGiftCard, applyPriceSheetToProduct, archiveProduct, beginDigitalUpload, completeDigitalUpload, createDiscount, createProduct, createPriceSheet, deleteDigitalFile, deletePriceSheet, issueGiftCard, markManualSalePaid, replaceProductPrices, replacePriceSheetRows, resendSaleLibraryLink, setDiscountActive, setGiftCardActive, updateProduct, type DigitalUploadMeta, type ProductPriceInput } from "@/lib/store";
 import { fieldErrors, storeDiscountSchema, storeGiftCardSchema, storePriceRowSchema, storePriceSheetSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
 import { cents, int, str, type ActionState } from "@/lib/action-state";
 import { parseRmMatrix } from "@/lib/store-shared";
@@ -91,6 +91,26 @@ export async function archiveProductAction(formData: FormData) {
   const id = str(formData, "id", 64);
   if (str(formData, "active", 5) === "true") await updateProduct(studio.id, id, { isActive: true });
   else await archiveProduct(studio.id, id);
+  revalidatePath("/studio/store");
+}
+
+/** Uploader.begin for a digital product: reserve a file row and a private upload token (S21.3). */
+export async function beginDigitalUploadAction(productId: string, meta: DigitalUploadMeta) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const t = await beginDigitalUpload(studio.id, productId, meta);
+  return { id: t.fileId, pathname: t.pathname, token: t.token };
+}
+
+/** Uploader.complete: finalise the file once the bytes have landed (S21.3). */
+export async function completeDigitalUploadAction(fileId: string, url: string) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  await completeDigitalUpload(studio.id, fileId, url);
+  revalidatePath("/studio/store");
+}
+
+export async function deleteDigitalFileAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  await deleteDigitalFile(studio.id, str(formData, "id", 64));
   revalidatePath("/studio/store");
 }
 
