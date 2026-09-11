@@ -49,7 +49,7 @@ export default function PricingPage() {
     <>
       <Section className="pb-8">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Pricing</p>
+          <p className="eyebrow">Pricing</p>
           <Heading level={1} className="mt-3 text-4xl sm:text-5xl">Start free. Upgrade when you grow.</Heading>
           <Lead className="mx-auto">No commission on what you sell, no storage tiers to game, no charge for taking payments. Pay for seats only when you add a team.</Lead>
         </div>

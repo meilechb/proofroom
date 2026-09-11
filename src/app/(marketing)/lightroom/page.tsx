@@ -35,7 +35,7 @@ export default function LightroomPage() {
       <Section className="pb-10">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Lightroom Classic plugin</p>
+            <p className="eyebrow">Lightroom Classic plugin</p>
             <Heading level={1} className="mt-3 text-4xl sm:text-5xl">Install the plugin</Heading>
             <Lead>Ten minutes from download to your first published gallery. The plugin is a standard Lightroom Classic Publish Service, so it behaves like the ones you already know.</Lead>
             <ul className="mt-6 space-y-2">

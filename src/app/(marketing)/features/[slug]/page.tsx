@@ -37,7 +37,7 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
         </nav>
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">{page.eyebrow}</p>
+            <p className="eyebrow">{page.eyebrow}</p>
             <Heading level={1} className="mt-3 text-4xl sm:text-5xl">{page.title}</Heading>
             <Lead>{page.lead}</Lead>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">

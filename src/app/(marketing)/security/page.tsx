@@ -52,7 +52,7 @@ export default function SecurityPage() {
     <>
       <Section className="pb-8">
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Security</p>
+          <p className="eyebrow">Security</p>
           <Heading level={1} className="mt-3 text-4xl sm:text-5xl">How we handle what you trust us with</Heading>
           <Lead>Photographers hand us their work, their clients and their income. This page says plainly what we do with each.</Lead>
         </div>

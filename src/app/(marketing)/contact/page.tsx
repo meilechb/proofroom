@@ -15,7 +15,7 @@ export default function ContactPage() {
     <Section>
       <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr]">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Contact</p>
+          <p className="eyebrow">Contact</p>
           <Heading level={1} className="mt-3 text-4xl">Talk to a person</Heading>
           <Lead>Questions before you start, help moving from another tool, or a large team headshot program to set up. We reply within one business day.</Lead>
           <dl className="mt-8 space-y-4 text-sm">

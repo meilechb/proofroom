@@ -38,7 +38,7 @@ export default async function ComparePage({ params }: PageProps<"/compare/[slug]
           ))}
         </nav>
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Compare</p>
+          <p className="eyebrow">Compare</p>
           <Heading level={1} className="mt-3 text-4xl sm:text-5xl">{APP_NAME} vs {page.vendor}</Heading>
           <Lead>{page.lead}</Lead>
           <p className="mt-4 text-sm text-muted">Last checked {page.lastChecked} against {page.vendor}&apos;s published pages, linked below. Tell us if something has changed.</p>

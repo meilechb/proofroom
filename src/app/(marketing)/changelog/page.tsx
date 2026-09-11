@@ -19,7 +19,7 @@ export default async function ChangelogPage() {
   return (
     <div className="container-x py-14 sm:py-20">
       <div className="max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted">Changelog</p>
+        <p className="eyebrow">Changelog</p>
         <Heading level={1} className="mt-3 text-4xl">What changed</Heading>
         <Lead>Newest first. Every entry is a shipped change.</Lead>
         <div className="mt-10 changelog" dangerouslySetInnerHTML={{ __html: markdownToHtml(body) }} />
