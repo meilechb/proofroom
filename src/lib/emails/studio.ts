@@ -74,6 +74,20 @@ export async function sendStoreDeliveryEmail(studio: StudioMail, input: { to: st
   });
 }
 
+export async function sendGiftCardEmail(studio: StudioMail, input: { to: string; buyerName: string | null; codes: { code: string; amount: string }[] }) {
+  const many = input.codes.length > 1;
+  const lines = input.codes.map((c) => `${c.code}  —  ${c.amount}`).join("\n");
+  return sendEmail({
+    to: input.to,
+    subject: `Your ${studio.name} gift card`,
+    text: `Hi ${input.buyerName || "there"},\n\nThank you! Here ${many ? "are your gift cards" : "is your gift card"}:\n\n${lines}\n\nEnter the code at checkout to spend it in the store. Keep it somewhere safe — it won't be re-sent.\n\n${studio.name}\n${studio.email}`,
+    replyTo: studio.email,
+    fromName: studio.name,
+    kind: "store_giftcard",
+    studioId: studio.id,
+  });
+}
+
 export async function sendInquiryNoticeEmail(studio: StudioMail, input: { name: string; email: string; message: string; url: string }) {
   return sendEmail({
     to: studio.email,

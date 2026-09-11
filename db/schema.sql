@@ -1270,3 +1270,8 @@ alter table stripe_events add column if not exists processed_at timestamptz;
 -- Declared here, after gift_cards exists, so the reference resolves.
 alter table sales add column if not exists gift_card_id uuid references gift_cards (id) on delete set null;
 alter table sales add column if not exists gift_card_cents integer not null default 0;
+
+-- A gift card can itself be sold as a product; link it to the line that sold it
+-- so fulfilment issues it exactly once.
+alter table gift_cards add column if not exists sale_item_id uuid references sale_items (id) on delete set null;
+create unique index if not exists gift_cards_sale_item_idx on gift_cards (sale_item_id) where sale_item_id is not null;

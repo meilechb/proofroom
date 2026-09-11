@@ -21,7 +21,7 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
     );
   }
 
-  const items = await listSaleItems(sale.id);
+  const items = (await listSaleItems(sale.id)).filter((it) => it.kind !== "gift_card" && it.kind !== "voucher");
   const grants = await listGrantsForSale(sale.id);
   const grantByItem = new Map(grants.map((g) => [g.sale_item_id, g]));
   const cur = sale.currency;

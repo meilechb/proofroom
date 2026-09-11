@@ -601,6 +601,7 @@ export type GiftCard = {
   currency: string;
   expires_at: string | null;
   is_active: boolean;
+  sale_item_id: string | null;
   created_at: string;
   updated_at: string;
 };

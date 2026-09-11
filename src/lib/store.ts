@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/types";
 import { normalizeGiftCode, storeSettings } from "@/lib/store-shared";
 import { signLink } from "@/lib/tenant-tokens";
 import { storeLibraryUrl } from "@/lib/tenant";
-import { sendStoreDeliveryEmail } from "@/lib/emails/studio";
+import { sendGiftCardEmail, sendStoreDeliveryEmail } from "@/lib/emails/studio";
 import type {
   DiscountCode,
   DownloadGrant,
@@ -312,9 +312,37 @@ export async function spendGiftCard(studioId: string, cardId: string, saleId: st
 /** Draws down a paid sale's gift card once (idempotent per sale via the ledger). */
 export async function recordSaleGiftCard(sale: Pick<Sale, "id" | "studio_id" | "gift_card_id" | "gift_card_cents">) {
   if (!sale.gift_card_id || sale.gift_card_cents <= 0) return;
-  const already = await db()`select 1 from gift_card_txns where sale_id = ${sale.id} limit 1`;
+  const already = await db()`select 1 from gift_card_txns where sale_id = ${sale.id} and reason = 'redeemed' limit 1`;
   if (already.length > 0) return;
   await spendGiftCard(sale.studio_id, sale.gift_card_id, sale.id, sale.gift_card_cents);
+}
+
+/**
+ * Issues a fresh gift card for every gift_card line on a paid sale — its balance
+ * is the line's amount. Idempotent via gift_cards.sale_item_id. Returns the
+ * plaintext codes (cents) so the caller can email them to the buyer.
+ */
+export async function issueSoldGiftCards(sale: Pick<Sale, "id" | "studio_id" | "currency">) {
+  const items = rows<SaleItem>(await db()`select * from sale_items where sale_id = ${sale.id} and kind = 'gift_card' and amount_cents > 0`);
+  const issued: { code: string; amountCents: number }[] = [];
+  for (const it of items) {
+    const existing = await db()`select 1 from gift_cards where sale_item_id = ${it.id} limit 1`;
+    if (existing.length > 0) continue;
+    const code = generateGiftCode();
+    const normalized = normalizeGiftCode(code);
+    const card = one<GiftCard>(
+      await db()`
+        insert into gift_cards (studio_id, code_hash, code_last4, initial_cents, balance_cents, currency, sale_item_id)
+        values (${sale.studio_id}, ${giftCodeHash(normalized)}, ${normalized.slice(-4)}, ${it.amount_cents}, ${it.amount_cents}, ${sale.currency}, ${it.id})
+        on conflict (sale_item_id) where sale_item_id is not null do nothing
+        returning *`
+    );
+    if (card) {
+      await db()`insert into gift_card_txns (studio_id, gift_card_id, sale_id, delta_cents, reason) values (${sale.studio_id}, ${card.id}, ${sale.id}, ${it.amount_cents}, 'sold')`;
+      issued.push({ code, amountCents: it.amount_cents });
+    }
+  }
+  return issued;
 }
 
 // --- Fast path: sell an existing gallery photo or portfolio asset -----------
@@ -472,6 +500,7 @@ export async function mintGrants(sale: Pick<Sale, "id" | "studio_id">, opts: { m
   if (existing.length > 0) return;
   const items = await listSaleItems(sale.id);
   for (const it of items) {
+    if (it.kind === "gift_card" || it.kind === "voucher") continue; // nothing to download
     const grant = one<DownloadGrant>(
       await db()`
         insert into download_grants (studio_id, sale_id, sale_item_id, photo_id, resolution, token_hash, expires_at, max_downloads)
@@ -521,8 +550,22 @@ export async function fulfillPaidStoreSale(saleId: string) {
   await recordSaleRedemption(sale).catch(() => undefined);
   await recordSaleGiftCard(sale).catch(() => undefined);
   const amount = formatMoney(sale.total_cents, sale.currency);
-  const url = storeLibraryUrl(studio, signLink("download", sale.id));
-  await sendStoreDeliveryEmail({ id: studio.id, name: studio.name, email: studio.email }, { to: sale.buyer_email, buyerName: sale.buyer_name, amount, orderNumber: sale.order_number, url }).catch(() => undefined);
+  const mail = { id: studio.id, name: studio.name, email: studio.email };
+  const items = await listSaleItems(sale.id);
+
+  // Deliverable (downloadable) items get the library link; skip it for a
+  // gift-card-only order, whose email is the codes below.
+  if (items.some((i) => i.kind !== "gift_card" && i.kind !== "voucher")) {
+    const url = storeLibraryUrl(studio, signLink("download", sale.id));
+    await sendStoreDeliveryEmail(mail, { to: sale.buyer_email, buyerName: sale.buyer_name, amount, orderNumber: sale.order_number, url }).catch(() => undefined);
+  }
+
+  // A purchased gift card issues a fresh card and emails its code to the buyer.
+  const issued = await issueSoldGiftCards(sale).catch(() => [] as { code: string; amountCents: number }[]);
+  if (issued.length > 0) {
+    const codes = issued.map((c) => ({ code: c.code, amount: formatMoney(c.amountCents, sale.currency) }));
+    await sendGiftCardEmail(mail, { to: sale.buyer_email, buyerName: sale.buyer_name, codes }).catch(() => undefined);
+  }
   return { sale, studio, amount };
 }
 
