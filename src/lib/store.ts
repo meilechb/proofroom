@@ -526,6 +526,42 @@ export async function storeRevenueCents(studioId: string) {
   return r?.n ?? 0;
 }
 
+/** Sales reporting from the orders themselves (revenue, AOV, top products/buyers). */
+export async function storeAnalytics(studioId: string) {
+  const totals = one<{ gross: number; net: number; orders: number }>(
+    await db()`select coalesce(sum(total_cents), 0)::int as gross, coalesce(sum(total_cents - refunded_cents), 0)::int as net, count(*)::int as orders
+      from sales where studio_id = ${studioId} and status in ('paid', 'partially_refunded')`
+  );
+  const units = one<{ n: number }>(
+    await db()`select coalesce(count(*), 0)::int as n from sale_items si join sales s on s.id = si.sale_id
+      where si.studio_id = ${studioId} and s.status in ('paid', 'partially_refunded') and si.kind not in ('gift_card', 'voucher')`
+  );
+  const giftOutstanding = one<{ n: number }>(await db()`select coalesce(sum(balance_cents), 0)::int as n from gift_cards where studio_id = ${studioId} and is_active`);
+  const topProducts = rows<{ title: string; units: number; revenue: number }>(
+    await db()`select coalesce(p.title, 'Image') as title, count(*)::int as units, coalesce(sum(si.amount_cents), 0)::int as revenue
+      from sale_items si join sales s on s.id = si.sale_id left join store_products p on p.id = si.product_id
+      where si.studio_id = ${studioId} and s.status in ('paid', 'partially_refunded') and si.kind not in ('gift_card', 'voucher')
+      group by p.title order by revenue desc, units desc limit 5`
+  );
+  const topBuyers = rows<{ email: string; orders: number; spend: number }>(
+    await db()`select buyer_email as email, count(*)::int as orders, coalesce(sum(total_cents - refunded_cents), 0)::int as spend
+      from sales where studio_id = ${studioId} and status in ('paid', 'partially_refunded')
+      group by buyer_email order by spend desc limit 5`
+  );
+  const orders = totals?.orders ?? 0;
+  const net = totals?.net ?? 0;
+  return {
+    grossCents: totals?.gross ?? 0,
+    netCents: net,
+    orders,
+    aovCents: orders > 0 ? Math.round(net / orders) : 0,
+    unitsSold: units?.n ?? 0,
+    giftCardOutstandingCents: giftOutstanding?.n ?? 0,
+    topProducts,
+    topBuyers,
+  };
+}
+
 export async function attachSaleSession(saleId: string, sessionId: string, accountId: string | null) {
   await db()`update sales set stripe_checkout_session_id = ${sessionId}, stripe_account_id = ${accountId} where id = ${saleId}`;
 }

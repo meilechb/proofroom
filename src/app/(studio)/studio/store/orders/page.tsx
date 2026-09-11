@@ -33,7 +33,16 @@ export default async function StoreOrdersPage() {
 
   return (
     <>
-      <PageHeader title="Store orders" description="Everything sold through your store." actions={<ButtonLink href="/studio/store" variant="secondary">Products</ButtonLink>} />
+      <PageHeader
+        title="Store orders"
+        description="Everything sold through your store."
+        actions={
+          <div className="flex gap-2">
+            <ButtonLink href="/studio/store/analytics" variant="secondary">Analytics</ButtonLink>
+            <ButtonLink href="/studio/store" variant="secondary">Products</ButtonLink>
+          </div>
+        }
+      />
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
         <Stat label="Net revenue" value={formatMoney(revenue, cur)} />
         <Stat label="Orders" value={String(sales.filter((s) => s.status === "paid" || s.status === "partially_refunded").length)} />

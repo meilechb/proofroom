@@ -12,7 +12,7 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
-- **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** net revenue + orders view · **S27 (partial)** buyer licence / print-release document
+- **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document
 
 Remaining phases: S6 tiers/scheduled/sale prices · S7 rights-managed matrix · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
@@ -431,10 +431,10 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S24.5 Tests: refund→grant revocation, dispute state, resend.
 
 ### Phase S25 — Analytics & reporting (studio)
-- [ ] S25.1 Extend `AnalyticsEvent` union with `store_view`, `product_view`, `cart_add`, `checkout_start`, `purchase`; call `track()` at each point; add a store branch to `/api/track`.
-- [ ] S25.2 Store dashboard `/studio/store/analytics` using `Stat`/`Table` pattern: views, favorites, cart adds, conversion (purchases ÷ product_views), revenue, AOV, top products, top buyers.
-- [ ] S25.3 Revenue/AOV computed from `sales`/`payments` (not `analytics_daily`); counts from `analytics_daily`/`store_events_daily`.
-- [ ] S25.4 Tests: aggregation correctness, conversion math.
+- [ ] S25.1 Extend `AnalyticsEvent` union with `store_view`, `product_view`, `cart_add`, `checkout_start`, `purchase`; call `track()` at each point; add a store branch to `/api/track`. _(View/favourite/conversion counts still pending — needs the beacon.)_
+- [x] S25.2 Store dashboard `/studio/store/analytics` (`storeAnalytics` + `Stat` cards + top-products/top-buyers lists): net & gross revenue, orders, AOV, items sold, gift-card balance outstanding.
+- [x] S25.3 Revenue/AOV/top lists computed from `sales`/`sale_items` (gift-card/voucher lines excluded from item counts). _(View-based conversion awaits S25.1.)_
+- [ ] S25.4 Tests: aggregation correctness, conversion math — with the S33 store test suite.
 
 ### Phase S26 — Marketing & distribution
 - [ ] S26.1 Embeddable "buy" button / storefront widget (a small script or link snippet the studio can paste on an external site) → deep-links into the tenant shop/checkout.
