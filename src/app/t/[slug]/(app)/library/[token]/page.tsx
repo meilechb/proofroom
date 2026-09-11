@@ -44,7 +44,13 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
       {sale.status !== "paid" && sale.status !== "partially_refunded" ? (
         <p className="mt-6 text-[var(--site-ink-2)]">We&apos;re still confirming your payment. Refresh in a moment — your files appear here once it clears.</p>
       ) : (
-        <ul className="mt-6 divide-y divide-[var(--site-line)] border-y border-[var(--site-line)]">
+        <>
+          {items.length > 1 ? (
+            <p className="mt-6">
+              <a href={`/api/store/library/${token}/zip`} className="inline-flex items-center rounded-lg border border-[var(--site-line)] px-3 h-9 text-sm hover:bg-[var(--site-bg-2)]">Download all (ZIP)</a>
+            </p>
+          ) : null}
+          <ul className="mt-4 divide-y divide-[var(--site-line)] border-y border-[var(--site-line)]">
           {items.map((it) => {
             const g = grantByItem.get(it.id);
             const left = g ? Math.max(0, g.max_downloads - g.downloads_used) : 0;
@@ -66,7 +72,8 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </>
       )}
 
       {otherOrders.length > 0 ? (

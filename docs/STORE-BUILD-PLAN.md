@@ -368,8 +368,8 @@ _(The atomic numbered items for each phase are appended below.)_
 ### Phase S16 — Delivery: buyer library, ZIP/split, caps, resets, email
 - [ ] S16.1 Add `"download"` (library) `LinkKind` to `src/lib/tenant-tokens.ts` with a sensible TTL; `libraryUrl(studio, token)`.
 - [ ] S16.2 Buyer library page `t/[slug]/(app)/library/[token]/page.tsx`: `verifyLink("download", token)` → sale(s) for that buyer; list items, downloads, receipts, license docs; re-download within window.
-- [ ] S16.3 Per-item download + "download all" ZIP via `zipStream` (`dedupeNames`).
-- [ ] S16.4 **ZIP splitting** for large orders (the current gallery zip has no cap) — chunk into multiple parts by count/bytes.
+- [x] S16.3 Per-item download + "Download all (ZIP)" (`/api/store/library/[token]/zip` streams `zipStream` of every still-downloadable grant, files rendered lazily; `resolveGrantFile` shared with the single-download route). Each included grant counts as one download; capped/expired grants are skipped.
+- [ ] S16.4 **ZIP splitting** for very large orders — a later refinement (the stream already avoids holding the order in memory).
 - [ ] S16.5 "Link expired / reset" flow: buyer requests a fresh library link by email (re-mint `signLink`); grant reset within policy.
 - [ ] S16.6 `download_ready` email template + send from the webhook with the library link.
 - [ ] S16.7 Tests: library link verify/expiry, ZIP contents, split threshold, reset flow.
