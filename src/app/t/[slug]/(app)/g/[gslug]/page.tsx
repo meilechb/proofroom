@@ -60,7 +60,8 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
   return (
     <div className="mx-auto w-full max-w-6xl px-5 sm:px-8 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{gallery.title}</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--site-accent)]">{gallery.kind === "final" ? "Your photos are ready" : "Your proofs are ready"}</p>
+        <h1 className="mt-2 text-2xl sm:text-3xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{gallery.title}</h1>
         {gallery.welcome_message ? <p className="mt-2 text-[var(--site-ink-2)] max-w-2xl">{gallery.welcome_message}</p> : null}
       </header>
 

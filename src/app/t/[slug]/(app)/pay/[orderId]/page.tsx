@@ -34,46 +34,61 @@ export default async function PayPage({ params, searchParams }: PageProps<"/t/[s
   const signed = Boolean(order.contract_signed_at);
 
   return (
-    <div className="mx-auto w-full max-w-lg px-5 py-12">
-      <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{order.title}</h1>
+    <div className="mx-auto w-full max-w-4xl px-5 sm:px-8 py-12">
+      <h1 className="text-2xl sm:text-3xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{order.title}</h1>
       <p className="mt-1 text-[var(--site-ink-2)]">{studio.name}{order.scheduled_at ? ` · ${formatDate(order.scheduled_at)}` : ""}</p>
 
-      <div className="mt-6 rounded-xl border border-[var(--site-line)] p-4 text-sm">
-        <Row label="Session" value={formatMoney(order.amount_cents, cur)} />
-        {money.extras_cents > 0 ? <Row label={`Extra photos (${money.extra_picks})`} value={formatMoney(money.extras_cents, cur)} /> : null}
-        {order.discount_cents > 0 ? <Row label="Discount" value={`- ${formatMoney(order.discount_cents, cur)}`} /> : null}
-        <Row label="Total" value={formatMoney(money.total_cents, cur)} bold />
-        {money.paid_cents > 0 ? <Row label="Paid" value={`- ${formatMoney(money.paid_cents, cur)}`} /> : null}
-        <div className="mt-2 border-t border-[var(--site-line)] pt-2"><Row label="Due now" value={formatMoney(money.due_cents, cur)} bold /></div>
-      </div>
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+        {/* Order summary */}
+        <aside className="lg:order-2 lg:sticky lg:top-6 rounded-2xl bg-[var(--site-primary)] text-[var(--site-primary-ink)] p-6 sm:p-7">
+          <p className="text-lg font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{order.title}</p>
+          {order.scheduled_at ? <p className="mt-0.5 text-sm opacity-80">{formatDate(order.scheduled_at)}</p> : null}
+          <div className="my-5 h-px bg-[var(--site-primary-ink)] opacity-20" />
+          <div className="space-y-2.5 text-sm">
+            <SumRow label="Session" value={formatMoney(order.amount_cents, cur)} />
+            {money.extras_cents > 0 ? <SumRow label={`Extra photos (${money.extra_picks})`} value={formatMoney(money.extras_cents, cur)} /> : null}
+            {order.discount_cents > 0 ? <SumRow label="Discount" value={`- ${formatMoney(order.discount_cents, cur)}`} /> : null}
+            <SumRow label="Total" value={formatMoney(money.total_cents, cur)} strong />
+            {money.paid_cents > 0 ? <SumRow label="Paid" value={`- ${formatMoney(money.paid_cents, cur)}`} /> : null}
+          </div>
+          <div className="my-5 h-px bg-[var(--site-primary-ink)] opacity-20" />
+          <div className="flex items-baseline justify-between">
+            <span className="text-base">Due now</span>
+            <span className="text-2xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{formatMoney(money.due_cents, cur)}</span>
+          </div>
+        </aside>
 
-      {sp.cancelled === "1" ? <p className="mt-4 text-sm text-[var(--site-ink-2)]">Payment cancelled. You can try again below.</p> : null}
+        {/* Agreement + payment */}
+        <div className="lg:order-1 space-y-6">
+          {sp.cancelled === "1" ? <p className="text-sm text-[var(--site-ink-2)]">Payment cancelled. You can try again below.</p> : null}
 
-      {!signed && agreement ? (
-        <div className="mt-8">
-          <h2 className="font-medium mb-3">Agreement</h2>
-          <SignForm slug={slug} orderId={order.id} agreementText={agreement.text} />
-        </div>
-      ) : (
-        <div className="mt-8">
-          {signed ? <p className="text-sm text-[var(--site-ink-2)] mb-4">Agreement signed by {order.contract_signed_name}. Thank you.</p> : null}
-          {cardsOn ? (
-            <div className="space-y-2">
-              {money.deposit_due_cents > 0 && money.deposit_due_cents < money.due_cents ? (
-                <PayButton orderId={order.id} kind="deposit" label={`Pay the deposit · ${formatMoney(money.deposit_due_cents, cur)}`} primary />
-              ) : null}
-              <PayButton orderId={order.id} kind="full" label={`Pay ${money.paid_cents > 0 ? "the balance" : "in full"} · ${formatMoney(money.due_cents, cur)}`} primary={money.deposit_due_cents === 0 || money.deposit_due_cents >= money.due_cents} />
-              <p className="text-center text-xs text-[var(--site-ink-2)] mt-2">Paid securely to {studio.name} through Stripe.</p>
+          {!signed && agreement ? (
+            <div>
+              <h2 className="font-medium mb-3">Agreement</h2>
+              <SignForm slug={slug} orderId={order.id} agreementText={agreement.text} />
             </div>
           ) : (
-            <div className="rounded-lg border border-[var(--site-line)] bg-[var(--site-bg-2)] p-4 text-sm">
-              <p className="font-medium">How to pay</p>
-              {studio.manual_payment_instructions ? <p className="mt-1 whitespace-pre-wrap text-[var(--site-ink-2)]">{studio.manual_payment_instructions}</p> : <p className="mt-1 text-[var(--site-ink-2)]">Contact {studio.name} at {studio.email} to arrange payment.</p>}
-              {studio.manual_payment_link ? <a href={studio.manual_payment_link} className="mt-3 inline-block underline" target="_blank" rel="noopener">Payment link</a> : null}
+            <div>
+              {signed ? <p className="text-sm text-[var(--site-ink-2)] mb-4">Agreement signed by {order.contract_signed_name}. Thank you.</p> : null}
+              {cardsOn ? (
+                <div className="space-y-2">
+                  {money.deposit_due_cents > 0 && money.deposit_due_cents < money.due_cents ? (
+                    <PayButton orderId={order.id} kind="deposit" label={`Pay the deposit · ${formatMoney(money.deposit_due_cents, cur)}`} primary />
+                  ) : null}
+                  <PayButton orderId={order.id} kind="full" label={`Pay ${money.paid_cents > 0 ? "the balance" : "in full"} · ${formatMoney(money.due_cents, cur)}`} primary={money.deposit_due_cents === 0 || money.deposit_due_cents >= money.due_cents} />
+                  <p className="text-center text-xs text-[var(--site-ink-2)] mt-2">Paid securely to {studio.name} through Stripe.</p>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-[var(--site-line)] bg-[var(--site-bg-2)] p-4 text-sm">
+                  <p className="font-medium">How to pay</p>
+                  {studio.manual_payment_instructions ? <p className="mt-1 whitespace-pre-wrap text-[var(--site-ink-2)]">{studio.manual_payment_instructions}</p> : <p className="mt-1 text-[var(--site-ink-2)]">Contact {studio.name} at {studio.email} to arrange payment.</p>}
+                  {studio.manual_payment_link ? <a href={studio.manual_payment_link} className="mt-3 inline-block underline" target="_blank" rel="noopener">Payment link</a> : null}
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -88,8 +103,8 @@ function PayButton({ orderId, kind, label, primary }: { orderId: string; kind: "
   );
 }
 
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
-  return <div className="flex justify-between py-1"><span className={bold ? "font-medium" : "text-[var(--site-ink-2)]"}>{label}</span><span className={bold ? "font-semibold" : ""}>{value}</span></div>;
+function SumRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return <div className="flex justify-between"><span className={strong ? "font-medium" : "opacity-80"}>{label}</span><span className={strong ? "font-semibold" : ""}>{value}</span></div>;
 }
 
 function Centered({ title, body }: { title: string; body: string }) {

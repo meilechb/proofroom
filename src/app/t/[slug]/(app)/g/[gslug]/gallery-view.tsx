@@ -61,7 +61,8 @@ export function GalleryView({
   return (
     <div>
       {(allowComments || anyDownload || shareUrl) ? (
-        <div className="sticky top-0 z-20 -mx-5 sm:-mx-8 mb-6 border-b border-[var(--site-line)] bg-[var(--site-bg)]/90 backdrop-blur px-5 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="sticky top-0 z-20 -mx-5 sm:-mx-8 mb-6 border-b border-[var(--site-line)] bg-[var(--site-bg)]/90 backdrop-blur px-5 sm:px-8 py-3 flex flex-col gap-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
           {allowComments ? (
             <p className="text-sm text-[var(--site-ink-2)]">
               {favoriteCount} favorited{favoritesLimit ? ` of ${favoritesLimit} included` : ""}
@@ -86,6 +87,12 @@ export function GalleryView({
               </>
             ) : null}
           </div>
+          </div>
+          {allowComments && favoritesLimit ? (
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--site-bg-2)]" aria-hidden>
+              <div className="h-full rounded-full bg-[var(--site-primary)] transition-[width] duration-200" style={{ width: `${Math.min(100, Math.round((favoriteCount / favoritesLimit) * 100))}%` }} />
+            </div>
+          ) : null}
         </div>
       ) : null}
 
