@@ -98,6 +98,22 @@ export async function listSellablePhotos(studioId: string, galleryId: string) {
   );
 }
 
+/** Active, priced products with a "from" price and thumbnail, for cross-sell modules (S23). */
+export async function listShopHighlights(studioId: string, limit = 4, excludeId: string | null = null) {
+  return rows<{ id: string; slug: string; title: string; from: number; thumb_url: string | null; web_url: string | null; url: string | null }>(
+    await db()`
+      select p.id, p.slug, p.title,
+        (select min(amount_cents) from product_prices pr where pr.product_id = p.id and pr.is_active and pr.amount_cents > 0) as from,
+        a.thumb_url, a.web_url, a.url
+      from store_products p left join assets a on a.id = p.asset_id
+      where p.studio_id = ${studioId} and p.is_active
+        and (${excludeId}::uuid is null or p.id <> ${excludeId})
+        and p.kind in ('image', 'bundle', 'gallery_unlock', 'collection_unlock', 'digital')
+        and exists (select 1 from product_prices pr where pr.product_id = p.id and pr.is_active and pr.amount_cents > 0)
+      order by p.is_featured desc, p.sort_order, p.created_at limit ${limit}`
+  ).map((r) => ({ id: r.id, slug: r.slug, title: r.title, from: r.from, img: r.thumb_url ?? r.web_url ?? r.url }));
+}
+
 /** A few other active, sellable products for the "more from the shop" module. */
 export async function listRelatedProducts(studioId: string, excludeId: string, limit = 4) {
   return rows<StoreProduct>(

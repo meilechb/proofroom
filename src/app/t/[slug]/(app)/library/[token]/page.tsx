@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { studioBySlug } from "@/lib/tenant-data";
 import { signLink, verifyLink } from "@/lib/tenant-tokens";
-import { digitalFileNames, getSaleById, grantToken, listGrantsForSale, listPaidSalesForBuyer, listSaleItems } from "@/lib/store";
+import { digitalFileNames, getSaleById, grantToken, listGrantsForSale, listPaidSalesForBuyer, listSaleItems, listShopHighlights } from "@/lib/store";
 import { formatDate, formatMoney, storeLicenseLabels, storeResolutionLabels, type DownloadGrant } from "@/lib/types";
 import { ResendForm } from "../resend-form";
 
@@ -35,6 +36,7 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
   const fileNames = await digitalFileNames(studio.id, grants.map((g) => g.file_id).filter((x): x is string => !!x));
   const cur = sale.currency;
   const otherOrders = (await listPaidSalesForBuyer(studio.id, sale.buyer_email)).filter((s) => s.id !== sale.id);
+  const highlights = await listShopHighlights(studio.id, 4);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-5 sm:px-8 py-10">
@@ -123,6 +125,26 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
               </li>
             ))}
           </ul>
+        </section>
+      ) : null}
+
+      {highlights.length > 0 ? (
+        <section className="mt-10">
+          <h2 className="text-sm font-semibold text-[var(--site-ink-2)]">More from {studio.name}</h2>
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {highlights.map((h) => (
+              <Link key={h.id} href={`/shop/${h.slug}`} className="group block">
+                <div className="aspect-[4/5] overflow-hidden rounded-xl bg-[var(--site-bg-2)]">
+                  {h.img ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={h.img} alt={h.title} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
+                  ) : null}
+                </div>
+                <p className="mt-2 text-sm font-medium">{h.title}</p>
+                <p className="text-xs text-[var(--site-ink-2)]">From {formatMoney(h.from, cur)}</p>
+              </Link>
+            ))}
+          </div>
         </section>
       ) : null}
     </div>
