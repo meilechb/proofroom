@@ -11,6 +11,7 @@ const items: Array<{ href: string; label: string; minRole?: MembershipRole; exac
   { href: "/studio/clients", label: "Clients" },
   { href: "/studio/sessions", label: "Sessions" },
   { href: "/studio/packages", label: "Packages", minRole: "admin" },
+  { href: "/studio/store", label: "Store", minRole: "admin" },
   { href: "/studio/calendar", label: "Calendar" },
   { href: "/studio/tasks", label: "Tasks" },
   { href: "/studio/galleries", label: "Galleries" },

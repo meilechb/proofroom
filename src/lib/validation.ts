@@ -63,6 +63,34 @@ export const packageSchema = z.object({
   bookable: z.coerce.boolean().optional(),
 });
 
+export const storeProductSchema = z.object({
+  title: z.string().trim().min(1, "Name the product.").max(120),
+  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  licenseText: z.string().trim().max(4000).optional().or(z.literal("")),
+  isActive: z.coerce.boolean().optional(),
+  isFeatured: z.coerce.boolean().optional(),
+});
+
+export const storePriceRowSchema = z.object({
+  resolution: z.enum(["web", "standard", "original"]),
+  license: z.enum(["personal", "rf", "rm", "extended"]),
+  amountCents: z.coerce.number().int().min(0).max(10_000_000),
+});
+
+export const storeSettingsSchema = z.object({
+  enabled: z.coerce.boolean().optional(),
+  paymentMode: z.enum(["connected", "marketplace", "manual"]),
+  taxMode: z.enum(["off", "stripe"]),
+  commissionBps: z.coerce.number().int().min(0).max(10_000),
+  watermark: z.coerce.boolean().optional(),
+  watermarkText: z.string().trim().max(60).optional().or(z.literal("")),
+  downloadMaxCount: z.coerce.number().int().min(1).max(100),
+  downloadWindowHours: z.coerce.number().int().min(1).max(8760),
+  deliveryPolicy: z.string().trim().max(4000).optional().or(z.literal("")),
+  manualInstructions: z.string().trim().max(4000).optional().or(z.literal("")),
+  manualPaymentLink: z.string().trim().url("Enter a full URL.").max(500).optional().or(z.literal("")),
+});
+
 export const orderSchema = z.object({
   clientId: z.string().uuid(),
   packageId: z.string().uuid().optional().or(z.literal("")),
