@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHash, randomBytes } from "node:crypto";
 import { db, one, rows } from "@/lib/db";
+import { assertOwned } from "@/lib/auth";
 import { normalizeSlug } from "@/lib/slug";
 import { hmac } from "@/lib/tokens";
 import { requireEnv } from "@/lib/env";
@@ -280,6 +281,7 @@ export async function listCollectionItems(studioId: string, collectionId: string
 export async function addCollectionAsset(studioId: string, collectionId: string, assetId: string) {
   const owned = await getCollection(studioId, collectionId);
   if (!owned) throw new Error("Not found");
+  await assertOwned("assets", assetId, studioId); // never let another studio's asset into a collection
   const exists = await db()`select 1 from store_collection_items where studio_id = ${studioId} and collection_id = ${collectionId} and asset_id = ${assetId} limit 1`;
   if (exists.length > 0) return;
   const next = one<{ n: number }>(await db()`select coalesce(max(sort_order), 0) + 1 as n from store_collection_items where collection_id = ${collectionId}`);
@@ -295,7 +297,7 @@ export async function listCollectionAssets(studioId: string, collectionId: strin
   return rows<{ item_id: string; asset_id: string; filename: string; thumb_url: string | null; web_url: string | null; url: string }>(
     await db()`
       select ci.id as item_id, a.id as asset_id, a.filename, a.thumb_url, a.web_url, a.url
-      from store_collection_items ci join assets a on a.id = ci.asset_id
+      from store_collection_items ci join assets a on a.id = ci.asset_id and a.studio_id = ci.studio_id
       where ci.studio_id = ${studioId} and ci.collection_id = ${collectionId} and ci.asset_id is not null
         and a.url not like 'pending:%'
       order by ci.sort_order, ci.created_at`
