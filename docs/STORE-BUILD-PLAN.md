@@ -4,6 +4,17 @@
 
 ---
 
+## Status — built so far (branch `claude/photographer-asset-sales-hg938i`, PR #19)
+
+Shipped and green (typecheck + lint + 165 tests, each its own commit):
+- **S1** schema/types/OwnedTable · **S2** Pro `store` entitlement · **S3** pricing/licence maths + catalog data layer
+- **S4** store settings · **S5/S8** catalog admin (products with image picker, resolution×licence price rows, orders view)
+- **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
+- **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
+- **S18** discount codes · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** net revenue + orders view
+
+Remaining phases: S6 price sheets · S7 rights-managed matrix + generated licence documents · S10 favorites · S13 marketplace-collect + Stripe Tax · S17 buyer accounts/history · S19 gift cards · S20 bundles / whole-gallery unlock (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+
 ## 1. Context — why we're building this
 
 Photographer sites carry two kinds of store: one that orders **physical prints** through a lab, and one that lets people **buy the images** (digital files + licenses). Proofroom gives every photographer a studio website, client galleries and payments — but no way to *sell* their work. This feature adds a complete store so a studio can turn its portfolio and client galleries into revenue: sell individual images, packages, whole-gallery unlocks, licenses, gift cards and prints — with the money going straight into the photographer's **own Stripe** (Proofroom's existing 0%-commission posture), watermark-until-paid delivery, and an automation engine that is the difference between a store nobody notices (~3% gallery→sale) and one that pays for the subscription (~8–12%).
