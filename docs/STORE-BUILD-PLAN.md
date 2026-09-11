@@ -410,7 +410,7 @@ _(The atomic numbered items for each phase are appended below.)_
 
 ### Phase S22 — Conversion engine: sales automations & broadcasts (Pro)
 - [ ] S22.1 Add store rules to `AUTOMATION_RULES` in `automations-shared.ts`: `favorite_frame`, `abandoned_cart`, `holiday_promo` (`gallery_expiring` already exists) with default timing/enabled.
-- [ ] S22.2 `dueTargets` cases in `automations.ts` (favorite-frame from `photo_selections`+delivery interval; abandoned-cart from `carts` older than N hours; holiday windows), idempotent via `automation_sends` target keys.
+- [x] S22.2 (abandoned checkout) `recoverAbandonedCheckouts` in the daily cron: a connected sale still `pending` a day after it started never completed at Stripe, so the buyer is nudged back to the shop once (idempotent via an `automation_sends` `store_abandoned` row; manual-mode pending sales excluded). Uses the pending sale as the data source, so no separate carts table is needed. _(favorite-frame/holiday rules still pending — they need buyer-email capture on favourites.)_
 - [ ] S22.3 Template keys + defaults in `email-templates.ts`: `favorite_frame`, `abandoned_cart`, `order_confirmation`, `download_ready`, `license`, `store_receipt`; per-studio overrides via the `email_templates` table + editor.
 - [ ] S22.4 Wire `sendAutomation` branches for the new rules (load entity, build vars, `sendStudioEmail`, `recordClientEvent`).
 - [ ] S22.5 **Broadcasts (greenfield):** build `broadcasts.ts` + studio UI + a `sending` cron job; expand the `filter` jsonb to buyer/client segments; send via `sendStudioEmail` with an unsubscribe link (`signLink("unsub")`); per-recipient idempotency ledger.

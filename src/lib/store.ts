@@ -8,8 +8,8 @@ import { requireEnv } from "@/lib/env";
 import { formatMoney } from "@/lib/types";
 import { normalizeGiftCode, storeSettings, type RmMatrixRow } from "@/lib/store-shared";
 import { signLink } from "@/lib/tenant-tokens";
-import { storeLibraryUrl } from "@/lib/tenant";
-import { sendGiftCardEmail, sendStoreDeliveryEmail } from "@/lib/emails/studio";
+import { shopUrl, storeLibraryUrl } from "@/lib/tenant";
+import { sendGiftCardEmail, sendStoreAbandonedEmail, sendStoreDeliveryEmail } from "@/lib/emails/studio";
 import type {
   DiscountCode,
   DownloadGrant,
@@ -678,6 +678,34 @@ export async function cleanupStore() {
   const grants = await db()`delete from download_grants where revoked and created_at < now() - interval '90 days' returning id`;
   const carts = await db()`delete from carts where recovered_at is null and updated_at < now() - interval '30 days' returning id`;
   return { events: events.length, grants: grants.length, carts: carts.length };
+}
+
+/**
+ * Abandoned-checkout recovery (S22): a connected store sale still `pending` a day
+ * after it was started never completed at Stripe, so nudge the buyer back to the
+ * shop once (idempotent via automation_sends). Manual-mode pending sales are the
+ * studio's to collect, so they're excluded.
+ */
+export async function recoverAbandonedCheckouts(olderThanHours = 24, withinDays = 7) {
+  const due = rows<{ id: string; studio_id: string; buyer_email: string; buyer_name: string | null; total_cents: number; currency: string; slug: string; name: string; email: string; custom_domain: string | null; custom_domain_verified_at: string | null; settings: Record<string, unknown> }>(
+    await db()`
+      select s.id, s.studio_id, s.buyer_email, s.buyer_name, s.total_cents, s.currency,
+        st.slug, st.name, st.email, st.custom_domain, st.custom_domain_verified_at, st.settings
+      from sales s join studios st on st.id = s.studio_id
+      where s.status = 'pending' and s.payment_mode = 'connected' and st.deleted_at is null
+        and s.created_at < now() - (${olderThanHours} || ' hours')::interval
+        and s.created_at > now() - (${withinDays} || ' days')::interval`
+  );
+  let sent = 0;
+  for (const s of due) {
+    if (!storeSettings(s.settings ?? {}).enabled) continue;
+    const marked = await db()`insert into automation_sends (studio_id, rule, target) values (${s.studio_id}, 'store_abandoned', ${s.id}) on conflict do nothing returning rule`;
+    if (marked.length === 0) continue;
+    const url = shopUrl({ slug: s.slug, custom_domain: s.custom_domain, custom_domain_verified_at: s.custom_domain_verified_at });
+    await sendStoreAbandonedEmail({ id: s.studio_id, name: s.name, email: s.email }, { to: s.buyer_email, buyerName: s.buyer_name, amount: formatMoney(s.total_cents, s.currency), url }).catch(() => undefined);
+    sent++;
+  }
+  return sent;
 }
 
 /**

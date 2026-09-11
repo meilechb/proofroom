@@ -74,6 +74,18 @@ export async function sendStoreDeliveryEmail(studio: StudioMail, input: { to: st
   });
 }
 
+export async function sendStoreAbandonedEmail(studio: StudioMail, input: { to: string; buyerName: string | null; amount: string; url: string }) {
+  return sendEmail({
+    to: input.to,
+    subject: `You left something at ${studio.name}`,
+    text: `Hi ${input.buyerName || "there"},\n\nYou started a purchase (${input.amount}) at ${studio.name} but didn't finish checking out. Your selection is still waiting whenever you're ready:\n\n${input.url}\n\n${studio.name}\n${studio.email}`,
+    replyTo: studio.email,
+    fromName: studio.name,
+    kind: "store_abandoned",
+    studioId: studio.id,
+  });
+}
+
 export async function sendGiftCardEmail(studio: StudioMail, input: { to: string; buyerName: string | null; codes: { code: string; amount: string }[] }) {
   const many = input.codes.length > 1;
   const lines = input.codes.map((c) => `${c.code}  —  ${c.amount}`).join("\n");
