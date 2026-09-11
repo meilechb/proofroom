@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireEntitledStudio } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { adjustGiftCard, applyPriceSheetToProduct, archiveProduct, beginDigitalUpload, completeDigitalUpload, createDiscount, createProduct, createPriceSheet, deleteDigitalFile, deletePriceSheet, issueGiftCard, markManualSalePaid, replaceProductPrices, replacePriceSheetRows, resendSaleLibraryLink, setDiscountActive, setGiftCardActive, updateProduct, type DigitalUploadMeta, type ProductPriceInput } from "@/lib/store";
-import { fieldErrors, storeDiscountSchema, storeGiftCardSchema, storePriceRowSchema, storePriceSheetSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
+import { addCollectionAsset, adjustGiftCard, applyPriceSheetToProduct, archiveProduct, beginDigitalUpload, completeDigitalUpload, createCollection, createDiscount, createProduct, createPriceSheet, deleteCollection, deleteDigitalFile, deletePriceSheet, issueGiftCard, markManualSalePaid, removeCollectionItem, replaceProductPrices, replacePriceSheetRows, resendSaleLibraryLink, setDiscountActive, setGiftCardActive, updateCollection, updateProduct, type DigitalUploadMeta, type ProductPriceInput } from "@/lib/store";
+import { fieldErrors, storeCollectionSchema, storeDiscountSchema, storeGiftCardSchema, storePriceRowSchema, storePriceSheetSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
 import { cents, int, str, type ActionState } from "@/lib/action-state";
 import { parseRmMatrix, parseVolumeTiers } from "@/lib/store-shared";
 import type { StoreProductKind } from "@/lib/types";
@@ -114,6 +114,47 @@ export async function deleteDigitalFileAction(formData: FormData) {
   const { studio } = await requireEntitledStudio("store", "admin");
   await deleteDigitalFile(studio.id, str(formData, "id", 64));
   revalidatePath("/studio/store");
+}
+
+export async function saveCollectionAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const parsed = storeCollectionSchema.safeParse({
+    title: str(formData, "title", 120),
+    description: str(formData, "description", 2000),
+    visibility: str(formData, "visibility", 20) || "public",
+  });
+  if (!parsed.success) return { error: "Please fix the highlighted fields.", fields: fieldErrors(parsed.error) };
+  const input = {
+    title: parsed.data.title,
+    description: parsed.data.description || null,
+    coverAssetId: str(formData, "coverAssetId", 64) || null,
+    visibility: parsed.data.visibility,
+  };
+  const id = str(formData, "id", 64);
+  if (id) await updateCollection(studio.id, id, input);
+  else await createCollection(studio.id, input);
+  revalidatePath("/studio/store/collections");
+  return { ok: true, message: id ? "Collection saved." : "Collection created." };
+}
+
+export async function deleteCollectionAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  await deleteCollection(studio.id, str(formData, "id", 64));
+  revalidatePath("/studio/store/collections");
+}
+
+export async function addCollectionAssetAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const collectionId = str(formData, "collectionId", 64);
+  const assetId = str(formData, "assetId", 64);
+  if (collectionId && assetId) await addCollectionAsset(studio.id, collectionId, assetId);
+  revalidatePath("/studio/store/collections");
+}
+
+export async function removeCollectionItemAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  await removeCollectionItem(studio.id, str(formData, "id", 64));
+  revalidatePath("/studio/store/collections");
 }
 
 export async function saveStoreSettingsAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

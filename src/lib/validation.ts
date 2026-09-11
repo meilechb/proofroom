@@ -71,6 +71,12 @@ export const storeProductSchema = z.object({
   isFeatured: z.coerce.boolean().optional(),
 });
 
+export const storeCollectionSchema = z.object({
+  title: z.string().trim().min(1, "Name the collection.").max(120),
+  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  visibility: z.enum(["public", "unlisted", "hidden"]),
+});
+
 export const storePriceRowSchema = z.object({
   resolution: z.enum(["web", "standard", "original"]),
   license: z.enum(["personal", "rf", "rm", "extended"]),

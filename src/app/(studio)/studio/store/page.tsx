@@ -51,6 +51,7 @@ export default async function StorePage() {
         actions={
           <div className="flex gap-2">
             <ButtonLink href="/studio/store/orders" variant="secondary">Orders</ButtonLink>
+            <ButtonLink href="/studio/store/collections" variant="secondary">Collections</ButtonLink>
             <ButtonLink href="/studio/store/discounts" variant="secondary">Discounts</ButtonLink>
             <ButtonLink href="/studio/store/gift-cards" variant="secondary">Gift cards</ButtonLink>
             <ButtonLink href="/studio/store/price-sheets" variant="secondary">Price sheets</ButtonLink>
