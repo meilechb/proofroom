@@ -437,7 +437,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S25.4 Tests: aggregation correctness, conversion math — with the S33 store test suite.
 
 ### Phase S26 — Marketing & distribution
-- [x] S26.1 Embeddable "buy" button / shop link: a "Share & embed" panel on store settings gives the shop URL and a copyable, self-contained HTML button snippet (no script, works on any site builder) that deep-links into the tenant shop.
+- [x] S26.1 Embeddable "buy" button / shop link: a "Share & embed" panel on store settings gives the shop URL and a copyable, self-contained HTML button snippet (no script, works on any site builder) that deep-links into the tenant shop; each active product also has an **Embed** dialog with its own link + deep-linked buy button (title HTML-escaped).
 - [ ] S26.2 Social sharing + SEO landing for products/collections (works on custom domains via existing tenant routing).
 - [ ] S26.3 Buyer export + Klaviyo/Mailchimp segment hooks (optional).
 - [ ] S26.4 Optional affiliate/referral for store sales (reuse referral primitives).
