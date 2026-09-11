@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ProductPrice } from "@/lib/types";
-import { formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
+import { formatDate, formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
 import { effectivePrice, resolveStorePrice, RM_DIMENSIONS } from "@/lib/store-shared";
 import { addToCart, itemKey } from "../cart-store";
 
@@ -27,6 +27,7 @@ export function BuyForm({ slug, productId, productSlug, productTitle, prices, cu
   const priceCents = priced && "amountCents" in priced ? priced.amountCents : null;
   // Struck-through "was" price for a non-rm option currently on sale.
   const compareAt = chosen && !isRm ? effectivePrice(chosen).compareAtCents : null;
+  const saleEnds = compareAt != null && chosen?.sale_ends_at && new Date(chosen.sale_ends_at) > new Date() ? chosen.sale_ends_at : null;
 
   const add = () => {
     if (!chosen || priceCents == null) return;
@@ -106,7 +107,7 @@ export function BuyForm({ slug, productId, productSlug, productTitle, prices, cu
       ) : (
         <>
           {compareAt != null && priceCents != null ? (
-            <p className="text-sm text-[var(--site-ink-2)]"><s>{formatMoney(compareAt, currency)}</s> <span className="font-medium text-[var(--site-ink)]">{formatMoney(priceCents, currency)}</span> · on sale</p>
+            <p className="text-sm text-[var(--site-ink-2)]"><s>{formatMoney(compareAt, currency)}</s> <span className="font-medium text-[var(--site-ink)]">{formatMoney(priceCents, currency)}</span> · on sale{saleEnds ? ` — ends ${formatDate(saleEnds)}` : ""}</p>
           ) : null}
           <button type="submit" disabled={priceCents == null} className="inline-flex items-center justify-center rounded-lg bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-4 h-11 text-sm font-medium w-full disabled:opacity-50">
             Buy now{priceCents != null ? ` — ${formatMoney(priceCents, currency)}` : ""}
