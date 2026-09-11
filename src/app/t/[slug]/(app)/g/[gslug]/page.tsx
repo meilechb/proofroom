@@ -6,6 +6,9 @@ import { db, one, rows } from "@/lib/db";
 import { listPhotos } from "@/lib/photos";
 import { getOrder } from "@/lib/orders";
 import { listPayments } from "@/lib/payments";
+import { getGalleryStoreProduct } from "@/lib/store";
+import { storeSettings } from "@/lib/store-shared";
+import { billingState, entitlements } from "@/lib/plans";
 import { orderMoney } from "@/lib/types";
 import { payUrl, galleryUrl } from "@/lib/tenant";
 import { GalleryView, type ClientPhoto } from "./gallery-view";
@@ -56,6 +59,8 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
   const payments = gallery.order_id ? await listPayments(gallery.order_id) : [];
   const gate = downloadGate(gallery, order, payments, favSet.size);
   const included = one<{ included: number }>(await db()`select included_finals as included from orders where id = ${gallery.order_id ?? null}`);
+  const storeOn = storeSettings((studio.settings ?? {}) as Record<string, unknown>).enabled && entitlements(billingState(studio).effectivePlan).store;
+  const shopProduct = storeOn ? await getGalleryStoreProduct(studio.id, gallery.id) : null;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 sm:px-8 py-8">
@@ -68,6 +73,13 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
         <div className="mb-6 rounded-xl border border-[var(--site-line)] bg-[var(--site-bg-2)] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-sm">Your downloads unlock once the balance is paid.</p>
           <a href={payUrl(studio, order.id)} className="inline-flex items-center justify-center rounded-lg bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-4 h-10 text-sm font-medium">Pay {formatBalance(order, payments, favSet.size)}</a>
+        </div>
+      ) : null}
+
+      {shopProduct ? (
+        <div className="mb-6 rounded-xl border border-[var(--site-line)] bg-[var(--site-bg-2)] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-sm">{shopProduct.kind === "bundle" ? "Buy prints and downloads — pick your favourites." : "Buy prints and downloads of this gallery."}</p>
+          <a href={`/shop/${shopProduct.slug}`} className="inline-flex items-center justify-center rounded-lg bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-4 h-10 text-sm font-medium shrink-0">Shop this gallery</a>
         </div>
       ) : null}
 

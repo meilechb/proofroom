@@ -115,6 +115,14 @@ export async function listShopHighlights(studioId: string, limit = 4, excludeId:
   ).map((r) => ({ id: r.id, slug: r.slug, title: r.title, from: r.from, img: r.thumb_url ?? r.web_url ?? r.url }));
 }
 
+/** The active gallery-unlock or bundle product selling a gallery, for an in-gallery "buy" CTA (S9.10). */
+export async function getGalleryStoreProduct(studioId: string, galleryId: string) {
+  return one<StoreProduct>(
+    await db()`select * from store_products where studio_id = ${studioId} and gallery_id = ${galleryId} and kind in ('gallery_unlock', 'bundle') and is_active
+      order by case kind when 'gallery_unlock' then 0 else 1 end, created_at limit 1`
+  );
+}
+
 /** A few other active, sellable products for the "more from the shop" module. */
 export async function listRelatedProducts(studioId: string, excludeId: string, limit = 4) {
   return rows<StoreProduct>(
