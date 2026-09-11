@@ -8,6 +8,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { FormMessage } from "@/components/forms/form-message";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { initialActionState } from "@/lib/action-state";
+import { ImagePicker, type PickerAsset } from "../website/image-picker";
 import { saveProductAction } from "./actions";
 
 type Row = { resolution: StoreResolution; license: StoreLicense; amount: string };
@@ -15,9 +16,10 @@ type Row = { resolution: StoreResolution; license: StoreLicense; amount: string 
 const RES: StoreResolution[] = ["web", "standard", "original"];
 const LIC: StoreLicense[] = ["personal", "rf", "rm", "extended"];
 
-export function ProductDialog({ product, prices, trigger }: { product?: StoreProduct; prices?: ProductPrice[]; trigger: "add" | "edit" }) {
+export function ProductDialog({ product, prices, trigger, assets }: { product?: StoreProduct; prices?: ProductPrice[]; trigger: "add" | "edit"; assets: PickerAsset[] }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(saveProductAction, initialActionState);
+  const [assetId, setAssetId] = useState<string | null>(product?.asset_id ?? null);
   const [rows, setRows] = useState<Row[]>(
     prices && prices.length
       ? prices.map((p) => ({ resolution: p.resolution, license: p.license, amount: (p.amount_cents / 100).toString() }))
@@ -38,9 +40,11 @@ export function ProductDialog({ product, prices, trigger }: { product?: StorePro
           {product ? <input type="hidden" name="id" value={product.id} /> : null}
           <input type="hidden" name="kind" value={product?.kind ?? "image"} />
           <input type="hidden" name="prices" value={pricesJson} />
+          <input type="hidden" name="assetId" value={assetId ?? ""} />
           <FormMessage state={state} />
           <Field label="Name" htmlFor="s-title" error={state.fields?.title}><Input id="s-title" name="title" required defaultValue={product?.title} /></Field>
           <Field label="Description" htmlFor="s-desc"><Textarea id="s-desc" name="description" rows={2} defaultValue={product?.description ?? ""} /></Field>
+          <ImagePicker label="Image" value={assetId} assets={assets} onChange={setAssetId} />
 
           <div>
             <div className="flex items-center justify-between">
