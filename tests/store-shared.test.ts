@@ -4,6 +4,8 @@ import {
   cartTotals,
   cleanRmUsage,
   DEFAULT_STORE,
+  DIGITAL_EXTENSIONS,
+  digitalExtOk,
   discountAmount,
   effectivePrice,
   giftCardSpend,
@@ -191,6 +193,25 @@ describe("cleanRmUsage / isCompleteRmUsage", () => {
     expect(isCompleteRmUsage({ usage: "commercial", term: "3y", territory: "national" })).toBe(true);
     expect(isCompleteRmUsage({ usage: "commercial", term: "3y" })).toBe(false);
     expect(isCompleteRmUsage({ usage: "commercial", term: "3y", territory: "mars" })).toBe(false);
+  });
+});
+
+describe("digitalExtOk", () => {
+  it("accepts the sellable download extensions, case-insensitively", () => {
+    expect(digitalExtOk("summer-tones.xmp")).toBe(true);
+    expect(digitalExtOk("PACK.ZIP")).toBe(true);
+    expect(digitalExtOk("guide.pdf")).toBe(true);
+    expect(digitalExtOk("cinema.CUBE")).toBe(true);
+    expect(digitalExtOk("my.preset.pack.zip")).toBe(true); // matches on the last segment
+  });
+  it("rejects images, executables and extensionless names", () => {
+    expect(digitalExtOk("photo.jpg")).toBe(false);
+    expect(digitalExtOk("evil.exe")).toBe(false);
+    expect(digitalExtOk("README")).toBe(false);
+    expect(digitalExtOk("")).toBe(false);
+  });
+  it("every listed extension passes", () => {
+    for (const ext of DIGITAL_EXTENSIONS) expect(digitalExtOk(`file.${ext}`)).toBe(true);
   });
 });
 
