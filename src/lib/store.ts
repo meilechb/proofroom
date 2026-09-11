@@ -12,6 +12,7 @@ import { shopUrl, storeLibraryUrl } from "@/lib/tenant";
 import { clientUploadToken, deleteBlobs, digitalPath, safeFilename } from "@/lib/storage";
 import { addBytes, assertUnderStorageCap } from "@/lib/usage";
 import { sendGiftCardEmail, sendStoreAbandonedEmail, sendStoreDeliveryEmail } from "@/lib/emails/studio";
+import { track } from "@/lib/analytics";
 import type {
   DigitalFile,
   DiscountCode,
@@ -811,6 +812,7 @@ export async function fulfillPaidStoreSale(saleId: string) {
   if (!studio) return null;
   const settings = storeSettings(studio.settings ?? {});
   await mintGrants(sale, { maxDownloads: settings.downloadMaxCount, windowHours: settings.downloadWindowHours });
+  await track(sale.studio_id, "purchase", "order").catch(() => undefined); // once per sale (callers guard on firstTime)
   await recordSaleRedemption(sale).catch(() => undefined);
   await recordSaleGiftCard(sale).catch(() => undefined);
   const amount = formatMoney(sale.total_cents, sale.currency);

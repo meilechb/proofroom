@@ -10,6 +10,7 @@ import { createClient } from "@/lib/clients";
 import { storeLicenseLabels, storeResolutionLabels, type StoreLicense, type StoreResolution, type Studio } from "@/lib/types";
 import { signLink } from "@/lib/tenant-tokens";
 import { storeLibraryUrl, studioBaseUrl } from "@/lib/tenant";
+import { track } from "@/lib/analytics";
 import { log } from "@/lib/logger";
 
 const RES = ["web", "standard", "original"];
@@ -125,6 +126,7 @@ export async function POST(request: NextRequest) {
     giftCardCents,
     items,
   });
+  await track(studio.id, "checkout_start", product.id).catch(() => undefined);
 
   const base = studioBaseUrl(studio);
 

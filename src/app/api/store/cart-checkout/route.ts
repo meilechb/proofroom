@@ -7,6 +7,7 @@ import { billingState, entitlements } from "@/lib/plans";
 import { cleanRmUsage, discountAmount, giftCardSpend, resolveStorePrice, storeSettings } from "@/lib/store-shared";
 import { attachSaleSession, createSale, findUsableGiftCard, findValidDiscount, fulfillPaidStoreSale, getProduct, listProductPrices, markSalePaid } from "@/lib/store";
 import { createClient } from "@/lib/clients";
+import { track } from "@/lib/analytics";
 import { storeLicenseLabels, storeResolutionLabels, type StoreLicense, type StoreResolution, type Studio } from "@/lib/types";
 import { signLink } from "@/lib/tenant-tokens";
 import { storeLibraryUrl, studioBaseUrl } from "@/lib/tenant";
@@ -121,6 +122,7 @@ export async function POST(request: NextRequest) {
     giftCardCents,
     items,
   });
+  await track(studio.id, "checkout_start", "cart").catch(() => undefined);
 
   const base = studioBaseUrl(studio);
 
