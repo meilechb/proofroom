@@ -8,12 +8,12 @@ import { FormMessage } from "@/components/forms/form-message";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { GoogleAuthButton } from "../google-auth";
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({ next, googleHref }: { next: string; googleHref?: string }) {
   const [state, action] = useActionState(loginAction, initialActionState);
   return (
     <form action={action} className="mt-6 space-y-4" noValidate>
       <input type="hidden" name="next" value={next} />
-      <GoogleAuthButton label="Sign in with Google" />
+      <GoogleAuthButton label="Sign in with Google" href={googleHref} />
       <FormMessage state={state} />
       <Field label="Email" htmlFor="email">
         <Input id="email" name="email" type="email" autoComplete="email" required defaultValue={state.values?.email} autoFocus />

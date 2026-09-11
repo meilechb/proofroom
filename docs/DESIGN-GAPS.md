@@ -12,7 +12,7 @@ UI pages on real tables, not missing systems.
 | 1 | Studio Calendar | `/studio/calendar` (linked in studio nav) | `orders.scheduled_at` (shoots), `booking_slots` (holds), `settings.booking` blocked/closed dates | ✅ built |
 | 2 | Studio Bookings | `/studio/bookings` (linked in studio nav) | `booking_requests` + `inquiries`, `booking_slots` (upcoming) | ✅ built |
 | 3 | Settings → Agreement | `/studio/settings/agreement` (linked in settings sub-nav) | `agreement_templates`, `lib/agreements.ts` | ✅ built |
-| 4 | Google sign-in | `/login`, `/signup` (button in the design) | new: Google OAuth + `users`/`memberships` | see below |
+| 4 | Google sign-in | `/login`, `/signup` (button in the design) | Google OAuth + `users.google_sub` | ✅ built (needs credentials) |
 
 ## Notes
 
@@ -28,9 +28,22 @@ UI pages on real tables, not missing systems.
 ## Google sign-in
 
 The design leads both `/login` and `/signup` with a "Continue with Google"
-button. The app had no Google OAuth backend. Status recorded in the table above;
-implementation details and any configuration the operator must provide are in the
-commit that builds it.
+button. Built as a standard OAuth 2.0 authorization-code flow:
+
+- `GET /auth/google/start` — sets a short-lived CSRF cookie and redirects to Google.
+- `GET /auth/google/callback` — verifies the CSRF nonce, exchanges the code for
+  the id_token at Google's token endpoint (server-to-server over TLS), requires a
+  verified email, then signs the user in via `findOrCreateGoogleUser`:
+  known Google account → sign in; matching email → link (`users.google_sub`);
+  new person → create the user (no password; `password_hash` is nullable) plus
+  their first studio, and land on `/studio/welcome`.
+- `src/lib/google-oauth.ts` holds the flow; `users.google_sub` is the link column.
+
+**The button is gated on configuration.** It renders as a real link only when
+both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set (see `.env.example`);
+otherwise it shows the disabled "coming soon" placeholder so the design still
+reads. The operator must create an OAuth client in Google Cloud Console and add
+the redirect URI `{APP_URL}/auth/google/callback`.
 
 ## Out of scope (noted by the design as future, not built here)
 

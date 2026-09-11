@@ -10,7 +10,7 @@ import { FormMessage } from "@/components/forms/form-message";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { GoogleAuthButton } from "../google-auth";
 
-export function SignupForm({ refCode = "" }: { refCode?: string }) {
+export function SignupForm({ refCode = "", googleHref }: { refCode?: string; googleHref?: string }) {
   const [state, action] = useActionState(signupAction, initialActionState);
   const [studioName, setStudioName] = useState(state.values?.studioName ?? "");
   const [slug, setSlug] = useState(state.values?.slug ?? "");
@@ -59,7 +59,7 @@ export function SignupForm({ refCode = "" }: { refCode?: string }) {
 
   return (
     <form action={action} className="mt-6 space-y-4" noValidate>
-      <GoogleAuthButton label="Sign up with Google" />
+      <GoogleAuthButton label="Sign up with Google" href={googleHref} />
       <FormMessage state={state} />
       <input type="hidden" name="ref" value={refCode} />
       <input type="hidden" name="timezone" ref={timezoneRef} defaultValue="" />

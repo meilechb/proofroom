@@ -570,6 +570,11 @@ alter table studios add column if not exists purge_at timestamptz;
 -- Leads: mark a lead contacted from the platform admin (plan 19.6)
 alter table leads add column if not exists contacted_at timestamptz;
 
+-- users: Google sign-in. password_hash is already nullable, so a Google-only
+-- account has no password; google_sub is the Google account id we link by.
+alter table users add column if not exists google_sub text;
+create unique index if not exists users_google_sub_idx on users (google_sub) where google_sub is not null;
+
 -- clients: pipeline stage, activity, archive timestamp, one client per email (plan 2.19)
 alter table clients add column if not exists stage text not null default 'lead';
 alter table clients drop constraint if exists clients_stage_check;

@@ -4,9 +4,9 @@ import { cx } from "@/components/ui";
  * Design handoff (login.dc.html / signup.dc.html) leads sign-in and sign-up with
  * a "Continue with Google" button and an "or" divider above the email form.
  *
- * There is no Google OAuth server action in the codebase yet, so this renders the
- * button as a clearly non-wired placeholder (disabled, submits nothing) purely to
- * match the design. Wire it to a real sign-in action before enabling it.
+ * When Google OAuth is configured (GOOGLE_CLIENT_ID/SECRET) the page passes an
+ * `href` to /auth/google/start and the button is a real link; otherwise it falls
+ * back to a clearly non-wired, disabled placeholder so the design still shows.
  */
 function GoogleMark() {
   return (
@@ -20,19 +20,20 @@ function GoogleMark() {
 }
 
 /** SSO button + "or" divider. Returns a fragment so it drops into a form's `space-y` flow. */
-export function GoogleAuthButton({ label }: { label: string }) {
+export function GoogleAuthButton({ label, href }: { label: string; href?: string }) {
   return (
     <>
-      <button
-        type="button"
-        disabled
-        title="Google sign-in is coming soon"
-        aria-label={`${label} (coming soon)`}
-        className={cx("btn-secondary btn-lg w-full")}
-      >
-        <GoogleMark />
-        {label}
-      </button>
+      {href ? (
+        <a href={href} className={cx("btn-secondary btn-lg w-full")} aria-label={label}>
+          <GoogleMark />
+          {label}
+        </a>
+      ) : (
+        <button type="button" disabled title="Google sign-in is coming soon" aria-label={`${label} (coming soon)`} className={cx("btn-secondary btn-lg w-full")}>
+          <GoogleMark />
+          {label}
+        </button>
+      )}
       <div className="flex items-center gap-3" aria-hidden="true">
         <span className="h-px flex-1 bg-line" />
         <span className="text-xs text-muted">or</span>

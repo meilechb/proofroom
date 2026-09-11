@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { APP_NAME } from "@/lib/env";
+import { APP_NAME, configured } from "@/lib/env";
 import { db, dbConfigured, one } from "@/lib/db";
 import { isReferralCodeShape, normalizeReferralCode, REFERRAL_REWARD_TEXT } from "@/lib/referrals";
 import { Notice } from "@/components/ui";
@@ -21,6 +21,8 @@ export default async function SignupPage({ searchParams }: PageProps<"/signup">)
   const fromQuery = typeof sp.ref === "string" ? sp.ref : null;
   const code = fromQuery ?? (await cookies()).get("ref")?.value ?? null;
   const referrer = await referrerName(code);
+  const refCode = referrer && code ? normalizeReferralCode(code) : "";
+  const googleHref = configured.google() ? `/auth/google/start${refCode ? `?ref=${encodeURIComponent(refCode)}` : ""}` : undefined;
   return (
     <div className="card card-pad">
       <h1 className="text-xl font-semibold">Create your studio</h1>
@@ -30,7 +32,7 @@ export default async function SignupPage({ searchParams }: PageProps<"/signup">)
           Referred by <strong>{referrer}</strong>: you both get {REFERRAL_REWARD_TEXT} once your subscription starts.
         </Notice>
       ) : null}
-      <SignupForm refCode={referrer && code ? normalizeReferralCode(code) : ""} />
+      <SignupForm refCode={refCode} googleHref={googleHref} />
       <p className="mt-6 text-sm text-ink-2">
         Already using {APP_NAME}? <Link href="/login" className="font-medium text-ink underline">Sign in</Link>
       </p>
