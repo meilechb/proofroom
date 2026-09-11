@@ -78,6 +78,16 @@ export function bundleTotal(count: number, tiers: VolumeTier[]): number {
 }
 
 /**
+ * Pick-N total with the flat price as the implicit min-1 tier: below the lowest
+ * defined tier the base price applies (an explicit min-1 tier still overrides
+ * it). This is the fallback the storefront and checkout both use.
+ */
+export function bundlePickTotal(count: number, baseCents: number, tiers: VolumeTier[]): number {
+  if (tiers.length === 0) return cents(baseCents) * Math.max(0, Math.floor(count));
+  return bundleTotal(count, [{ min: 1, unitAmountCents: baseCents }, ...tiers]);
+}
+
+/**
  * Read a stored volume-tiers jsonb into clean {min, unitAmountCents} rows:
  * positive integer mins and non-negative cents only, deduped by min (last wins)
  * and sorted ascending. Anything malformed is dropped. Pure and client-safe.

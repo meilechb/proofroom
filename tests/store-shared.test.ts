@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  bundlePickTotal,
   bundleTotal,
   cartTotals,
   cleanRmUsage,
@@ -45,6 +46,19 @@ describe("bundleTotal", () => {
   it("is zero for no items or no tiers", () => {
     expect(bundleTotal(0, tiers)).toBe(0);
     expect(bundleTotal(5, [])).toBe(0);
+  });
+});
+
+describe("bundlePickTotal", () => {
+  it("applies the base price below the lowest tier", () => {
+    const tiers = [{ min: 5, unitAmountCents: 1200 }, { min: 10, unitAmountCents: 1000 }];
+    expect(bundlePickTotal(2, 1500, tiers)).toBe(3000); // 2 * base 1500
+    expect(bundlePickTotal(5, 1500, tiers)).toBe(6000); // 5 * 1200
+    expect(bundlePickTotal(10, 1500, tiers)).toBe(10000); // 10 * 1000
+  });
+  it("with no tiers is just base * count; an explicit min-1 tier overrides the base", () => {
+    expect(bundlePickTotal(3, 1500, [])).toBe(4500);
+    expect(bundlePickTotal(3, 1500, [{ min: 1, unitAmountCents: 1000 }])).toBe(3000);
   });
 });
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ProductPrice } from "@/lib/types";
 import { formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
-import { bundleTotal, effectivePrice, parseVolumeTiers } from "@/lib/store-shared";
+import { bundlePickTotal, effectivePrice, parseVolumeTiers } from "@/lib/store-shared";
 
 const inputClass = "w-full rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 h-11 text-sm";
 
@@ -33,7 +33,7 @@ export function BundlePicker({ slug, productId, price, photos, currency, cancell
   const enough = picked.length >= min && picked.length <= max;
   // With volume tiers the per-photo price falls as more are picked; recomputed
   // server-side at checkout, this is only the live preview.
-  const total = tiers.length ? bundleTotal(picked.length, tiers) : base * picked.length;
+  const total = bundlePickTotal(picked.length, base, tiers);
   const per = picked.length ? Math.round(total / picked.length) : base;
 
   if (photos.length === 0) return <p className="text-[var(--site-ink-2)]">This bundle has no photos to choose from yet.</p>;
