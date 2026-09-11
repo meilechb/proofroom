@@ -419,8 +419,8 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S22.8 Tests: dueTargets windows, single-send idempotency, broadcast segment expansion, suppression respect.
 
 ### Phase S23 — Upsell / cross-sell
-- [ ] S23.1 Cart upsell prompts (resolution upgrade, "complete the set", wall-art suggestion placeholder for S31) — with the multi-item cart.
-- [x] S23.2 Related-product module on product pages ("More from the shop": `listRelatedProducts`, featured first). _(Post-purchase upsell email: with S22 automations.)_
+- [x] S23.1 Cross-sell at the cart: a "You might also like" strip of up to four other priced products, filtering out anything already in the cart (client-side). _(Resolution-upgrade nudge and wall-art suggestion — the latter needs S31 prints — remain.)_
+- [x] S23.2 Related-product module on product pages ("More from the shop": `listRelatedProducts`, featured first) **and** a post-purchase "More from {studio}" strip in the buyer library (`listShopHighlights`). _(Post-purchase upsell email: with S22 automations.)_
 - [ ] S23.3 Tests: upsell suggestion logic — with the S33 store test suite.
 
 ### Phase S24 — Refunds, disputes, order management
