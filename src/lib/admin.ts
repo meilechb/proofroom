@@ -154,6 +154,12 @@ export async function platformMetrics() {
     from email_log where created_at >= now() - interval '30 days'`);
   const rewards = one<{ n: number }>(await db()`select count(*)::int as n from referrals where status = 'rewarded'`);
 
+  // Store adoption across all studios. GMV is studios' own revenue (0% commission).
+  const store = one<{ studios: number; orders: number; gmv: number }>(await db()`
+    select count(distinct studio_id)::int as studios, count(*)::int as orders, coalesce(sum(total_cents - refunded_cents), 0)::int as gmv
+    from sales where status in ('paid', 'partially_refunded')`);
+  const giftLiability = one<{ n: number }>(await db()`select coalesce(sum(balance_cents), 0)::int as n from gift_cards where is_active`);
+
   return {
     byState,
     mrrCents: active * PLAN_PRICE_CENTS,
@@ -166,6 +172,10 @@ export async function platformMetrics() {
     emailsSent: emails?.sent ?? 0,
     emailsFailed: emails?.failed ?? 0,
     rewardsGranted: rewards?.n ?? 0,
+    storeSellingStudios: store?.studios ?? 0,
+    storeOrders: store?.orders ?? 0,
+    storeGmvCents: store?.gmv ?? 0,
+    giftLiabilityCents: giftLiability?.n ?? 0,
   };
 }
 

@@ -444,8 +444,8 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S26.5 Tests: widget deep-link, export shape.
 
 ### Phase S27 — Notifications & emails
-- [ ] S27.1 Add `store_sale` to `NOTIFICATION_KEYS`; studio alert via `notifiableMembers` + `sendPlatformEmail` (fallback to `studio.email`).
-- [ ] S27.2 Buyer emails: `order_confirmation`, `download_ready`, `license`, `store_receipt`, refund — via templates + `sendStudioEmail`, logged in `email_log`, suppressions respected.
+- [x] S27.1 Studio alert on a paid store sale (owner email via `notifyStudio` in the connect webhook), plus refund and dispute alerts. _(A $0 gift-card-covered order deliberately skips the "new sale" notice — no new money moved.)_
+- [~] S27.2 Buyer emails: delivery/library link on paid (`sendStoreDeliveryEmail`), gift-card codes (`sendGiftCardEmail`), and the printable licence page are done; dedicated `order_confirmation`/`store_receipt`/refund templates + per-studio overrides remain.
 - [ ] S27.3 License/print-release document generator: render per `sale_item` (Markdown-template like `agreements.ts`, or an HTML print-view like invoice/receipt) → upload to private blob via `storage.ts` → `insert into documents (kind:'license', …)`; add `'license'` to the `documents.kind` CHECK and a `'license'` `LinkKind`.
 - [ ] S27.4 Tests: email sends & suppression, license-doc generation & access.
 
@@ -470,7 +470,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S29.8 Tests: grant cleanup, price-flip transitions, regeneration idempotency.
 
 ### Phase S30 — Platform admin, fair-use, metering
-- [ ] S30.1 Platform admin views of store adoption/revenue/metrics.
+- [x] S30.1 Platform admin store metrics on `/admin/metrics`: store GMV (all studios, 0% commission), order count, number of selling studios, and outstanding gift-card liability (added to `platformMetrics`).
 - [ ] S30.2 Delivery storage/bandwidth metering via `usage.ts`; fair-use surfacing.
 - [ ] S30.3 Abuse/fraud handling; marketplace-collect tax-liability config; platform digest includes store activity.
 - [ ] S30.4 Tests: metering counts, admin scoping.
