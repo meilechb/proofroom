@@ -44,6 +44,8 @@ export async function saveProductAction(_prev: ActionState, formData: FormData):
   if (!prices) return { error: "One of the price options is invalid.", fields: { prices: "Check the resolution, licence and amount." } };
   const kindRaw = str(formData, "kind", 40);
   const kind: StoreProductKind = (KINDS as string[]).includes(kindRaw) ? (kindRaw as StoreProductKind) : "image";
+  const galleryId = str(formData, "galleryId", 64) || null;
+  if (kind === "gallery_unlock" && !galleryId) return { error: "Choose a gallery to unlock.", fields: { galleryId: "Pick a gallery." } };
   const id = str(formData, "id", 64);
   const input = {
     kind,
@@ -54,7 +56,7 @@ export async function saveProductAction(_prev: ActionState, formData: FormData):
     isFeatured: parsed.data.isFeatured ?? false,
     photoId: str(formData, "photoId", 64) || null,
     assetId: str(formData, "assetId", 64) || null,
-    galleryId: str(formData, "galleryId", 64) || null,
+    galleryId,
   };
   const product = id ? await updateProduct(studio.id, id, input) : await createProduct(studio.id, input);
   if (product) await replaceProductPrices(studio.id, product.id, prices);

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { db, isUuid, one } from "@/lib/db";
+import { db, isUuid, one, rows } from "@/lib/db";
 import { createStoreCheckout } from "@/lib/payments";
 import { canTakeCardPayments } from "@/lib/connect";
 import { clientIp, limited } from "@/lib/rate-limit";
@@ -61,6 +61,17 @@ export async function POST(request: NextRequest) {
   const charged = Math.max(0, amount - discountCents);
   if (charged <= 0) return new NextResponse("That code makes this order free — please contact the studio to arrange it.", { status: 409 });
 
+  // Build the sale items. A gallery/collection unlock expands into one item per
+  // photo (each gets its own download grant); the price sits on the first item.
+  let items: Parameters<typeof createSale>[1]["items"];
+  if (product.kind === "gallery_unlock" && product.gallery_id) {
+    const photos = rows<{ id: string }>(await db()`select id from photos where gallery_id = ${product.gallery_id} and studio_id = ${studio.id} and deleted_at is null and preview_url <> '' order by sort_order, created_at`);
+    if (photos.length === 0) return new NextResponse("This gallery has no photos to sell yet.", { status: 409 });
+    items = photos.map((ph, i) => ({ productId: product.id, photoId: ph.id, assetId: null, kind: "gallery_unlock", resolution, license, qty: 1, unitAmountCents: i === 0 ? amount : 0, amountCents: i === 0 ? amount : 0 }));
+  } else {
+    items = [{ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution, license, qty: 1, unitAmountCents: amount, amountCents: amount }];
+  }
+
   const { client } = await createClient(studio.id, { name: name || email.split("@")[0], email, source: "store" });
 
   const sale = await createSale(studio.id, {
@@ -71,7 +82,7 @@ export async function POST(request: NextRequest) {
     paymentMode: manual ? "manual" : "connected",
     discountCents,
     discountCode,
-    items: [{ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution, license, qty: 1, unitAmountCents: amount, amountCents: amount }],
+    items,
   });
 
   const base = studioBaseUrl(studio);

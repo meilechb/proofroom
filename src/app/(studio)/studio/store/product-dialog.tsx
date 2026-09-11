@@ -16,10 +16,12 @@ type Row = { resolution: StoreResolution; license: StoreLicense; amount: string 
 const RES: StoreResolution[] = ["web", "standard", "original"];
 const LIC: StoreLicense[] = ["personal", "rf", "rm", "extended"];
 
-export function ProductDialog({ product, prices, trigger, assets }: { product?: StoreProduct; prices?: ProductPrice[]; trigger: "add" | "edit"; assets: PickerAsset[] }) {
+export function ProductDialog({ product, prices, trigger, assets, galleries }: { product?: StoreProduct; prices?: ProductPrice[]; trigger: "add" | "edit"; assets: PickerAsset[]; galleries: { id: string; title: string }[] }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(saveProductAction, initialActionState);
   const [assetId, setAssetId] = useState<string | null>(product?.asset_id ?? null);
+  const [kind, setKind] = useState<string>(product?.kind === "gallery_unlock" ? "gallery_unlock" : "image");
+  const [galleryId, setGalleryId] = useState<string>(product?.gallery_id ?? "");
   const [rows, setRows] = useState<Row[]>(
     prices && prices.length
       ? prices.map((p) => ({ resolution: p.resolution, license: p.license, amount: (p.amount_cents / 100).toString() }))
@@ -38,13 +40,30 @@ export function ProductDialog({ product, prices, trigger, assets }: { product?: 
       <Dialog open={open} onClose={() => setOpen(false)} title={product ? "Edit product" : "Add a product"}>
         <form action={action} className="space-y-4" noValidate>
           {product ? <input type="hidden" name="id" value={product.id} /> : null}
-          <input type="hidden" name="kind" value={product?.kind ?? "image"} />
+          <input type="hidden" name="kind" value={kind} />
+          <input type="hidden" name="galleryId" value={kind === "gallery_unlock" ? galleryId : ""} />
           <input type="hidden" name="prices" value={pricesJson} />
           <input type="hidden" name="assetId" value={assetId ?? ""} />
           <FormMessage state={state} />
           <Field label="Name" htmlFor="s-title" error={state.fields?.title}><Input id="s-title" name="title" required defaultValue={product?.title} /></Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="What you're selling" htmlFor="s-kind">
+              <Select id="s-kind" value={kind} onChange={(e) => setKind(e.target.value)}>
+                <option value="image">A single image</option>
+                <option value="gallery_unlock">A whole gallery (unlock)</option>
+              </Select>
+            </Field>
+            {kind === "gallery_unlock" ? (
+              <Field label="Gallery" htmlFor="s-gallery" hint="The buyer gets every photo in it.">
+                <Select id="s-gallery" value={galleryId} onChange={(e) => setGalleryId(e.target.value)}>
+                  <option value="">Choose a gallery…</option>
+                  {galleries.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}
+                </Select>
+              </Field>
+            ) : null}
+          </div>
           <Field label="Description" htmlFor="s-desc"><Textarea id="s-desc" name="description" rows={2} defaultValue={product?.description ?? ""} /></Field>
-          <ImagePicker label="Image" value={assetId} assets={assets} onChange={setAssetId} />
+          <ImagePicker label={kind === "gallery_unlock" ? "Cover image" : "Image"} value={assetId} assets={assets} onChange={setAssetId} />
 
           <div>
             <div className="flex items-center justify-between">
