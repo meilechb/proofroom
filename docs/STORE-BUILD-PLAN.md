@@ -427,7 +427,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S24.1 Studio sales list + detail with statuses; refund is issued in the studio's Stripe dashboard and mirrored via `charge.refunded` → `recordRefund` (extend to sales).
 - [ ] S24.2 Revoke `download_grants` on full refund; keep on partial (configurable).
 - [ ] S24.3 Dispute mirroring (`charge.dispute.*`) on sales; studio notification.
-- [ ] S24.4 Cancel a pending sale; resend delivery/library link; manual mark-paid (manual mode).
+- [x] S24.4 Studio "Resend link" on each paid order (`resendSaleLibraryLink` → the delivery email) + manual mark-paid (manual mode). _(Cancel-a-pending-sale: minor, future.)_
 - [ ] S24.5 Tests: refund→grant revocation, dispute state, resend.
 
 ### Phase S25 — Analytics & reporting (studio)

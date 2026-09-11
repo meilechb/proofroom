@@ -3,7 +3,7 @@ import { listPendingManualSales, listSales, storeRevenueCents } from "@/lib/stor
 import { formatDate, formatMoney, type SaleStatus } from "@/lib/types";
 import { Badge, ButtonLink, EmptyState, PageHeader, Stat } from "@/components/ui";
 import { UpgradeLock } from "@/components/studio/upgrade-lock";
-import { markManualPaidAction } from "../actions";
+import { markManualPaidAction, resendOrderLinkAction } from "../actions";
 
 export const metadata = { title: "Store orders" };
 
@@ -79,9 +79,17 @@ export default async function StoreOrdersPage() {
                 </div>
                 <p className="text-xs text-muted truncate">{s.buyer_email} · {formatDate(s.created_at)}</p>
               </div>
-              <div className="text-right">
-                <p className="font-medium">{formatMoney(s.total_cents, cur)}</p>
-                {s.refunded_cents > 0 ? <p className="text-xs text-muted">−{formatMoney(s.refunded_cents, cur)} refunded</p> : null}
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="font-medium">{formatMoney(s.total_cents, cur)}</p>
+                  {s.refunded_cents > 0 ? <p className="text-xs text-muted">−{formatMoney(s.refunded_cents, cur)} refunded</p> : null}
+                </div>
+                {s.status === "paid" || s.status === "partially_refunded" ? (
+                  <form action={resendOrderLinkAction}>
+                    <input type="hidden" name="id" value={s.id} />
+                    <button className="text-xs text-muted hover:text-ink whitespace-nowrap">Resend link</button>
+                  </form>
+                ) : null}
               </div>
             </li>
           ))}

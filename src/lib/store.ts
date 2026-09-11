@@ -745,6 +745,22 @@ export async function fulfillPaidStoreSale(saleId: string) {
   return { sale, studio, amount };
 }
 
+/** Studio re-sends a paid sale's download-library link to the buyer (support). */
+export async function resendSaleLibraryLink(studioId: string, saleId: string) {
+  const sale = await getSale(studioId, saleId);
+  if (!sale || (sale.status !== "paid" && sale.status !== "partially_refunded")) return false;
+  const studio = one<{ id: string; name: string; email: string; slug: string; custom_domain: string | null; custom_domain_verified_at: string | null }>(
+    await db()`select id, name, email, slug, custom_domain, custom_domain_verified_at from studios where id = ${studioId}`
+  );
+  if (!studio) return false;
+  const url = storeLibraryUrl(studio, signLink("download", sale.id));
+  await sendStoreDeliveryEmail(
+    { id: studio.id, name: studio.name, email: studio.email },
+    { to: sale.buyer_email, buyerName: sale.buyer_name, amount: formatMoney(sale.total_cents, sale.currency), orderNumber: sale.order_number, url }
+  ).catch(() => undefined);
+  return true;
+}
+
 /** Studio records an off-platform (manual) payment: mark paid and fulfil. */
 export async function markManualSalePaid(studioId: string, saleId: string) {
   const owned = await getSale(studioId, saleId);

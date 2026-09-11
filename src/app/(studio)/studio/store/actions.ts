@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireEntitledStudio } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { adjustGiftCard, applyPriceSheetToProduct, archiveProduct, createDiscount, createProduct, createPriceSheet, deletePriceSheet, issueGiftCard, markManualSalePaid, replaceProductPrices, replacePriceSheetRows, setDiscountActive, setGiftCardActive, updateProduct, type ProductPriceInput } from "@/lib/store";
+import { adjustGiftCard, applyPriceSheetToProduct, archiveProduct, createDiscount, createProduct, createPriceSheet, deletePriceSheet, issueGiftCard, markManualSalePaid, replaceProductPrices, replacePriceSheetRows, resendSaleLibraryLink, setDiscountActive, setGiftCardActive, updateProduct, type ProductPriceInput } from "@/lib/store";
 import { fieldErrors, storeDiscountSchema, storeGiftCardSchema, storePriceRowSchema, storePriceSheetSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
 import { cents, int, str, type ActionState } from "@/lib/action-state";
 import { parseRmMatrix } from "@/lib/store-shared";
@@ -222,5 +222,11 @@ export async function markManualPaidAction(formData: FormData) {
   const { studio } = await requireEntitledStudio("store", "admin");
   const id = str(formData, "id", 64);
   await markManualSalePaid(studio.id, id);
+  revalidatePath("/studio/store/orders");
+}
+
+export async function resendOrderLinkAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  await resendSaleLibraryLink(studio.id, str(formData, "id", 64));
   revalidatePath("/studio/store/orders");
 }
