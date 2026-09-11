@@ -23,7 +23,7 @@ export function Tabs({ param = "tab", items, defaultValue, className }: { param?
             key={item.value}
             href={qs ? `${pathname}?${qs}` : pathname}
             aria-current={isActive ? "page" : undefined}
-            className={cx("px-3 py-2 text-sm whitespace-nowrap border-b-2 -mb-px", isActive ? "border-ink text-ink font-medium" : "border-transparent text-ink-2 hover:text-ink")}
+            className={cx("px-3 py-2 text-sm whitespace-nowrap border-b-2 -mb-px", isActive ? "border-brand text-brand font-medium" : "border-transparent text-ink-2 hover:text-ink")}
           >
             {item.label}
             {item.count !== undefined ? <span className="ml-1.5 text-xs text-muted">{item.count}</span> : null}
