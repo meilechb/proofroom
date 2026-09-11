@@ -232,6 +232,15 @@ export async function getSaleById(id: string) {
   return one<Sale>(await db()`select * from sales where id = ${id}`);
 }
 
+export async function listSales(studioId: string, limit = 200) {
+  return rows<Sale>(await db()`select * from sales where studio_id = ${studioId} and status <> 'pending' order by created_at desc limit ${limit}`);
+}
+
+export async function storeRevenueCents(studioId: string) {
+  const r = one<{ n: number }>(await db()`select coalesce(sum(total_cents - refunded_cents), 0)::int as n from sales where studio_id = ${studioId} and status in ('paid', 'partially_refunded')`);
+  return r?.n ?? 0;
+}
+
 export async function attachSaleSession(saleId: string, sessionId: string, accountId: string | null) {
   await db()`update sales set stripe_checkout_session_id = ${sessionId}, stripe_account_id = ${accountId} where id = ${saleId}`;
 }

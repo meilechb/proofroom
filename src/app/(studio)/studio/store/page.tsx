@@ -34,6 +34,7 @@ export default async function StorePage() {
         description="Sell your photos, packages and licences online. Paid into your own Stripe."
         actions={
           <div className="flex gap-2">
+            <ButtonLink href="/studio/store/orders" variant="secondary">Orders</ButtonLink>
             <ButtonLink href="/studio/store/settings" variant="secondary">Settings</ButtonLink>
             <ProductDialog trigger="add" assets={pickerAssets} />
           </div>
