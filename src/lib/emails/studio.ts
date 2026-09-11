@@ -62,6 +62,18 @@ export async function sendReceiptEmail(studio: StudioMail, input: { to: string; 
   });
 }
 
+export async function sendStoreDeliveryEmail(studio: StudioMail, input: { to: string; buyerName: string | null; amount: string; orderNumber: number; url: string }) {
+  return sendEmail({
+    to: input.to,
+    subject: `Your download from ${studio.name}`,
+    text: `Hi ${input.buyerName || "there"},\n\nThank you for your purchase (order #${input.orderNumber}, ${input.amount}). Download your files here:\n\n${input.url}\n\nThis link is yours to keep — come back any time within the download window.\n\n${studio.name}\n${studio.email}`,
+    replyTo: studio.email,
+    fromName: studio.name,
+    kind: "store_delivery",
+    studioId: studio.id,
+  });
+}
+
 export async function sendInquiryNoticeEmail(studio: StudioMail, input: { name: string; email: string; message: string; url: string }) {
   return sendEmail({
     to: studio.email,

@@ -10,9 +10,9 @@ import { requireEnv } from "@/lib/env";
  * row, so nothing to clean up; re-requesting simply mints a fresh one.
  */
 
-export type LinkKind = "hub" | "unsub" | "invoice" | "receipt" | "preview";
+export type LinkKind = "hub" | "unsub" | "invoice" | "receipt" | "preview" | "download";
 
-const DEFAULT_TTL_DAYS: Record<LinkKind, number> = { hub: 7, unsub: 365, invoice: 180, receipt: 3650, preview: 2 };
+const DEFAULT_TTL_DAYS: Record<LinkKind, number> = { hub: 7, unsub: 365, invoice: 180, receipt: 3650, preview: 2, download: 3650 };
 
 function secret() {
   return requireEnv("APP_SECRET");

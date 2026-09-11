@@ -201,3 +201,38 @@ export async function syncOrderPaymentState(orderId: string) {
   await db()`update orders set paid_at = ${paidAt}, status = ${nextStatus} where id = ${orderId}`;
   return money;
 }
+
+/**
+ * Store checkout. Like createOrderCheckout, a direct charge on the studio's own
+ * account with no application fee, but for a store `sale` (metadata.kind =
+ * "store") rather than a session order. Returns the Checkout URL and session id.
+ */
+export async function createStoreCheckout(
+  studio: PayStudio,
+  sale: { id: string; order_number: number; currency: string },
+  lineItems: { name: string; description?: string; amountCents: number; quantity: number }[],
+  buyerEmail: string,
+  urls: { successUrl: string; cancelUrl: string }
+) {
+  if (!canTakeCardPayments(studio) || !studio.stripe_account_id) throw new Error("This studio is not set up for card payments yet.");
+  if (lineItems.length === 0) throw new Error("Nothing to buy.");
+  const currency = studio.currency || sale.currency || "usd";
+  const session = await stripe().checkout.sessions.create(
+    {
+      mode: "payment",
+      client_reference_id: sale.id,
+      customer_email: buyerEmail,
+      line_items: lineItems.map((li) => ({
+        quantity: li.quantity,
+        price_data: { currency, unit_amount: li.amountCents, product_data: { name: li.name, ...(li.description ? { description: li.description } : {}) } },
+      })),
+      payment_intent_data: { description: `Store order #${sale.order_number} with ${studio.name}` },
+      metadata: { sale_id: sale.id, studio_id: studio.id, kind: "store" },
+      success_url: urls.successUrl,
+      cancel_url: urls.cancelUrl,
+    },
+    onAccount(studio.stripe_account_id)
+  );
+  if (!session.url) throw new Error("Stripe did not return a Checkout URL.");
+  return { url: session.url, sessionId: session.id };
+}

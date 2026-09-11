@@ -1,12 +1,19 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import { db, one, rows } from "@/lib/db";
 import { normalizeSlug } from "@/lib/slug";
+import { hmac } from "@/lib/tokens";
+import { requireEnv } from "@/lib/env";
 import type {
+  DownloadGrant,
   ProductPrice,
+  Sale,
+  SaleItem,
   StoreCollection,
   StoreCollectionItem,
   StoreLicense,
+  StorePaymentMode,
   StoreProduct,
   StoreProductKind,
   StoreResolution,
@@ -163,4 +170,143 @@ export async function markSellable(
   if (!product) throw new Error("Could not create product");
   if (input.prices?.length) await replaceProductPrices(studioId, product.id, input.prices);
   return product;
+}
+
+// --- Sales -----------------------------------------------------------------
+
+export type NewSaleItem = {
+  productId: string | null;
+  photoId?: string | null;
+  assetId?: string | null;
+  kind: string;
+  resolution: StoreResolution;
+  license: StoreLicense;
+  qty: number;
+  unitAmountCents: number;
+  amountCents: number;
+  usageScope?: Record<string, unknown>;
+};
+
+async function nextSaleNumber(studioId: string) {
+  const r = one<{ n: number }>(await db()`select coalesce(max(order_number), 1000) + 1 as n from sales where studio_id = ${studioId}`);
+  return r?.n ?? 1001;
+}
+
+export async function createSale(
+  studioId: string,
+  input: {
+    buyerEmail: string;
+    buyerName?: string | null;
+    buyerClientId?: string | null;
+    currency: string;
+    paymentMode: StorePaymentMode;
+    items: NewSaleItem[];
+    discountCents?: number;
+    discountCode?: string | null;
+  }
+) {
+  const subtotal = input.items.reduce((s, i) => s + i.amountCents, 0);
+  const discount = Math.min(subtotal, Math.max(0, input.discountCents ?? 0));
+  const total = Math.max(0, subtotal - discount);
+  const number = await nextSaleNumber(studioId);
+  const sale = one<Sale>(
+    await db()`
+      insert into sales (studio_id, order_number, buyer_email, buyer_name, buyer_client_id, subtotal_cents, discount_cents, total_cents, currency, status, payment_mode, discount_code)
+      values (${studioId}, ${number}, ${input.buyerEmail}, ${input.buyerName ?? null}, ${input.buyerClientId ?? null}, ${subtotal}, ${discount}, ${total}, ${input.currency}, 'pending', ${input.paymentMode}, ${input.discountCode ?? null})
+      returning *`
+  );
+  if (!sale) throw new Error("Could not create sale");
+  for (const it of input.items) {
+    await db()`
+      insert into sale_items (studio_id, sale_id, product_id, photo_id, asset_id, kind, resolution, license, usage_scope, qty, unit_amount_cents, amount_cents)
+      values (${studioId}, ${sale.id}, ${it.productId}, ${it.photoId ?? null}, ${it.assetId ?? null}, ${it.kind}, ${it.resolution}, ${it.license}, ${JSON.stringify(it.usageScope ?? {})}::jsonb, ${it.qty}, ${it.unitAmountCents}, ${it.amountCents})`;
+  }
+  return sale;
+}
+
+export async function getSale(studioId: string, id: string) {
+  return one<Sale>(await db()`select * from sales where id = ${id} and studio_id = ${studioId}`);
+}
+
+export async function getSaleById(id: string) {
+  return one<Sale>(await db()`select * from sales where id = ${id}`);
+}
+
+export async function attachSaleSession(saleId: string, sessionId: string, accountId: string | null) {
+  await db()`update sales set stripe_checkout_session_id = ${sessionId}, stripe_account_id = ${accountId} where id = ${saleId}`;
+}
+
+export async function listSaleItems(saleId: string) {
+  return rows<SaleItem>(await db()`select * from sale_items where sale_id = ${saleId} order by created_at`);
+}
+
+/**
+ * Marks a sale paid from its Checkout Session. Returns { sale, firstTime };
+ * firstTime is true only on the pending -> paid transition, so grants and the
+ * delivery email fire exactly once.
+ */
+export async function markSalePaid(saleId: string, ref: { paymentIntentId?: string | null; chargeId?: string | null; receiptUrl?: string | null }) {
+  const updated = one<Sale>(
+    await db()`
+      update sales set status = 'paid', paid_at = coalesce(paid_at, now()),
+        stripe_payment_intent_id = coalesce(${ref.paymentIntentId ?? null}, stripe_payment_intent_id),
+        stripe_charge_id = coalesce(${ref.chargeId ?? null}, stripe_charge_id),
+        receipt_url = coalesce(${ref.receiptUrl ?? null}, receipt_url)
+      where id = ${saleId} and status = 'pending'
+      returning *`
+  );
+  if (updated) return { sale: updated, firstTime: true };
+  const existing = await getSaleById(saleId);
+  return existing ? { sale: existing, firstTime: false } : null;
+}
+
+// --- Download grants --------------------------------------------------------
+
+function sha256Hex(value: string) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+/**
+ * The capability token for a grant: derived from its id + APP_SECRET, so it is
+ * stateless (recomputable when rendering the library) yet unguessable.
+ */
+export function grantToken(grantId: string) {
+  return hmac(requireEnv("APP_SECRET"), `grant.${grantId}`);
+}
+
+/** One grant per purchased item. Idempotent: does nothing if grants already exist. */
+export async function mintGrants(sale: Pick<Sale, "id" | "studio_id">, opts: { maxDownloads: number; windowHours: number }) {
+  const existing = await db()`select 1 from download_grants where sale_id = ${sale.id} limit 1`;
+  if (existing.length > 0) return;
+  const items = await listSaleItems(sale.id);
+  for (const it of items) {
+    const grant = one<DownloadGrant>(
+      await db()`
+        insert into download_grants (studio_id, sale_id, sale_item_id, photo_id, resolution, token_hash, expires_at, max_downloads)
+        values (${sale.studio_id}, ${sale.id}, ${it.id}, ${it.photo_id}, ${it.resolution}, ${"pending"}, now() + (${opts.windowHours} || ' hours')::interval, ${opts.maxDownloads})
+        returning *`
+    );
+    if (grant) await db()`update download_grants set token_hash = ${sha256Hex(grantToken(grant.id))} where id = ${grant.id}`;
+  }
+}
+
+export async function listGrantsForSale(saleId: string) {
+  return rows<DownloadGrant>(await db()`select * from download_grants where sale_id = ${saleId} order by created_at`);
+}
+
+/** Resolve a grant by its capability token, enforcing expiry, cap and revocation. */
+export async function getUsableGrantByToken(token: string) {
+  return one<DownloadGrant>(
+    await db()`select * from download_grants where token_hash = ${sha256Hex(token)}
+      and not revoked and downloads_used < max_downloads and (expires_at is null or expires_at > now()) limit 1`
+  );
+}
+
+export async function recordGrantDownload(grant: Pick<DownloadGrant, "id" | "studio_id">, meta: { ip: string | null; ua: string | null; bytes: number }) {
+  await db()`update download_grants set downloads_used = downloads_used + 1 where id = ${grant.id}`;
+  await db()`insert into download_events (studio_id, grant_id, ip, ua, bytes) values (${grant.studio_id}, ${grant.id}, ${meta.ip}, ${meta.ua}, ${meta.bytes})`;
+}
+
+export async function revokeGrantsForSale(saleId: string) {
+  await db()`update download_grants set revoked = true where sale_id = ${saleId}`;
 }
