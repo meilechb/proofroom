@@ -71,6 +71,12 @@ export const storeProductSchema = z.object({
   isFeatured: z.coerce.boolean().optional(),
 });
 
+export const broadcastSchema = z.object({
+  subject: z.string().trim().min(1, "Write a subject.").max(200),
+  body: z.string().trim().min(1, "Write your message.").max(20000),
+  audience: z.enum(["buyers", "clients"]),
+});
+
 export const storeCollectionSchema = z.object({
   title: z.string().trim().min(1, "Name the collection.").max(120),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
