@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { signLink, verifyLink } from "@/lib/tenant-tokens";
-import { getSaleById, grantToken, listGrantsForSale, listSaleItems } from "@/lib/store";
+import { getSaleById, grantToken, listGrantsForSale, listPaidSalesForBuyer, listSaleItems } from "@/lib/store";
 import { formatDate, formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
 
 export const metadata = { robots: { index: false, follow: false } };
@@ -25,6 +25,7 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
   const grants = await listGrantsForSale(sale.id);
   const grantByItem = new Map(grants.map((g) => [g.sale_item_id, g]));
   const cur = sale.currency;
+  const otherOrders = (await listPaidSalesForBuyer(studio.id, sale.buyer_email)).filter((s) => s.id !== sale.id);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-5 sm:px-8 py-10">
@@ -33,13 +34,14 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
         Order #{sale.order_number} · {formatMoney(sale.total_cents, cur)}
         {sale.paid_at ? ` · ${formatDate(sale.paid_at)}` : ""}
       </p>
-      {sale.status === "paid" ? (
-        <p className="mt-2">
+      {sale.status === "paid" || sale.status === "partially_refunded" ? (
+        <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
           <a href={`/license/${signLink("license", sale.id)}`} className="text-sm underline text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">View your licence &amp; print release →</a>
+          {sale.receipt_url ? <a href={sale.receipt_url} className="text-sm underline text-[var(--site-ink-2)] hover:text-[var(--site-ink)]" target="_blank" rel="noreferrer">View receipt →</a> : null}
         </p>
       ) : null}
 
-      {sale.status !== "paid" ? (
+      {sale.status !== "paid" && sale.status !== "partially_refunded" ? (
         <p className="mt-6 text-[var(--site-ink-2)]">We&apos;re still confirming your payment. Refresh in a moment — your files appear here once it clears.</p>
       ) : (
         <ul className="mt-6 divide-y divide-[var(--site-line)] border-y border-[var(--site-line)]">
@@ -66,6 +68,26 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
           })}
         </ul>
       )}
+
+      {otherOrders.length > 0 ? (
+        <section className="mt-10">
+          <h2 className="text-sm font-semibold text-[var(--site-ink-2)]">Your other orders</h2>
+          <ul className="mt-3 divide-y divide-[var(--site-line)] border-y border-[var(--site-line)]">
+            {otherOrders.map((o) => (
+              <li key={o.id} className="flex items-center justify-between gap-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm">Order #{o.order_number}</p>
+                  <p className="text-xs text-[var(--site-ink-2)]">
+                    {formatMoney(o.total_cents, o.currency)}
+                    {o.paid_at ? ` · ${formatDate(o.paid_at)}` : ""}
+                  </p>
+                </div>
+                <a href={`/library/${signLink("download", o.id)}`} className="text-sm underline text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">Open →</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

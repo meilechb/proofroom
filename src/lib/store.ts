@@ -435,6 +435,13 @@ export async function listPendingManualSales(studioId: string) {
   return rows<Sale>(await db()`select * from sales where studio_id = ${studioId} and status = 'pending' and payment_mode = 'manual' order by created_at desc limit 100`);
 }
 
+/** A buyer's completed orders at one studio, for the no-login order history in the library. */
+export async function listPaidSalesForBuyer(studioId: string, email: string) {
+  return rows<Sale>(
+    await db()`select * from sales where studio_id = ${studioId} and lower(buyer_email) = lower(${email}) and status in ('paid', 'partially_refunded', 'refunded', 'disputed') order by created_at desc limit 50`
+  );
+}
+
 export async function storeRevenueCents(studioId: string) {
   const r = one<{ n: number }>(await db()`select coalesce(sum(total_cents - refunded_cents), 0)::int as n from sales where studio_id = ${studioId} and status in ('paid', 'partially_refunded')`);
   return r?.n ?? 0;

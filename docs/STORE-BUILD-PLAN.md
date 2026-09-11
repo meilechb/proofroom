@@ -12,9 +12,9 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
 - **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
-- **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** net revenue + orders view · **S27 (partial)** buyer licence / print-release document
+- **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** net revenue + orders view · **S27 (partial)** buyer licence / print-release document
 
-Remaining phases: S6 price sheets · S7 rights-managed matrix · S10 favorites · S13 marketplace-collect + Stripe Tax · S17 buyer accounts/history · S20 bundles / pick-N (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S6 price sheets · S7 rights-managed matrix · S10 favorites · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -375,10 +375,10 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S16.7 Tests: library link verify/expiry, ZIP contents, split threshold, reset flow.
 
 ### Phase S17 — Buyer accounts & order history
-- [ ] S17.1 Buyer identity via `clients` (dedupe on `(studio_id, lower(email))` using `findClientByEmail`/`createClient`); a purchase links to a client.
-- [ ] S17.2 Order history in the library (all sales for that buyer email at that studio) + receipts (`signLink("receipt")`) + license docs (`signLink("license")`).
-- [ ] S17.3 Optional lightweight buyer account (email magic-link) — decide vs pure tokenized; default tokenized (no password).
-- [ ] S17.4 Tests: buyer dedupe, history scoping to one studio, receipt/license access.
+- [x] S17.1 Buyer identity via `clients` (dedupe on `(studio_id, lower(email))` via `createClient`) at checkout; the sale links to a client.
+- [x] S17.2 Order history in the library (`listPaidSalesForBuyer`, scoped to the studio): a buyer's other orders cross-link to their own library page; each order shows its Stripe receipt (`receipt_url`) and licence (`signLink("license")`). Downloads and links stay available through a partial refund.
+- [x] S17.3 Tokenised, no-login by default (per-sale `signLink("download")`); a lightweight password account is deferred.
+- [ ] S17.4 Tests: buyer dedupe, history scoping to one studio, receipt/license access. _(covered by the checkout/fulfilment paths; formal store test suite is S33.)_
 
 ### Phase S18 — Discounts & coupons
 - [ ] S18.1 `discount_codes` + `discount_redemptions` data layer in `store.ts`.
