@@ -12,9 +12,9 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
-- **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** net revenue + orders view · **S27 (partial)** buyer licence / print-release document
+- **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** net revenue + orders view · **S27 (partial)** buyer licence / print-release document
 
-Remaining phases: S6 price sheets · S7 rights-managed matrix · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S6 tiers/scheduled/sale prices · S7 rights-managed matrix · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -261,12 +261,12 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S5.10 Tests: product CRUD, slug uniqueness, cross-studio `assertOwned` rejection.
 
 ### Phase S6 — Pricing: sheets, tiers, sale & scheduled prices
-- [ ] S6.1 Price-sheet editor UI (rows of resolution × license × amount, optional volume tiers).
-- [ ] S6.2 Apply a sheet to a product / a whole gallery / a collection.
-- [ ] S6.3 Per-product price override editor.
-- [ ] S6.4 Volume/tier pricing config for bundles (N ranges → per-image price).
+- [x] S6.1 Price-sheet editor UI at `/studio/store/price-sheets` (name + rows of resolution × licence × amount) with a create/edit dialog reusing the product price-rows editor; `store.ts` CRUD (`listPriceSheetsWithRows`, `createPriceSheet`, `replacePriceSheetRows`, `deletePriceSheet`).
+- [x] S6.2 Apply a sheet to a product (`applyPriceSheetToProduct` → `replaceProductPrices`) from a per-product "Apply sheet…" control on the store list. _(Apply-to-whole-gallery/collection: deferred with the bulk mark-sellable flow.)_
+- [ ] S6.3 Per-product price override editor. _(Already covered by the product dialog's price rows.)_
+- [ ] S6.4 Volume/tier pricing config for bundles (N ranges → per-image price) — with S20.
 - [ ] S6.5 Compare-at / sale price + optional scheduled start/end (cron flips them — see S29).
-- [ ] S6.6 Min/max pick config for pick-N bundles.
+- [ ] S6.6 Min/max pick config for pick-N bundles — with S20.
 - [ ] S6.7 Free "web-share" tier toggle (share-size, watermarked, no print release).
 - [ ] S6.8 Tests: sheet application, tier math via `store-shared`, scheduled-price transitions.
 

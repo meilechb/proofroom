@@ -104,6 +104,10 @@ export const storeGiftCardSchema = z.object({
   expiresAt: z.string().datetime({ offset: true }).optional().or(z.literal("")),
 });
 
+export const storePriceSheetSchema = z.object({
+  name: z.string().trim().min(1, "Name the price sheet.").max(80),
+});
+
 export const orderSchema = z.object({
   clientId: z.string().uuid(),
   packageId: z.string().uuid().optional().or(z.literal("")),

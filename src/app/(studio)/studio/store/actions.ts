@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireEntitledStudio } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { adjustGiftCard, archiveProduct, createDiscount, createProduct, issueGiftCard, markManualSalePaid, replaceProductPrices, setDiscountActive, setGiftCardActive, updateProduct, type ProductPriceInput } from "@/lib/store";
-import { fieldErrors, storeDiscountSchema, storeGiftCardSchema, storePriceRowSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
+import { adjustGiftCard, applyPriceSheetToProduct, archiveProduct, createDiscount, createProduct, createPriceSheet, deletePriceSheet, issueGiftCard, markManualSalePaid, replaceProductPrices, replacePriceSheetRows, setDiscountActive, setGiftCardActive, updateProduct, type ProductPriceInput } from "@/lib/store";
+import { fieldErrors, storeDiscountSchema, storeGiftCardSchema, storePriceRowSchema, storePriceSheetSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
 import { cents, int, str, type ActionState } from "@/lib/action-state";
 import type { StoreProductKind } from "@/lib/types";
 
@@ -170,6 +170,37 @@ export async function toggleGiftCardAction(formData: FormData) {
   const id = str(formData, "id", 64);
   await setGiftCardActive(studio.id, id, str(formData, "active", 5) === "true");
   revalidatePath("/studio/store/gift-cards");
+}
+
+export async function savePriceSheetAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const parsed = storePriceSheetSchema.safeParse({ name: str(formData, "name", 80) });
+  if (!parsed.success) return { error: "Please fix the highlighted fields.", fields: fieldErrors(parsed.error) };
+  const prices = parsePrices(str(formData, "prices", 8000));
+  if (!prices || prices.length === 0) return { error: "Add at least one price row.", fields: { prices: "Add a resolution, licence and amount." } };
+  const id = str(formData, "id", 64);
+  if (id) {
+    await db()`update price_sheets set name = ${parsed.data.name} where id = ${id} and studio_id = ${studio.id}`;
+    await replacePriceSheetRows(studio.id, id, prices);
+  } else {
+    await createPriceSheet(studio.id, parsed.data.name, prices);
+  }
+  revalidatePath("/studio/store/price-sheets");
+  return { ok: true, message: id ? "Price sheet saved." : "Price sheet added." };
+}
+
+export async function deletePriceSheetAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  await deletePriceSheet(studio.id, str(formData, "id", 64));
+  revalidatePath("/studio/store/price-sheets");
+}
+
+export async function applyPriceSheetAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const sheetId = str(formData, "sheetId", 64);
+  const productId = str(formData, "productId", 64);
+  if (sheetId && productId) await applyPriceSheetToProduct(studio.id, sheetId, productId);
+  revalidatePath("/studio/store");
 }
 
 export async function markManualPaidAction(formData: FormData) {

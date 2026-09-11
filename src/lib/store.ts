@@ -15,6 +15,8 @@ import type {
   DownloadGrant,
   GiftCard,
   GiftCardTxn,
+  PriceSheet,
+  PriceSheetRow,
   ProductPrice,
   Sale,
   SaleItem,
@@ -136,6 +138,54 @@ export async function replaceProductPrices(studioId: string, productId: string, 
       values (${studioId}, ${productId}, ${r.resolution}, ${r.license}, ${r.amountCents}, ${r.compareAtCents ?? null}, ${r.minPick ?? null}, ${r.maxPick ?? null}, ${i++})`;
   }
   return listProductPrices(studioId, productId);
+}
+
+// --- Price sheets (reusable pricing presets) --------------------------------
+
+export async function listPriceSheets(studioId: string) {
+  return rows<PriceSheet>(await db()`select * from price_sheets where studio_id = ${studioId} order by name`);
+}
+
+export async function listPriceSheetRows(studioId: string, sheetId: string) {
+  return rows<PriceSheetRow>(await db()`select * from price_sheet_rows where studio_id = ${studioId} and sheet_id = ${sheetId} order by sort_order, created_at`);
+}
+
+/** All sheets with their rows, for the admin list and the product prefill. */
+export async function listPriceSheetsWithRows(studioId: string) {
+  const sheets = await listPriceSheets(studioId);
+  return Promise.all(sheets.map(async (s) => ({ sheet: s, rows: await listPriceSheetRows(studioId, s.id) })));
+}
+
+export async function createPriceSheet(studioId: string, name: string, priceRows: ProductPriceInput[]) {
+  const sheet = one<PriceSheet>(await db()`insert into price_sheets (studio_id, name) values (${studioId}, ${name.trim()}) returning *`);
+  if (!sheet) throw new Error("Could not create price sheet");
+  await replacePriceSheetRows(studioId, sheet.id, priceRows);
+  return sheet;
+}
+
+export async function replacePriceSheetRows(studioId: string, sheetId: string, priceRows: ProductPriceInput[]) {
+  const owned = one<PriceSheet>(await db()`select * from price_sheets where id = ${sheetId} and studio_id = ${studioId}`);
+  if (!owned) throw new Error("Not found");
+  await db()`delete from price_sheet_rows where studio_id = ${studioId} and sheet_id = ${sheetId}`;
+  let i = 0;
+  for (const r of priceRows) {
+    await db()`
+      insert into price_sheet_rows (studio_id, sheet_id, resolution, license, amount_cents, min_pick, max_pick, sort_order)
+      values (${studioId}, ${sheetId}, ${r.resolution}, ${r.license}, ${r.amountCents}, ${r.minPick ?? null}, ${r.maxPick ?? null}, ${i++})`;
+  }
+  await db()`update price_sheets set updated_at = now() where id = ${sheetId} and studio_id = ${studioId}`;
+}
+
+export async function deletePriceSheet(studioId: string, sheetId: string) {
+  await db()`delete from price_sheets where id = ${sheetId} and studio_id = ${studioId}`;
+}
+
+/** Copy a sheet's rows onto a product, replacing its current price rows. */
+export async function applyPriceSheetToProduct(studioId: string, sheetId: string, productId: string) {
+  const sheetRows = await listPriceSheetRows(studioId, sheetId);
+  if (sheetRows.length === 0) return null;
+  const priceRows: ProductPriceInput[] = sheetRows.map((r) => ({ resolution: r.resolution, license: r.license, amountCents: r.amount_cents, minPick: r.min_pick, maxPick: r.max_pick }));
+  return replaceProductPrices(studioId, productId, priceRows);
 }
 
 // --- Collections ------------------------------------------------------------

@@ -1,13 +1,13 @@
 import { requireStudioPage } from "@/lib/auth";
 import { db, rows as sqlRows } from "@/lib/db";
-import { listProductPrices, listProducts } from "@/lib/store";
+import { listPriceSheets, listProductPrices, listProducts } from "@/lib/store";
 import { isReady, listAssets } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
-import { Badge, ButtonLink, EmptyState, PageHeader } from "@/components/ui";
+import { Badge, ButtonLink, EmptyState, PageHeader, Select } from "@/components/ui";
 import { UpgradeLock } from "@/components/studio/upgrade-lock";
 import type { PickerAsset } from "../website/image-picker";
 import { ProductDialog } from "./product-dialog";
-import { archiveProductAction } from "./actions";
+import { applyPriceSheetAction, archiveProductAction } from "./actions";
 
 export const metadata = { title: "Store" };
 
@@ -27,6 +27,7 @@ export default async function StorePage() {
   const prices = new Map(priceRows);
   const pickerAssets: PickerAsset[] = (await listAssets(ctx.studio.id)).filter(isReady).map((a) => ({ id: a.id, thumb: a.thumb_url ?? a.web_url ?? a.url, filename: a.filename, alt: a.alt }));
   const galleryList = sqlRows<{ id: string; title: string }>(await db()`select id, title from galleries where studio_id = ${ctx.studio.id} and parent_id is null order by created_at desc`);
+  const sheets = await listPriceSheets(ctx.studio.id);
   const cur = ctx.studio.currency;
 
   return (
@@ -39,6 +40,7 @@ export default async function StorePage() {
             <ButtonLink href="/studio/store/orders" variant="secondary">Orders</ButtonLink>
             <ButtonLink href="/studio/store/discounts" variant="secondary">Discounts</ButtonLink>
             <ButtonLink href="/studio/store/gift-cards" variant="secondary">Gift cards</ButtonLink>
+            <ButtonLink href="/studio/store/price-sheets" variant="secondary">Price sheets</ButtonLink>
             <ButtonLink href="/studio/store/settings" variant="secondary">Settings</ButtonLink>
             <ProductDialog trigger="add" assets={pickerAssets} galleries={galleryList} />
           </div>
@@ -69,6 +71,16 @@ export default async function StorePage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {sheets.length > 0 ? (
+                    <form action={applyPriceSheetAction} className="flex items-center gap-1">
+                      <input type="hidden" name="productId" value={p.id} />
+                      <Select name="sheetId" defaultValue="" aria-label="Apply a price sheet" className="h-8 text-xs">
+                        <option value="" disabled>Apply sheet…</option>
+                        {sheets.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </Select>
+                      <button className="text-xs text-muted hover:text-ink">Apply</button>
+                    </form>
+                  ) : null}
                   <ProductDialog product={p} prices={rows} trigger="edit" assets={pickerAssets} galleries={galleryList} />
                   <form action={archiveProductAction}>
                     <input type="hidden" name="id" value={p.id} />
