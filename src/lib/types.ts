@@ -354,3 +354,280 @@ export function formatDate(value: string | null | undefined, opts: Intl.DateTime
   if (!value) return "";
   return new Date(value).toLocaleDateString("en-US", opts);
 }
+
+// ---------------------------------------------------------------------------
+// Store (STORE-BUILD-PLAN.md): selling portfolio images, packages and licences.
+// ---------------------------------------------------------------------------
+
+export type StoreProductKind =
+  | "image" | "bundle" | "gallery_unlock" | "collection_unlock" | "gift_card" | "voucher" | "digital" | "print";
+export type StoreResolution = "web" | "standard" | "original";
+export type StoreLicense = "personal" | "rf" | "rm" | "extended";
+export type SaleStatus = "pending" | "paid" | "failed" | "refunded" | "partially_refunded" | "disputed";
+export type StorePaymentMode = "connected" | "marketplace" | "manual";
+
+export const storeResolutionLabels: Record<StoreResolution, string> = {
+  web: "Web / social",
+  standard: "Standard print",
+  original: "High-res original",
+};
+export const storeLicenseLabels: Record<StoreLicense, string> = {
+  personal: "Personal / print release",
+  rf: "Commercial — royalty-free",
+  rm: "Commercial — rights-managed",
+  extended: "Extended",
+};
+
+export type StoreCollection = {
+  id: string;
+  studio_id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  cover_asset_id: string | null;
+  visibility: "public" | "unlisted" | "hidden";
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StoreCollectionItem = {
+  id: string;
+  studio_id: string;
+  collection_id: string;
+  photo_id: string | null;
+  asset_id: string | null;
+  sort_order: number;
+  created_at: string;
+};
+
+export type StoreProduct = {
+  id: string;
+  studio_id: string;
+  kind: StoreProductKind;
+  slug: string;
+  title: string;
+  description: string | null;
+  asset_id: string | null;
+  photo_id: string | null;
+  gallery_id: string | null;
+  collection_id: string | null;
+  license_text: string | null;
+  is_active: boolean;
+  is_featured: boolean;
+  sort_order: number;
+  seo: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductPrice = {
+  id: string;
+  studio_id: string;
+  product_id: string;
+  resolution: StoreResolution;
+  license: StoreLicense;
+  amount_cents: number;
+  compare_at_cents: number | null;
+  min_pick: number | null;
+  max_pick: number | null;
+  rm_matrix: unknown | null;
+  sale_starts_at: string | null;
+  sale_ends_at: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
+export type PriceSheet = {
+  id: string;
+  studio_id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PriceSheetRow = {
+  id: string;
+  studio_id: string;
+  sheet_id: string;
+  resolution: StoreResolution;
+  license: StoreLicense;
+  amount_cents: number;
+  min_pick: number | null;
+  max_pick: number | null;
+  sort_order: number;
+  created_at: string;
+};
+
+export type DigitalFile = {
+  id: string;
+  studio_id: string;
+  product_id: string;
+  url: string;
+  filename: string;
+  content_type: string | null;
+  size_bytes: number;
+  created_at: string;
+};
+
+export type PrintProduct = {
+  id: string;
+  studio_id: string;
+  product_id: string;
+  lab: string | null;
+  created_at: string;
+};
+
+export type PrintVariant = {
+  id: string;
+  studio_id: string;
+  print_product_id: string;
+  name: string;
+  size: string | null;
+  finish: string | null;
+  base_cost_cents: number;
+  price_cents: number;
+  created_at: string;
+};
+
+export type Sale = {
+  id: string;
+  studio_id: string;
+  order_number: number;
+  buyer_email: string;
+  buyer_name: string | null;
+  buyer_client_id: string | null;
+  subtotal_cents: number;
+  discount_cents: number;
+  tax_cents: number;
+  total_cents: number;
+  currency: string;
+  status: SaleStatus;
+  payment_mode: StorePaymentMode;
+  discount_code: string | null;
+  stripe_account_id: string | null;
+  stripe_checkout_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  stripe_charge_id: string | null;
+  refunded_cents: number;
+  dispute_status: string | null;
+  receipt_url: string | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SaleItem = {
+  id: string;
+  studio_id: string;
+  sale_id: string;
+  product_id: string | null;
+  photo_id: string | null;
+  asset_id: string | null;
+  kind: string;
+  resolution: StoreResolution;
+  license: StoreLicense;
+  usage_scope: Record<string, unknown>;
+  qty: number;
+  unit_amount_cents: number;
+  amount_cents: number;
+  license_document_id: string | null;
+  created_at: string;
+};
+
+export type DownloadGrant = {
+  id: string;
+  studio_id: string;
+  sale_id: string;
+  sale_item_id: string | null;
+  photo_id: string | null;
+  file_id: string | null;
+  resolution: StoreResolution;
+  token_hash: string;
+  expires_at: string | null;
+  max_downloads: number;
+  downloads_used: number;
+  revoked: boolean;
+  created_at: string;
+};
+
+export type DownloadEvent = {
+  id: string;
+  studio_id: string;
+  grant_id: string;
+  ip: string | null;
+  ua: string | null;
+  bytes: number;
+  created_at: string;
+};
+
+export type DiscountCode = {
+  id: string;
+  studio_id: string;
+  code: string;
+  kind: "percent" | "fixed" | "free_ship";
+  value: number;
+  min_subtotal_cents: number | null;
+  product_scope: string | null;
+  gallery_scope: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  max_uses: number | null;
+  uses: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DiscountRedemption = {
+  id: string;
+  studio_id: string;
+  code_id: string;
+  sale_id: string;
+  amount_cents: number;
+  created_at: string;
+};
+
+export type GiftCard = {
+  id: string;
+  studio_id: string;
+  code_hash: string;
+  code_last4: string;
+  initial_cents: number;
+  balance_cents: number;
+  currency: string;
+  expires_at: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GiftCardTxn = {
+  id: string;
+  studio_id: string;
+  gift_card_id: string;
+  sale_id: string | null;
+  delta_cents: number;
+  reason: string | null;
+  created_at: string;
+};
+
+export type StoreFavorite = {
+  id: string;
+  studio_id: string;
+  buyer_key: string;
+  product_id: string | null;
+  photo_id: string | null;
+  created_at: string;
+};
+
+export type Cart = {
+  id: string;
+  studio_id: string;
+  buyer_email: string | null;
+  items: unknown[];
+  recovered_at: string | null;
+  created_at: string;
+  updated_at: string;
+};

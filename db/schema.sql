@@ -926,3 +926,341 @@ create table if not exists marketing_views_daily (
   count integer not null default 0,
   primary key (day, path, referrer)
 );
+
+-- ---------------------------------------------------------------------------
+-- Revision — Store (STORE-BUILD-PLAN.md phase S1): sell portfolio images,
+-- packages, licences and gift cards. Money is integer cents; every table
+-- carries studio_id and is registered in OwnedTable (src/lib/auth.ts).
+-- Selling is Pro-only (entitlements.store). Physical prints (print_*) are the
+-- deferred track and unused until phase S31.
+-- ---------------------------------------------------------------------------
+
+-- Curated groups of images that can be sold or unlocked as one.
+create table if not exists store_collections (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  slug text not null,
+  title text not null,
+  description text,
+  cover_asset_id uuid references assets (id) on delete set null,
+  visibility text not null default 'public' check (visibility in ('public', 'unlisted', 'hidden')),
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (studio_id, slug)
+);
+
+create index if not exists store_collections_studio_idx on store_collections (studio_id, sort_order);
+
+create table if not exists store_collection_items (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  collection_id uuid not null references store_collections (id) on delete cascade,
+  photo_id uuid references photos (id) on delete cascade,
+  asset_id uuid references assets (id) on delete cascade,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists store_collection_items_idx on store_collection_items (collection_id, sort_order);
+
+-- A sellable item. `kind` selects the shape; source columns point at what is sold.
+create table if not exists store_products (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  kind text not null check (kind in ('image', 'bundle', 'gallery_unlock', 'collection_unlock', 'gift_card', 'voucher', 'digital', 'print')),
+  slug text not null,
+  title text not null,
+  description text,
+  asset_id uuid references assets (id) on delete set null,
+  photo_id uuid references photos (id) on delete set null,
+  gallery_id uuid references galleries (id) on delete set null,
+  collection_id uuid references store_collections (id) on delete set null,
+  license_text text,
+  is_active boolean not null default true,
+  is_featured boolean not null default false,
+  sort_order integer not null default 0,
+  seo jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (studio_id, slug)
+);
+
+create index if not exists store_products_studio_idx on store_products (studio_id, sort_order);
+create index if not exists store_products_kind_idx on store_products (studio_id, kind) where is_active;
+
+-- Priced options on a product: one row per resolution x licence.
+create table if not exists product_prices (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  product_id uuid not null references store_products (id) on delete cascade,
+  resolution text not null default 'original' check (resolution in ('web', 'standard', 'original')),
+  license text not null default 'personal' check (license in ('personal', 'rf', 'rm', 'extended')),
+  amount_cents integer not null check (amount_cents >= 0),
+  compare_at_cents integer check (compare_at_cents >= 0),
+  min_pick integer,
+  max_pick integer,
+  rm_matrix jsonb,
+  sale_starts_at timestamptz,
+  sale_ends_at timestamptz,
+  is_active boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists product_prices_product_idx on product_prices (product_id, sort_order);
+
+-- Reusable pricing presets applied across many products.
+create table if not exists price_sheets (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists price_sheet_rows (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  sheet_id uuid not null references price_sheets (id) on delete cascade,
+  resolution text not null default 'original' check (resolution in ('web', 'standard', 'original')),
+  license text not null default 'personal' check (license in ('personal', 'rf', 'rm', 'extended')),
+  amount_cents integer not null check (amount_cents >= 0),
+  min_pick integer,
+  max_pick integer,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists price_sheet_rows_sheet_idx on price_sheet_rows (sheet_id, sort_order);
+
+-- Non-image downloadable files (presets, LUTs, e-books) attached to a product.
+create table if not exists digital_files (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  product_id uuid not null references store_products (id) on delete cascade,
+  url text not null,
+  filename text not null,
+  content_type text,
+  size_bytes bigint not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists digital_files_product_idx on digital_files (product_id);
+
+-- Physical print catalogue (deferred track, unused until S31).
+create table if not exists print_products (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  product_id uuid not null references store_products (id) on delete cascade,
+  lab text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists print_variants (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  print_product_id uuid not null references print_products (id) on delete cascade,
+  name text not null,
+  size text,
+  finish text,
+  base_cost_cents integer not null default 0 check (base_cost_cents >= 0),
+  price_cents integer not null default 0 check (price_cents >= 0),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists print_variants_product_idx on print_variants (print_product_id);
+
+-- A buyer purchase (the store's order). order_number is assigned per studio in code.
+create table if not exists sales (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  order_number integer not null,
+  buyer_email text not null,
+  buyer_name text,
+  buyer_client_id uuid references clients (id) on delete set null,
+  subtotal_cents integer not null default 0 check (subtotal_cents >= 0),
+  discount_cents integer not null default 0 check (discount_cents >= 0),
+  tax_cents integer not null default 0 check (tax_cents >= 0),
+  total_cents integer not null default 0 check (total_cents >= 0),
+  currency text not null default 'usd',
+  status text not null default 'pending' check (status in ('pending', 'paid', 'failed', 'refunded', 'partially_refunded', 'disputed')),
+  payment_mode text not null default 'connected' check (payment_mode in ('connected', 'marketplace', 'manual')),
+  discount_code text,
+  stripe_account_id text,
+  stripe_checkout_session_id text unique,
+  stripe_payment_intent_id text,
+  stripe_charge_id text,
+  refunded_cents integer not null default 0 check (refunded_cents >= 0),
+  dispute_status text,
+  receipt_url text,
+  paid_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (studio_id, order_number)
+);
+
+create index if not exists sales_studio_idx on sales (studio_id, created_at desc);
+create index if not exists sales_buyer_idx on sales (studio_id, buyer_email);
+
+create table if not exists sale_items (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  sale_id uuid not null references sales (id) on delete cascade,
+  product_id uuid references store_products (id) on delete set null,
+  photo_id uuid references photos (id) on delete set null,
+  asset_id uuid references assets (id) on delete set null,
+  kind text not null default 'image',
+  resolution text not null default 'original',
+  license text not null default 'personal',
+  usage_scope jsonb not null default '{}'::jsonb,
+  qty integer not null default 1 check (qty > 0),
+  unit_amount_cents integer not null default 0 check (unit_amount_cents >= 0),
+  amount_cents integer not null default 0 check (amount_cents >= 0),
+  license_document_id uuid references documents (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists sale_items_sale_idx on sale_items (sale_id);
+
+-- The right to download a purchased file: a hashed token, an expiry and a cap.
+create table if not exists download_grants (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  sale_id uuid not null references sales (id) on delete cascade,
+  sale_item_id uuid references sale_items (id) on delete cascade,
+  photo_id uuid references photos (id) on delete set null,
+  file_id uuid references digital_files (id) on delete set null,
+  resolution text not null default 'original',
+  token_hash text not null unique,
+  expires_at timestamptz,
+  max_downloads integer not null default 5,
+  downloads_used integer not null default 0,
+  revoked boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists download_grants_sale_idx on download_grants (sale_id);
+
+create table if not exists download_events (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  grant_id uuid not null references download_grants (id) on delete cascade,
+  ip text,
+  ua text,
+  bytes bigint not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists download_events_grant_idx on download_events (grant_id, created_at desc);
+
+create table if not exists discount_codes (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  code text not null,
+  kind text not null check (kind in ('percent', 'fixed', 'free_ship')),
+  value integer not null check (value >= 0),
+  min_subtotal_cents integer,
+  product_scope uuid references store_products (id) on delete cascade,
+  gallery_scope uuid references galleries (id) on delete cascade,
+  starts_at timestamptz,
+  ends_at timestamptz,
+  max_uses integer,
+  uses integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (studio_id, code)
+);
+
+create table if not exists discount_redemptions (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  code_id uuid not null references discount_codes (id) on delete cascade,
+  sale_id uuid not null references sales (id) on delete cascade,
+  amount_cents integer not null default 0 check (amount_cents >= 0),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists discount_redemptions_code_idx on discount_redemptions (code_id);
+
+create table if not exists gift_cards (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  code_hash text not null unique,
+  code_last4 text not null,
+  initial_cents integer not null check (initial_cents >= 0),
+  balance_cents integer not null check (balance_cents >= 0),
+  currency text not null default 'usd',
+  expires_at timestamptz,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists gift_card_txns (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  gift_card_id uuid not null references gift_cards (id) on delete cascade,
+  sale_id uuid references sales (id) on delete set null,
+  delta_cents integer not null,
+  reason text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists gift_card_txns_card_idx on gift_card_txns (gift_card_id, created_at);
+
+create table if not exists store_favorites (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  buyer_key text not null,
+  product_id uuid references store_products (id) on delete cascade,
+  photo_id uuid references photos (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (studio_id, buyer_key, product_id)
+);
+
+create table if not exists carts (
+  id uuid primary key default gen_random_uuid(),
+  studio_id uuid not null references studios (id) on delete cascade,
+  buyer_email text,
+  items jsonb not null default '[]'::jsonb,
+  recovered_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists carts_studio_idx on carts (studio_id, updated_at desc);
+
+-- Store metrics, aggregated per day, event and target (product id). No id column.
+create table if not exists store_events_daily (
+  studio_id uuid not null references studios (id) on delete cascade,
+  day date not null,
+  event text not null,
+  target text not null default '',
+  count integer not null default 0,
+  primary key (studio_id, day, event, target)
+);
+
+-- updated_at triggers for the mutable store tables.
+drop trigger if exists store_collections_set_updated_at on store_collections;
+create trigger store_collections_set_updated_at before update on store_collections for each row execute function set_updated_at();
+drop trigger if exists store_products_set_updated_at on store_products;
+create trigger store_products_set_updated_at before update on store_products for each row execute function set_updated_at();
+drop trigger if exists price_sheets_set_updated_at on price_sheets;
+create trigger price_sheets_set_updated_at before update on price_sheets for each row execute function set_updated_at();
+drop trigger if exists sales_set_updated_at on sales;
+create trigger sales_set_updated_at before update on sales for each row execute function set_updated_at();
+drop trigger if exists discount_codes_set_updated_at on discount_codes;
+create trigger discount_codes_set_updated_at before update on discount_codes for each row execute function set_updated_at();
+drop trigger if exists gift_cards_set_updated_at on gift_cards;
+create trigger gift_cards_set_updated_at before update on gift_cards for each row execute function set_updated_at();
+drop trigger if exists carts_set_updated_at on carts;
+create trigger carts_set_updated_at before update on carts for each row execute function set_updated_at();
+
+-- Store fulfilment reuses gallery_downloads for purchase downloads; widen the kind check.
+alter table gallery_downloads drop constraint if exists gallery_downloads_kind_check;
+alter table gallery_downloads add constraint gallery_downloads_kind_check check (kind in ('single', 'selection', 'zip', 'purchase'));
+
+-- Both Stripe webhook routes stamp processed_at; the column was never declared.
+alter table stripe_events add column if not exists processed_at timestamptz;
