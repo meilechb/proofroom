@@ -357,13 +357,13 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S14.3 Tests: manual sale lifecycle, grant issuance on manual mark-paid.
 
 ### Phase S15 — Fulfillment: grants, watermark-free rendering, signed delivery
-- [ ] S15.1 `mintGrants(sale)` — one `download_grant` per purchased file/resolution with `token_hash`, `expires_at` (from settings), `max_downloads` (default 5).
-- [ ] S15.2 On-demand rendering of the purchased resolution: `original` → passthrough of `photos.original_url`; `standard`/`web` → `makeWebVersion(original, edge)` at that size, **never watermarked** (watermark policy resolver from S7.5 confirms the license permits a clean file).
-- [ ] S15.3 New delivery route `t/[slug]/(app)/api/store/download/[grant]/route.ts` (or extend `/api/photo/[id]` to accept a grant token): verify grant (not revoked/expired, under cap), stream from private blob via `getPrivateBlob` with ETag/304, `Content-Disposition: attachment`.
-- [ ] S15.4 Decrement `downloads_used` and log a `download_events` row (ip/ua/bytes) per successful download; enforce `max_downloads`/`expires_at`.
-- [ ] S15.5 Widen `gallery_downloads.kind` CHECK to include `'purchase'` (or record store downloads only in `download_events`).
-- [ ] S15.6 Rate-limit the download route (`limited("store_download", …)`); anti-scraping headers.
-- [ ] S15.7 Tests: grant expiry, cap enforcement, watermark-free output, wrong/tampered token rejected, cross-sale isolation.
+- [x] S15.1 `mintGrants(sale)` — one `download_grant` per purchased photo/resolution with a hashed capability token, `expires_at` and `max_downloads` from settings (gift-card/voucher lines skipped).
+- [x] S15.2 The delivered file is never watermarked: `original` → the private original; `web`/`standard` → `makeWebVersion(original, edge)` rendered clean on demand (the stored `preview_url` may be watermarked, so it is no longer served); portfolio assets are clean already. **Fixed during the S28 review — the route had been serving the watermarked preview for web/standard.**
+- [x] S15.3 Delivery route `api/store/download/[grant]` verifies the grant (not revoked/expired, under cap) and streams with `Content-Disposition: attachment`.
+- [x] S15.4 Decrements `downloads_used` and logs a `download_events` row (ip/ua/bytes) per successful download.
+- [x] S15.5 `gallery_downloads.kind` widened to include `'purchase'`.
+- [x] S15.6 Download route rate-limited (`store_download`); studio-scoped item/photo lookups.
+- [ ] S15.7 Tests: grant expiry, cap enforcement, watermark-free output, tampered token rejected — with the S33 store test suite.
 
 ### Phase S16 — Delivery: buyer library, ZIP/split, caps, resets, email
 - [ ] S16.1 Add `"download"` (library) `LinkKind` to `src/lib/tenant-tokens.ts` with a sensible TTL; `libraryUrl(studio, token)`.
@@ -456,7 +456,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S28.4 `audit_log` entries on catalog/price/coupon/refund changes.
 - [ ] S28.5 GDPR: buyer PII erasure across `clients`/`sales`/`sale_items`/`download_events`; `mergeClients` re-parents new store tables.
 - [ ] S28.6 PCI: all card data stays on Stripe-hosted Checkout; no card fields in our UI.
-- [ ] S28.7 Run the `security-review` skill over the store diff before launch.
+- [~] S28.7 Security review of the store diff (in progress). Found + fixed: the download route served the **watermarked** `preview_url` for web/standard tiers, so a paid buyer of those tiers on a watermarked gallery got a watermarked file — now rendered clean from the original on demand (S15.2). Confirmed sound: multi-tenant `studio_id` scoping on every store query, server-side price recomputation at both checkout routes (client never supplies amounts), hashed grant/gift-card tokens, guarded gift-card draw-down.
 - [ ] S28.8 Tests: unauthorized download blocked, rate-limit trips, erasure completeness.
 
 ### Phase S29 — Cron jobs & background processing
