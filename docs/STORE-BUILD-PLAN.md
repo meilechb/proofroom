@@ -12,9 +12,9 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
-- **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document
+- **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document · **S21** digital products (sell presets/LUTs/e-books: private-store upload, `digital` product kind, per-file download grants, admin file manager)
 
-Remaining phases: S20.2 bundle volume tiers · S13 marketplace-collect + Stripe Tax · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S20.2 bundle volume tiers · S13 marketplace-collect + Stripe Tax · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -403,10 +403,10 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S20.5 Tests: pick-N bounds, tier boundaries — with the S33 store test suite.
 
 ### Phase S21 — Digital products (presets, e-books, etc.)
-- [ ] S21.1 `digital_products` + `digital_files` tables; upload files via `Uploader` to the **private** blob store.
-- [ ] S21.2 Product `kind="digital"`; delivery via grants (non-photo file passthrough, no watermark/rendering).
-- [ ] S21.3 Admin UI to manage digital products & files.
-- [ ] S21.4 Tests: digital delivery, file access gated by grant.
+- [x] S21.1 `digital_files` upload data layer: `begin/completeDigitalUpload` reserve a pending row + a one-file client token into the **private** galleries store (delivered only via a grant), then flip the row to its URL and meter storage; `listDigitalFiles` / `deleteDigitalFile`; extension allowlist (`DIGITAL_EXTENSIONS`, 500 MB) shared in `store-shared`.
+- [x] S21.2 Delivery: `mintGrants` issues one `file_id` grant per uploaded file for a `digital` sale item; `resolveGrantFile` serves a `file_id` grant byte-for-byte from the private store (no rendering/watermark, real extension kept); buyer library lists one row per file + "Download all (ZIP)" when >1 file; ZIP names digital entries by filename.
+- [x] S21.3 Admin UI: product dialog offers the `digital` kind (image slot → optional cover); a "Files" dialog per digital product uploads (one-file token) and lists/removes files. Storefront already lists + sells the `digital` kind.
+- [x] S21.4 Tests: `digitalExtOk` allowlist (accepts preset/LUT/e-book extensions case-insensitively, rejects images/executables/extensionless). _(End-to-end grant delivery: with the S33 store test suite.)_
 
 ### Phase S22 — Conversion engine: sales automations & broadcasts (Pro)
 - [ ] S22.1 Add store rules to `AUTOMATION_RULES` in `automations-shared.ts`: `favorite_frame`, `abandoned_cart`, `holiday_promo` (`gallery_expiring` already exists) with default timing/enabled.
