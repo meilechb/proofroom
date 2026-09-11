@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ProductPrice } from "@/lib/types";
 import { formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
-import { effectivePrice } from "@/lib/store-shared";
+import { bundleTotal, effectivePrice, parseVolumeTiers } from "@/lib/store-shared";
 
 const inputClass = "w-full rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 h-11 text-sm";
 
@@ -21,7 +21,8 @@ export function BundlePicker({ slug, productId, price, photos, currency, cancell
   cancelled?: boolean;
 }) {
   const [picked, setPicked] = useState<string[]>([]);
-  const per = effectivePrice(price).priceCents;
+  const base = effectivePrice(price).priceCents;
+  const tiers = parseVolumeTiers(price.volume_tiers);
   const min = price.min_pick ?? 1;
   const max = price.max_pick ?? photos.length;
   const atMax = picked.length >= max;
@@ -30,7 +31,10 @@ export function BundlePicker({ slug, productId, price, photos, currency, cancell
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : atMax ? p : [...p, id]));
 
   const enough = picked.length >= min && picked.length <= max;
-  const total = per * picked.length;
+  // With volume tiers the per-photo price falls as more are picked; recomputed
+  // server-side at checkout, this is only the live preview.
+  const total = tiers.length ? bundleTotal(picked.length, tiers) : base * picked.length;
+  const per = picked.length ? Math.round(total / picked.length) : base;
 
   if (photos.length === 0) return <p className="text-[var(--site-ink-2)]">This bundle has no photos to choose from yet.</p>;
 
@@ -45,7 +49,8 @@ export function BundlePicker({ slug, productId, price, photos, currency, cancell
       {cancelled ? <p className="text-sm text-[var(--site-ink-2)]">Your checkout was cancelled — nothing was charged.</p> : null}
 
       <p className="text-sm text-[var(--site-ink-2)]">
-        {storeResolutionLabels[price.resolution]} — {storeLicenseLabels[price.license]} · {formatMoney(per, currency)} each ·
+        {storeResolutionLabels[price.resolution]} — {storeLicenseLabels[price.license]} · {formatMoney(per, currency)} each
+        {tiers.length ? " · price drops as you add more" : ""} ·
         {" "}pick {min === max ? min : max >= photos.length ? `at least ${min}` : `${min}–${max}`}
       </p>
 
