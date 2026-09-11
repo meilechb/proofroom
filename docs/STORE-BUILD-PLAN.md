@@ -419,9 +419,9 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S22.8 Tests: dueTargets windows, single-send idempotency, broadcast segment expansion, suppression respect.
 
 ### Phase S23 — Upsell / cross-sell
-- [ ] S23.1 Cart upsell prompts (resolution upgrade, "complete the set", wall-art suggestion placeholder for S31).
-- [ ] S23.2 Post-purchase upsell email; related-product modules on product pages.
-- [ ] S23.3 Tests: upsell suggestion logic.
+- [ ] S23.1 Cart upsell prompts (resolution upgrade, "complete the set", wall-art suggestion placeholder for S31) — with the multi-item cart.
+- [x] S23.2 Related-product module on product pages ("More from the shop": `listRelatedProducts`, featured first). _(Post-purchase upsell email: with S22 automations.)_
+- [ ] S23.3 Tests: upsell suggestion logic — with the S33 store test suite.
 
 ### Phase S24 — Refunds, disputes, order management
 - [ ] S24.1 Studio sales list + detail with statuses; refund is issued in the studio's Stripe dashboard and mirrored via `charge.refunded` → `recordRefund` (extend to sales).

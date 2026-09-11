@@ -83,6 +83,16 @@ export async function getProductBySlug(studioId: string, slug: string) {
   return one<StoreProduct>(await db()`select * from store_products where slug = ${slug} and studio_id = ${studioId}`);
 }
 
+/** A few other active, sellable products for the "more from the shop" module. */
+export async function listRelatedProducts(studioId: string, excludeId: string, limit = 4) {
+  return rows<StoreProduct>(
+    await db()`select * from store_products
+      where studio_id = ${studioId} and is_active and id <> ${excludeId}
+        and kind in ('image', 'bundle', 'gallery_unlock', 'collection_unlock', 'digital')
+      order by is_featured desc, sort_order, created_at limit ${limit}`
+  );
+}
+
 export async function createProduct(studioId: string, input: ProductInput) {
   const slug = await uniqueProductSlug(studioId, input.title);
   const next = one<{ n: number }>(await db()`select coalesce(max(sort_order), 0) + 1 as n from store_products where studio_id = ${studioId}`);
