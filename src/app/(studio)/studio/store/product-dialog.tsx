@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import type { ProductPrice, StoreLicense, StoreProduct, StoreResolution } from "@/lib/types";
 import { storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
-import { parseRmMatrix, RM_DIMENSIONS } from "@/lib/store-shared";
+import { parseRmMatrix, parseVolumeTiers, RM_DIMENSIONS } from "@/lib/store-shared";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { Dialog } from "@/components/ui/dialog";
 import { FormMessage } from "@/components/forms/form-message";
@@ -13,11 +13,12 @@ import { ImagePicker, type PickerAsset } from "../website/image-picker";
 import { saveProductAction } from "./actions";
 
 type Tier = { dims: Record<string, string>; amount: string };
-type Row = { resolution: StoreResolution; license: StoreLicense; amount: string; tiers: Tier[]; compareAt: string; saleStart: string; saleEnd: string; minPick: string; maxPick: string };
+type VolTier = { min: string; unit: string };
+type Row = { resolution: StoreResolution; license: StoreLicense; amount: string; tiers: Tier[]; volumeTiers: VolTier[]; compareAt: string; saleStart: string; saleEnd: string; minPick: string; maxPick: string };
 
 const RES: StoreResolution[] = ["web", "standard", "original"];
 const LIC: StoreLicense[] = ["personal", "rf", "rm", "extended"];
-const EMPTY_ROW: Row = { resolution: "original", license: "personal", amount: "", tiers: [], compareAt: "", saleStart: "", saleEnd: "", minPick: "", maxPick: "" };
+const EMPTY_ROW: Row = { resolution: "original", license: "personal", amount: "", tiers: [], volumeTiers: [], compareAt: "", saleStart: "", saleEnd: "", minPick: "", maxPick: "" };
 
 function tiersFromMatrix(raw: unknown): Tier[] {
   return parseRmMatrix(raw).map((row) => ({
@@ -48,6 +49,7 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
           license: p.license,
           amount: (p.amount_cents / 100).toString(),
           tiers: p.license === "rm" ? tiersFromMatrix(p.rm_matrix) : [],
+          volumeTiers: parseVolumeTiers(p.volume_tiers).map((t) => ({ min: String(t.min), unit: (t.unitAmountCents / 100).toString() })),
           compareAt: p.compare_at_cents != null ? (p.compare_at_cents / 100).toString() : "",
           saleStart: toLocalInput(p.sale_starts_at),
           saleEnd: toLocalInput(p.sale_ends_at),
@@ -58,6 +60,7 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
   );
   const setRow = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const setTier = (i: number, ti: number, patch: Partial<Tier>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, tiers: r.tiers.map((t, k) => (k === ti ? { ...t, ...patch } : t)) } : r)));
+  const setVol = (i: number, vi: number, patch: Partial<VolTier>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, volumeTiers: r.volumeTiers.map((t, k) => (k === vi ? { ...t, ...patch } : t)) } : r)));
 
   const pricesJson = JSON.stringify(
     rows
@@ -71,6 +74,9 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
         saleEnd: r.saleEnd,
         minPick: r.minPick,
         maxPick: r.maxPick,
+        volumeTiers: r.volumeTiers
+          .filter((t) => t.min.trim() !== "" && t.unit.trim() !== "")
+          .map((t) => ({ min: Math.round(Number(t.min)), unitAmountCents: Math.round(Number(t.unit) * 100) })),
         ...(r.license === "rm"
           ? {
               rmMatrix: r.tiers
@@ -139,11 +145,28 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
                     {rows.length > 1 ? <button type="button" aria-label="Remove price option" className="text-muted hover:text-ink px-1" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>×</button> : null}
                   </div>
                   {kind === "bundle" ? (
-                    <div className="mt-1.5 flex flex-wrap items-end gap-2 pl-1">
-                      <span className="text-[11px] text-muted">Price is per photo.</span>
-                      <label className="text-[11px] text-muted">Min photos<Input aria-label="Minimum photos" type="number" min={1} placeholder="1" value={r.minPick} onChange={(e) => setRow(i, { minPick: e.target.value })} className="w-16 h-8 text-xs mt-0.5" /></label>
-                      <label className="text-[11px] text-muted">Max photos<Input aria-label="Maximum photos" type="number" min={1} placeholder="any" value={r.maxPick} onChange={(e) => setRow(i, { maxPick: e.target.value })} className="w-16 h-8 text-xs mt-0.5" /></label>
-                    </div>
+                    <>
+                      <div className="mt-1.5 flex flex-wrap items-end gap-2 pl-1">
+                        <span className="text-[11px] text-muted">Price is per photo.</span>
+                        <label className="text-[11px] text-muted">Min photos<Input aria-label="Minimum photos" type="number" min={1} placeholder="1" value={r.minPick} onChange={(e) => setRow(i, { minPick: e.target.value })} className="w-16 h-8 text-xs mt-0.5" /></label>
+                        <label className="text-[11px] text-muted">Max photos<Input aria-label="Maximum photos" type="number" min={1} placeholder="any" value={r.maxPick} onChange={(e) => setRow(i, { maxPick: e.target.value })} className="w-16 h-8 text-xs mt-0.5" /></label>
+                      </div>
+                      <div className="mt-1.5 pl-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-muted">Volume pricing — a lower per-photo price once enough are picked. The price above is the fallback.</span>
+                          <button type="button" className="text-xs text-muted hover:text-ink" onClick={() => setRow(i, { volumeTiers: [...r.volumeTiers, { min: "", unit: "" }] })}>Add tier</button>
+                        </div>
+                        <div className="mt-1 space-y-1.5">
+                          {r.volumeTiers.map((t, vi) => (
+                            <div key={vi} className="flex flex-wrap items-center gap-1.5">
+                              <label className="text-[11px] text-muted">From<Input aria-label="Tier from count" type="number" min={1} placeholder="e.g. 5" value={t.min} onChange={(e) => setVol(i, vi, { min: e.target.value })} className="w-16 h-8 text-xs ml-1" /></label>
+                              <label className="text-[11px] text-muted">photos, each<Input aria-label="Tier per-photo price" inputMode="decimal" placeholder="0.00" value={t.unit} onChange={(e) => setVol(i, vi, { unit: e.target.value })} className="w-20 h-8 text-xs ml-1" /></label>
+                              <button type="button" aria-label="Remove tier" className="text-muted hover:text-ink px-1" onClick={() => setRow(i, { volumeTiers: r.volumeTiers.filter((_, k) => k !== vi) })}>×</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
                   ) : null}
                   <div className="mt-1.5 flex flex-wrap items-end gap-2 pl-1">
                     <label className="text-[11px] text-muted">Compare-at<Input aria-label="Compare-at price" inputMode="decimal" placeholder="was…" value={r.compareAt} onChange={(e) => setRow(i, { compareAt: e.target.value })} className="w-20 h-8 text-xs mt-0.5" /></label>

@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { adjustGiftCard, applyPriceSheetToProduct, archiveProduct, beginDigitalUpload, completeDigitalUpload, createDiscount, createProduct, createPriceSheet, deleteDigitalFile, deletePriceSheet, issueGiftCard, markManualSalePaid, replaceProductPrices, replacePriceSheetRows, resendSaleLibraryLink, setDiscountActive, setGiftCardActive, updateProduct, type DigitalUploadMeta, type ProductPriceInput } from "@/lib/store";
 import { fieldErrors, storeDiscountSchema, storeGiftCardSchema, storePriceRowSchema, storePriceSheetSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
 import { cents, int, str, type ActionState } from "@/lib/action-state";
-import { parseRmMatrix } from "@/lib/store-shared";
+import { parseRmMatrix, parseVolumeTiers } from "@/lib/store-shared";
 import type { StoreProductKind } from "@/lib/types";
 
 const KINDS: StoreProductKind[] = ["image", "bundle", "gallery_unlock", "collection_unlock", "gift_card", "voucher", "digital", "print"];
@@ -27,11 +27,12 @@ function parsePrices(raw: string): ProductPriceInput[] | null {
   };
   const out: ProductPriceInput[] = [];
   for (const row of arr) {
-    const r = row as { resolution?: unknown; license?: unknown; amount?: unknown; rmMatrix?: unknown; compareAt?: unknown; saleStart?: unknown; saleEnd?: unknown; minPick?: unknown; maxPick?: unknown };
+    const r = row as { resolution?: unknown; license?: unknown; amount?: unknown; rmMatrix?: unknown; volumeTiers?: unknown; compareAt?: unknown; saleStart?: unknown; saleEnd?: unknown; minPick?: unknown; maxPick?: unknown };
     const amountCents = Math.round(Number(r.amount) * 100);
     const parsed = storePriceRowSchema.safeParse({ resolution: r.resolution, license: r.license, amountCents });
     if (!parsed.success) return null;
     const rmMatrix = parsed.data.license === "rm" && r.rmMatrix != null ? parseRmMatrix(r.rmMatrix) : null;
+    const volumeTiers = r.volumeTiers != null ? parseVolumeTiers(r.volumeTiers) : null;
     const compareRaw = typeof r.compareAt === "string" ? r.compareAt.replace(/[^0-9.]/g, "") : "";
     const compareCents = compareRaw ? Math.round(Number(compareRaw) * 100) : null;
     const pick = (v: unknown): number | null => {
@@ -42,6 +43,7 @@ function parsePrices(raw: string): ProductPriceInput[] | null {
     out.push({
       ...parsed.data,
       rmMatrix,
+      volumeTiers: volumeTiers && volumeTiers.length ? volumeTiers : null,
       compareAtCents: compareCents != null && Number.isFinite(compareCents) && compareCents >= 0 ? compareCents : null,
       saleStartsAt: toIso(r.saleStart),
       saleEndsAt: toIso(r.saleEnd),
