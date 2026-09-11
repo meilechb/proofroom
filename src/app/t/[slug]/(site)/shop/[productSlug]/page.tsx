@@ -7,9 +7,11 @@ import { getProductBySlug, listCollectionAssets, listFavoriteProductIds, listPro
 import { readBuyerKey } from "@/lib/store-buyer";
 import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
+import { productUrl } from "@/lib/tenant";
 import { Container } from "@/components/site/sections";
 import { BuyForm } from "./buy-form";
 import { BundlePicker } from "./bundle-picker";
+import { ShareRow } from "./share-row";
 import { FavoriteButton } from "../favorite-button";
 import { CartLink } from "../cart-link";
 import { StoreBeacon } from "../store-beacon";
@@ -19,7 +21,16 @@ export async function generateMetadata({ params }: PageProps<"/t/[slug]/shop/[pr
   const studio = await studioBySlug(slug);
   if (!studio) return { title: "Shop" };
   const product = await getProductBySlug(studio.id, productSlug);
-  return { title: product ? `${product.title} — ${studio.name}` : "Shop" };
+  if (!product) return { title: "Shop" };
+  const asset = product.asset_id ? await assetById(studio.id, product.asset_id) : null;
+  const image = asset ? asset.web_url ?? asset.url : null;
+  const description = (product.description?.trim() || `${product.title} from ${studio.name}.`).slice(0, 200);
+  return {
+    title: `${product.title} — ${studio.name}`,
+    description,
+    openGraph: { title: product.title, description, type: "website", images: image ? [{ url: image }] : undefined },
+    twitter: { card: image ? "summary_large_image" : "summary", title: product.title, description, images: image ? [image] : undefined },
+  };
 }
 
 export default async function ProductPage({ params, searchParams }: PageProps<"/t/[slug]/shop/[productSlug]">) {
@@ -49,9 +60,24 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
     })
   );
 
+  const pricedRows = prices.filter((p) => p.is_active && p.amount_cents > 0);
+  const productFrom = pricedRows.length ? Math.min(...pricedRows.map((p) => effectivePrice(p).priceCents)) : null;
+  const url = productUrl(studio, product.slug);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    ...(product.description ? { description: product.description } : {}),
+    ...(img ? { image: [img] } : {}),
+    ...(productFrom != null
+      ? { offers: { "@type": "Offer", price: (productFrom / 100).toFixed(2), priceCurrency: studio.currency.toUpperCase(), availability: "https://schema.org/InStock", url } }
+      : {}),
+  };
+
   return (
     <div className="py-12 sm:py-16">
       <StoreBeacon event="product_view" target={product.id} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Container>
         <div className="flex items-center justify-between gap-4">
           <Link href="/shop" className="text-sm text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">← Shop</Link>
@@ -79,6 +105,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
                 <BuyForm slug={slug} productId={product.id} productSlug={product.slug} productTitle={product.title} prices={prices} currency={studio.currency} cancelled={sp?.cancelled === "1"} kind={product.kind} />
               )}
             </div>
+            <ShareRow url={url} title={product.title} />
             {product.license_text ? (
               <details className="mt-6 text-sm">
                 <summary className="cursor-pointer text-[var(--site-ink-2)]">Licence &amp; usage</summary>
