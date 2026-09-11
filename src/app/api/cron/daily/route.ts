@@ -7,6 +7,7 @@ import { recheckPendingDomains } from "@/lib/sending-domains";
 import { applyDueRewards } from "@/lib/referrals-server";
 import { cleanupImports } from "@/lib/imports";
 import { cleanupOrphanBlobs } from "@/lib/maintenance";
+import { cleanupStore } from "@/lib/store";
 import { runAutomations } from "@/lib/automations";
 import { sendPlatformDigest } from "@/lib/platform-digest";
 import { db } from "@/lib/db";
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
     applyQueuedReferralRewards: applyDueRewards,
     cleanupImports,
     cleanupOrphanBlobs,
+    cleanupStore,
     runAutomations,
     platformDigest: sendPlatformDigest,
     refreshStorageCounters,

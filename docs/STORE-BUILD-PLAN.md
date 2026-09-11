@@ -461,12 +461,12 @@ _(The atomic numbered items for each phase are appended below.)_
 
 ### Phase S29 — Cron jobs & background processing
 - [ ] S29.1 Abandoned-cart handled as a `runAutomations` preset (daily) or a dedicated `frequent` job for hour-scale timing.
-- [ ] S29.2 Daily sweep: expire/cleanup stale `download_grants` (`expires_at < now()`), stale carts.
-- [ ] S29.3 Scheduled sale-price flips (daily job reads `product_prices` windows).
-- [ ] S29.4 Payout/tax status sync (`frequent` job) for marketplace mode.
+- [x] S29.2 Daily sweep (`cleanupStore`): prune old `download_events`, delete long-dead revoked `download_grants`, clear abandoned never-recovered carts (live-but-expired grants kept so the library shows an "expired" state).
+- [ ] S29.3 Scheduled sale-price flips (daily job reads `product_prices` windows) — with S6.5.
+- [ ] S29.4 Payout/tax status sync (`frequent` job) for marketplace mode — with S13.
 - [ ] S29.5 **Watermark-variant regeneration job** (build): when a studio toggles for-sale watermark defaults, regenerate affected previews (no such job exists today).
-- [ ] S29.6 Orphan-blob cleanup + `refreshStorageCounters` include store/digital files.
-- [ ] S29.7 Register each job in `runJobs({...})` in the `frequent`/`daily` routes; idempotent by construction.
+- [ ] S29.6 Orphan-blob cleanup + `refreshStorageCounters` include store/digital files — with S21.
+- [x] S29.7 `cleanupStore` registered in the daily `runJobs({...})`; idempotent by construction.
 - [ ] S29.8 Tests: grant cleanup, price-flip transitions, regeneration idempotency.
 
 ### Phase S30 — Platform admin, fair-use, metering

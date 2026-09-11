@@ -665,6 +665,19 @@ export async function revokeGrantsForSale(saleId: string) {
 }
 
 /**
+ * Daily store housekeeping (S29): drop long-dead revoked grants and their audit
+ * rows, prune old download events, and clear abandoned, never-recovered carts.
+ * Expired-but-live grants are left in place so the buyer's long-lived library
+ * still shows an "expired" state rather than a blank. Idempotent by construction.
+ */
+export async function cleanupStore() {
+  const events = await db()`delete from download_events where created_at < now() - interval '365 days' returning id`;
+  const grants = await db()`delete from download_grants where revoked and created_at < now() - interval '90 days' returning id`;
+  const carts = await db()`delete from carts where recovered_at is null and updated_at < now() - interval '30 days' returning id`;
+  return { events: events.length, grants: grants.length, carts: carts.length };
+}
+
+/**
  * Fulfils a paid sale once: mints download grants, records any discount
  * redemption, and emails the buyer their library link. Shared by the Stripe
  * webhook and the manual "mark paid" action. Returns the studio + amount for
