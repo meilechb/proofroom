@@ -4,7 +4,7 @@ import { createStoreCheckout } from "@/lib/payments";
 import { canTakeCardPayments } from "@/lib/connect";
 import { clientIp, limited } from "@/lib/rate-limit";
 import { billingState, entitlements } from "@/lib/plans";
-import { cleanRmUsage, discountAmount, giftCardSpend, resolveStorePrice, RM_DIMENSIONS, storeSettings } from "@/lib/store-shared";
+import { bundleTotal, cleanRmUsage, discountAmount, giftCardSpend, parseVolumeTiers, resolveStorePrice, RM_DIMENSIONS, storeSettings } from "@/lib/store-shared";
 import { attachSaleSession, createSale, findUsableGiftCard, findValidDiscount, fulfillPaidStoreSale, getProduct, listProductPrices, markSalePaid } from "@/lib/store";
 import { createClient } from "@/lib/clients";
 import { storeLicenseLabels, storeResolutionLabels, type StoreLicense, type StoreResolution, type Studio } from "@/lib/types";
@@ -72,7 +72,10 @@ export async function POST(request: NextRequest) {
     if (ids.length === 0 || ids.length < min || ids.length > max) return new NextResponse(`Please pick between ${min} and ${max} photos.`, { status: 409 });
     const valid = rows<{ id: string }>(await db()`select id from photos where studio_id = ${studio.id} and gallery_id = ${product.gallery_id} and deleted_at is null and id = any(${ids}::uuid[])`);
     if (valid.length !== ids.length) return new NextResponse("One of the chosen photos is no longer available.", { status: 409 });
-    items = valid.map((ph) => ({ productId: product.id, photoId: ph.id, assetId: null, kind: "bundle", resolution, license, usageScope: usage, qty: 1, unitAmountCents: amount, amountCents: amount }));
+    // Volume pricing: with tiers, the per-photo price falls as the count rises.
+    const tiers = parseVolumeTiers(priceRow?.volume_tiers);
+    const unit = tiers.length ? Math.round(bundleTotal(valid.length, tiers) / valid.length) : amount;
+    items = valid.map((ph) => ({ productId: product.id, photoId: ph.id, assetId: null, kind: "bundle", resolution, license, usageScope: usage, qty: 1, unitAmountCents: unit, amountCents: unit }));
   } else if (product.kind === "gallery_unlock" && product.gallery_id) {
     const photos = rows<{ id: string }>(await db()`select id from photos where gallery_id = ${product.gallery_id} and studio_id = ${studio.id} and deleted_at is null and preview_url <> '' order by sort_order, created_at`);
     if (photos.length === 0) return new NextResponse("This gallery has no photos to sell yet.", { status: 409 });
