@@ -76,7 +76,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
               {product.kind === "bundle" && bundlePrice ? (
                 <BundlePicker slug={slug} productId={product.id} price={bundlePrice} photos={bundlePhotos} currency={studio.currency} cancelled={sp?.cancelled === "1"} />
               ) : (
-                <BuyForm slug={slug} productId={product.id} productSlug={product.slug} productTitle={product.title} prices={prices} currency={studio.currency} cancelled={sp?.cancelled === "1"} />
+                <BuyForm slug={slug} productId={product.id} productSlug={product.slug} productTitle={product.title} prices={prices} currency={studio.currency} cancelled={sp?.cancelled === "1"} kind={product.kind} />
               )}
             </div>
             {product.license_text ? (

@@ -9,8 +9,11 @@ import { addToCart, itemKey } from "../cart-store";
 
 const selectClass = "w-full rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 h-11 text-sm";
 
-export function BuyForm({ slug, productId, productSlug, productTitle, prices, currency, cancelled }: { slug: string; productId: string; productSlug: string; productTitle: string; prices: ProductPrice[]; currency: string; cancelled?: boolean }) {
+export function BuyForm({ slug, productId, productSlug, productTitle, prices, currency, cancelled, kind }: { slug: string; productId: string; productSlug: string; productTitle: string; prices: ProductPrice[]; currency: string; cancelled?: boolean; kind?: string }) {
   const options = prices.filter((p) => p.is_active && p.amount_cents > 0);
+  // A gallery/collection unlock expands into many files only in the single "buy
+  // now" checkout, so it can't go through the per-line cart.
+  const isUnlock = kind === "gallery_unlock" || kind === "collection_unlock";
   const [sel, setSel] = useState(0);
   const [usage, setUsage] = useState<Record<string, string>>({});
   const [added, setAdded] = useState(false);
@@ -108,9 +111,11 @@ export function BuyForm({ slug, productId, productSlug, productTitle, prices, cu
           <button type="submit" disabled={priceCents == null} className="inline-flex items-center justify-center rounded-lg bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-4 h-11 text-sm font-medium w-full disabled:opacity-50">
             Buy now{priceCents != null ? ` — ${formatMoney(priceCents, currency)}` : ""}
           </button>
-          <button type="button" onClick={add} disabled={priceCents == null} className="inline-flex items-center justify-center rounded-lg border border-[var(--site-line)] px-4 h-11 text-sm font-medium w-full hover:bg-[var(--site-bg-2)] disabled:opacity-50">
-            Add to cart
-          </button>
+          {!isUnlock ? (
+            <button type="button" onClick={add} disabled={priceCents == null} className="inline-flex items-center justify-center rounded-lg border border-[var(--site-line)] px-4 h-11 text-sm font-medium w-full hover:bg-[var(--site-bg-2)] disabled:opacity-50">
+              Add to cart
+            </button>
+          ) : null}
         </>
       )}
       {added ? (
