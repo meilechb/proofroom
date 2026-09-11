@@ -24,7 +24,7 @@ export function SettingsTabs() {
       {TABS.map((t) => {
         const active = t.href === "/studio/settings" ? pathname === t.href : pathname.startsWith(t.href);
         return (
-          <Link key={t.href} href={t.href} aria-current={active ? "page" : undefined} className={cx("px-3 py-2 text-sm whitespace-nowrap border-b-2 -mb-px", active ? "border-ink text-ink font-medium" : "border-transparent text-ink-2 hover:text-ink")}>
+          <Link key={t.href} href={t.href} aria-current={active ? "page" : undefined} className={cx("px-3 py-2 text-sm whitespace-nowrap border-b-2 -mb-px", active ? "border-brand text-brand font-medium" : "border-transparent text-ink-2 hover:text-ink")}>
             {t.label}
           </Link>
         );

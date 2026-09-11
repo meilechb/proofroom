@@ -10,14 +10,18 @@ import { saveNotificationPrefsAction } from "./actions";
 export function NotificationsForm({ prefs }: { prefs: Record<NotificationKey, boolean> }) {
   const [state, action] = useActionState(saveNotificationPrefsAction, initialActionState);
   return (
-    <form action={action} className="space-y-3">
+    <form action={action} className="space-y-4">
       <FormMessage state={state} />
-      <ul className="space-y-2">
+      <ul className="divide-y divide-line">
         {NOTIFICATION_KEYS.map((n) => (
           <li key={n.key}>
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" name={`notify_${n.key}`} defaultChecked={prefs[n.key]} className="mt-1 h-4 w-4" />
-              <span><span className="font-medium">{n.label}</span><br /><span className="text-xs text-ink-2">{n.description}</span></span>
+            <label className="flex cursor-pointer items-center justify-between gap-4 py-3">
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">{n.label}</span>
+                <span className="block text-xs text-ink-2">{n.description}</span>
+              </span>
+              <input type="checkbox" name={`notify_${n.key}`} defaultChecked={prefs[n.key]} className="peer sr-only" />
+              <span aria-hidden className="relative h-[26px] w-[46px] shrink-0 rounded-full bg-line-2 transition-colors peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40 peer-focus-visible:ring-offset-1 after:absolute after:left-[3px] after:top-[3px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-[19px]" />
             </label>
           </li>
         ))}

@@ -49,6 +49,7 @@ export function TemplateEditor({ def, initial, customized }: { def: EmailTemplat
         <div>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Body</span>
+            <span className="text-xs text-muted">Blank line = new paragraph</span>
           </div>
           <textarea ref={bodyRef} value={body} onChange={(e) => setBody(e.target.value)} rows={12} className="mt-1 w-full rounded-lg border border-line-2 bg-surface px-3 py-2 text-sm font-mono" />
           <div className="mt-2 flex flex-wrap gap-1.5">

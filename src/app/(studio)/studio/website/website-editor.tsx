@@ -120,8 +120,17 @@ function Field({ label, value, onChange, textarea, hint }: { label: string; valu
   );
 }
 
+function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <span className="relative inline-flex shrink-0">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" aria-label={label} />
+      <span aria-hidden className="relative block h-[24px] w-[42px] rounded-full bg-line-2 transition-colors peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40 peer-focus-visible:ring-offset-1 after:absolute after:left-[3px] after:top-[3px] after:h-[18px] after:w-[18px] after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-[18px]" />
+    </span>
+  );
+}
+
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return <label className="flex items-center justify-between gap-3 text-sm py-1.5"><span>{label}</span><input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4" /></label>;
+  return <label className="flex cursor-pointer items-center justify-between gap-3 text-sm py-1.5"><span>{label}</span><Switch checked={checked} onChange={onChange} label={label} /></label>;
 }
 
 function NumberField({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
@@ -243,7 +252,7 @@ function SectionBlock({ title, enabled, onToggle, children }: { title: string; e
     <fieldset className="rounded-lg border border-line p-3 space-y-3">
       <div className="flex items-center justify-between">
         <legend className="text-xs font-semibold uppercase tracking-wide text-muted">{title}</legend>
-        <input type="checkbox" checked={enabled} onChange={(e) => onToggle(e.target.checked)} className="h-4 w-4" aria-label={`Show ${title}`} />
+        <label className="cursor-pointer"><Switch checked={enabled} onChange={onToggle} label={`Show ${title}`} /></label>
       </div>
       {enabled ? children : <p className="text-xs text-muted">Hidden.</p>}
     </fieldset>

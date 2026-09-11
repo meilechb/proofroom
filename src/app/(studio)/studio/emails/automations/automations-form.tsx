@@ -25,18 +25,19 @@ export function AutomationsForm({ settings, paused }: { settings: AutomationSett
         {AUTOMATION_RULES.map((def) => {
           const s = settings[def.rule];
           return (
-            <li key={def.rule} className={cx("rounded-lg border border-line p-3", isPaused && "opacity-60")}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <label className="flex items-center gap-2 text-sm font-medium">
-                    <input type="checkbox" name={`enabled_${def.rule}`} defaultChecked={s.enabled} className="h-4 w-4" />
-                    {def.label}
-                  </label>
-                  <p className="mt-1 text-xs text-ink-2">{def.description}</p>
-                </div>
-                <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted">
+            <li key={def.rule} className={cx("flex items-center justify-between gap-4 rounded-[12px] border border-line bg-surface p-4", isPaused && "opacity-60")}>
+              <div className="min-w-0">
+                <p className="text-sm font-medium">{def.label}</p>
+                <p className="mt-0.5 text-xs text-ink-2">{def.description}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-4">
+                <label className="flex items-center gap-1.5 text-xs text-muted">
                   <input type="number" name={`days_${def.rule}`} defaultValue={s.days} min={0} max={60} className="h-8 w-16 rounded border border-line-2 bg-surface px-2 text-sm text-ink" />
                   days
+                </label>
+                <label className="cursor-pointer" title={`Turn ${def.label} on or off`}>
+                  <input type="checkbox" name={`enabled_${def.rule}`} defaultChecked={s.enabled} className="peer sr-only" />
+                  <span aria-hidden className="relative block h-[26px] w-[46px] shrink-0 rounded-full bg-line-2 transition-colors peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40 peer-focus-visible:ring-offset-1 after:absolute after:left-[3px] after:top-[3px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-[19px]" />
                 </label>
               </div>
             </li>
