@@ -484,8 +484,8 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S31.6 Tests: lab order submission, status sync, combo pricing. *(Earlier flagged "skip for now" — build last or defer.)*
 
 ### Phase S32 — Marketing site, help docs, changelog
-- [ ] S32.1 Marketing feature page(s) for the store on the root marketing site.
-- [ ] S32.2 Update `pricing/page.tsx` + `features-content.ts` + compare pages to reflect the Pro store & 0% commission story.
+- [x] S32.1 Marketing feature page `/features/store` (added to `features-content.ts`, cross-linked from Payments): sell photos/licences/gift cards, 0% commission, watermark-until-paid delivery, buyer library.
+- [~] S32.2 `features-content.ts` covers the store & 0% story; the `pricing`/`compare` pages still need the Pro-store line.
 - [ ] S32.3 Help docs / setup runbook (connect Stripe, mark sellable, set licenses, delivery policy).
 - [ ] S32.4 `CHANGELOG.md` entries per shipped phase.
 
