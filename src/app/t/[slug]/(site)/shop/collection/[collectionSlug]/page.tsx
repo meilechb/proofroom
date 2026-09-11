@@ -4,6 +4,7 @@ import { studioBySlug } from "@/lib/tenant-data";
 import { billingState, entitlements } from "@/lib/plans";
 import { effectivePrice, storeSettings } from "@/lib/store-shared";
 import { getCollectionBySlug, getCollectionUnlockProduct, listCollectionAssets, listProductPrices } from "@/lib/store";
+import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
 import { Container } from "@/components/site/sections";
 import { CartLink } from "../../cart-link";
@@ -13,9 +14,16 @@ export async function generateMetadata({ params }: PageProps<"/t/[slug]/shop/col
   const studio = await studioBySlug(slug);
   if (!studio) return { title: "Collection" };
   const c = await getCollectionBySlug(studio.id, collectionSlug);
+  if (!c) return { title: "Collection" };
+  const cover = c.cover_asset_id ? await assetById(studio.id, c.cover_asset_id) : null;
+  const image = cover ? cover.web_url ?? cover.url : null;
+  const description = (c.description?.trim() || `${c.title} — a collection from ${studio.name}.`).slice(0, 200);
   return {
-    title: c ? `${c.title} — ${studio.name}` : "Collection",
-    robots: c && c.visibility !== "public" ? { index: false, follow: false } : undefined,
+    title: `${c.title} — ${studio.name}`,
+    description,
+    robots: c.visibility !== "public" ? { index: false, follow: false } : undefined,
+    openGraph: { title: c.title, description, type: "website", images: image ? [{ url: image }] : undefined },
+    twitter: { card: image ? "summary_large_image" : "summary", title: c.title, description, images: image ? [image] : undefined },
   };
 }
 
