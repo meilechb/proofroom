@@ -486,7 +486,7 @@ _(The atomic numbered items for each phase are appended below.)_
 ### Phase S32 — Marketing site, help docs, changelog
 - [x] S32.1 Marketing feature page `/features/store` (added to `features-content.ts`, cross-linked from Payments): sell photos/licences/gift cards, 0% commission, watermark-until-paid delivery, buyer library.
 - [x] S32.2 `features-content.ts`, the pricing comparison table and an FAQ now carry the Pro-store & 0%-commission story.
-- [ ] S32.3 Help docs / setup runbook (connect Stripe, mark sellable, set licenses, delivery policy).
+- [x] S32.3 Help docs / setup runbook — `docs/STORE-SETUP.md`: connect Stripe, open the store, add each product kind, set licences, delivery, manual mode, discounts/gift cards, analytics, and operator notes.
 - [x] S32.4 `CHANGELOG.md` "Unreleased" entry for the store.
 
 ### Phase S33 — Testing, QA, launch checklist, rollout
