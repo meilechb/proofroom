@@ -6,11 +6,14 @@ import { normalizeSlug } from "@/lib/slug";
 import { hmac } from "@/lib/tokens";
 import { requireEnv } from "@/lib/env";
 import { formatMoney } from "@/lib/types";
-import { normalizeGiftCode, storeSettings, type RmMatrixRow } from "@/lib/store-shared";
+import { digitalExtOk, MAX_DIGITAL_BYTES, normalizeGiftCode, storeSettings, type RmMatrixRow } from "@/lib/store-shared";
 import { signLink } from "@/lib/tenant-tokens";
 import { shopUrl, storeLibraryUrl } from "@/lib/tenant";
+import { clientUploadToken, deleteBlobs, digitalPath, safeFilename } from "@/lib/storage";
+import { addBytes, assertUnderStorageCap } from "@/lib/usage";
 import { sendGiftCardEmail, sendStoreAbandonedEmail, sendStoreDeliveryEmail } from "@/lib/emails/studio";
 import type {
+  DigitalFile,
   DiscountCode,
   DownloadGrant,
   GiftCard,
@@ -620,6 +623,60 @@ export async function markSalePaid(saleId: string, ref: { paymentIntentId?: stri
   if (updated) return { sale: updated, firstTime: true };
   const existing = await getSaleById(saleId);
   return existing ? { sale: existing, firstTime: false } : null;
+}
+
+// --- Digital product files (S21) --------------------------------------------
+
+export type DigitalUploadMeta = { filename: string; size: number; contentType: string };
+
+/**
+ * Reserve a digital_files row and a direct-upload token into the PRIVATE
+ * galleries store (a sold file must never be publicly reachable — it is
+ * delivered only through a download grant). Mirrors beginAssetUpload.
+ */
+export async function beginDigitalUpload(studioId: string, productId: string, meta: DigitalUploadMeta) {
+  if (meta.size <= 0 || meta.size > MAX_DIGITAL_BYTES) throw new Error(`Files must be under ${Math.round(MAX_DIGITAL_BYTES / 1024 / 1024)} MB.`);
+  if (!digitalExtOk(meta.filename)) throw new Error("That file type can't be sold as a digital download.");
+  const product = await getProduct(studioId, productId);
+  if (!product || product.kind !== "digital") throw new Error("Not a digital product.");
+  await assertUnderStorageCap(studioId);
+  const filename = safeFilename(meta.filename, "download");
+  const pathname = digitalPath(studioId, `${productId}/${Date.now()}-${filename}`);
+  const contentType = meta.contentType || "application/octet-stream";
+  const file = one<DigitalFile>(
+    await db()`
+      insert into digital_files (studio_id, product_id, url, filename, content_type, size_bytes)
+      values (${studioId}, ${productId}, ${`pending:${pathname}`}, ${filename}, ${contentType}, ${meta.size})
+      returning *`
+  );
+  if (!file) throw new Error("Could not start the upload.");
+  const token = await clientUploadToken({ store: "galleries", pathname, maximumSizeInBytes: meta.size + 1024, allowedContentTypes: [contentType] });
+  return { fileId: file.id, pathname, token };
+}
+
+/** After the bytes land: flip the row from pending to its real URL and meter the storage. */
+export async function completeDigitalUpload(studioId: string, fileId: string, url: string) {
+  const file = one<DigitalFile>(await db()`select * from digital_files where id = ${fileId} and studio_id = ${studioId}`);
+  if (!file) throw new Error("Not found");
+  const updated = one<DigitalFile>(await db()`update digital_files set url = ${url} where id = ${fileId} and studio_id = ${studioId} returning *`);
+  if (file.url.startsWith("pending:")) await addBytes(studioId, file.size_bytes);
+  return updated;
+}
+
+/** Ready (uploaded) files of a digital product, in upload order. */
+export async function listDigitalFiles(studioId: string, productId: string) {
+  return rows<DigitalFile>(await db()`select * from digital_files where product_id = ${productId} and studio_id = ${studioId} and url not like 'pending:%' order by created_at`);
+}
+
+/** Remove a digital file and its blob; free the storage it counted for. */
+export async function deleteDigitalFile(studioId: string, fileId: string) {
+  const file = one<DigitalFile>(await db()`select * from digital_files where id = ${fileId} and studio_id = ${studioId}`);
+  if (!file) return { deleted: false };
+  const pending = file.url.startsWith("pending:");
+  if (!pending) await deleteBlobs("galleries", [file.url]);
+  await db()`delete from digital_files where id = ${fileId} and studio_id = ${studioId}`;
+  if (!pending) await addBytes(studioId, -file.size_bytes);
+  return { deleted: true };
 }
 
 // --- Download grants --------------------------------------------------------

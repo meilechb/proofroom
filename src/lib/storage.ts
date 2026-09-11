@@ -35,6 +35,11 @@ export function assetPath(studioId: string, file: string) {
   return `studios/${studioId}/assets/${file}`;
 }
 
+/** Private path for a sold digital file (preset, LUT, e-book) — delivered only via a grant. */
+export function digitalPath(studioId: string, file: string) {
+  return `studios/${studioId}/digital/${file}`;
+}
+
 export function getPrivateBlob(url: string, ifNoneMatch?: string) {
   return get(url, { access: "private", token: blobToken("galleries"), ifNoneMatch });
 }

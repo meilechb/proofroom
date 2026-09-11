@@ -249,6 +249,32 @@ export function resolveStorePrice(
   return eff > 0 ? { amountCents: eff } : null;
 }
 
+// --- Digital products (S21) -------------------------------------------------
+
+/** Ceiling for a single sold file (presets, LUTs, e-books, bundles). */
+export const MAX_DIGITAL_BYTES = 500 * 1024 * 1024;
+
+/**
+ * File kinds a studio may sell as a download. Validation is by extension, not
+ * MIME: browsers report these inconsistently (a `.cube` LUT or `.xmp` preset is
+ * usually `application/octet-stream` or empty), so the extension is the reliable
+ * gate. Shared so the admin uploader's `accept` and the server agree.
+ */
+export const DIGITAL_EXTENSIONS = [
+  "zip", "pdf", "epub", "mobi",
+  "xmp", "lrtemplate", "dng", "dcp",
+  "cube", "3dl", "look",
+  "atn", "acv", "csv", "txt",
+];
+
+export const DIGITAL_ACCEPT = DIGITAL_EXTENSIONS.map((e) => `.${e}`).join(",");
+
+/** True when a filename's extension is one we allow as a digital download. */
+export function digitalExtOk(filename: string) {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  return filename.includes(".") && DIGITAL_EXTENSIONS.includes(ext);
+}
+
 export type CartLine = { unitAmountCents: number; qty: number };
 export type CartTotals = {
   subtotalCents: number;
