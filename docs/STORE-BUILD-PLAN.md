@@ -14,7 +14,7 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
 - **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document · **S21** digital products (sell presets/LUTs/e-books: private-store upload, `digital` product kind, per-file download grants, admin file manager)
 
-Remaining phases: S20.2 bundle volume tiers · S13 marketplace-collect + Stripe Tax · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S13 marketplace-collect + Stripe Tax · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -397,7 +397,7 @@ _(The atomic numbered items for each phase are appended below.)_
 
 ### Phase S20 — Bundles, volume pricing, gallery/collection unlock
 - [x] S20.1 Product `kind="bundle"` (from a gallery) with a pick-N selection UI (`BundlePicker`): watermarked previews via `/api/photo/[id]?size=thumb` (authorized for a gallery that backs an active bundle — never full-size), min/max enforced, running total; checkout re-validates gallery membership + count and re-prices server-side (per-photo × count), one download grant per picked photo.
-- [ ] S20.2 Volume/tier pricing via `store-shared.bundleTotal` (per-image price by count) — a later refinement on the flat per-photo bundle price.
+- [x] S20.2 Volume/tier pricing via `store-shared.bundleTotal`: a `product_prices.volume_tiers` jsonb ({min, unitAmountCents}) edited per bundle price row ("from N photos, each $X"); the storefront picker previews the tiered total live and checkout recomputes the per-photo unit server-side (`bundleTotal ÷ count`). `parseVolumeTiers` is unit-tested; the flat "from" price is the fallback below the lowest tier.
 - [x] S20.3 `kind="gallery_unlock"` → one SKU that grants every photo (mints a grant for all). _(collection_unlock: with collections admin.)_
 - [ ] S20.4 Reuse `photo_selections` for in-gallery "buy these N" — future.
 - [ ] S20.5 Tests: pick-N bounds, tier boundaries — with the S33 store test suite.
