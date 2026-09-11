@@ -43,8 +43,8 @@ export default async function ComparePage({ params }: PageProps<"/compare/[slug]
           <Lead>{page.lead}</Lead>
           <p className="mt-4 text-sm text-muted">Last checked {page.lastChecked} against {page.vendor}&apos;s published pages, linked below. Tell us if something has changed.</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <StartFreeLink className="btn-primary btn-lg">Start free for {TRIAL_DAYS} days</StartFreeLink>
-            <Link href="/pricing" className="btn-secondary btn-lg">See pricing</Link>
+            <StartFreeLink className="btn-primary btn-lg btn-pill">Start free for {TRIAL_DAYS} days</StartFreeLink>
+            <Link href="/pricing" className="btn-secondary btn-lg btn-pill">See pricing</Link>
           </div>
         </div>
       </Section>
@@ -65,13 +65,18 @@ export default async function ComparePage({ params }: PageProps<"/compare/[slug]
       </Section>
 
       <Section>
-        <div className="grid gap-10 lg:grid-cols-2">
-          <div>
-            <Heading level={3}>When {page.vendor} is the better fit</Heading>
-            <ul className="mt-4 space-y-3 text-sm text-ink-2 leading-relaxed list-disc pl-5">
-              {page.betterFit.map((b) => <li key={b}>{b}</li>)}
-            </ul>
-          </div>
+        <div className="rounded-2xl border border-warning/25 bg-warning-bg/40 p-6 sm:p-8">
+          <Heading level={3}>When {page.vendor} is the better fit</Heading>
+          <ul className="mt-4 space-y-2.5">
+            {page.betterFit.map((b) => (
+              <li key={b} className="flex gap-3 text-sm leading-relaxed text-ink-2">
+                <span className="mt-0.5 shrink-0 text-warning-fg" aria-hidden>•</span>
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="mt-10 grid gap-8 lg:grid-cols-2">
           <div>
             <Heading level={3}>Sources</Heading>
             <ul className="mt-4 space-y-2 text-sm">
@@ -82,8 +87,8 @@ export default async function ComparePage({ params }: PageProps<"/compare/[slug]
               ))}
               <li><Link href="/pricing" className="underline">{APP_NAME} pricing</Link></li>
             </ul>
-            <p className="mt-4 text-xs text-muted">{page.vendor} is a trademark of its owner. This page compares published information as of {page.lastChecked} and is not endorsed by {page.vendor}.</p>
           </div>
+          <p className="text-xs text-muted leading-relaxed lg:self-end">{page.vendor} is a trademark of its owner. This page compares published information as of {page.lastChecked} and is not endorsed by {page.vendor}.</p>
         </div>
       </Section>
 

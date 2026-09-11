@@ -16,22 +16,22 @@ export default function ContactPage() {
       <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr]">
         <div>
           <p className="eyebrow">Contact</p>
-          <Heading level={1} className="mt-3 text-4xl">Talk to a person</Heading>
+          <Heading level={1} className="mt-3 text-4xl sm:text-5xl">Talk to a person</Heading>
           <Lead>Questions before you start, help moving from another tool, or a large team headshot program to set up. We reply within one business day.</Lead>
-          <dl className="mt-8 space-y-4 text-sm">
-            <div>
-              <dt className="font-medium">Email</dt>
-              <dd className="text-ink-2"><a href={`mailto:${supportEmail()}`} className="underline">{supportEmail()}</a></dd>
-            </div>
-            <div>
-              <dt className="font-medium">Already a customer?</dt>
-              <dd className="text-ink-2">Sign in and use the help link in the app so we can see your studio. <Link href="/login" className="underline">Sign in</Link></dd>
-            </div>
-            <div>
-              <dt className="font-medium">Security reports</dt>
-              <dd className="text-ink-2">See the <Link href="/security" className="underline">security page</Link>.</dd>
-            </div>
-          </dl>
+          <ul className="mt-8 space-y-4 text-sm">
+            <li className="flex gap-3">
+              <span className="mt-0.5 shrink-0 text-brand" aria-hidden>✉</span>
+              <span>Email <a href={`mailto:${supportEmail()}`} className="underline">{supportEmail()}</a></span>
+            </li>
+            <li className="flex gap-3">
+              <span className="mt-0.5 shrink-0 text-brand" aria-hidden>◆</span>
+              <span className="text-ink-2">Already a customer? <Link href="/login" className="underline">Sign in</Link> and use the help link in the app so we can see your studio.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="mt-0.5 shrink-0 text-brand" aria-hidden>⚑</span>
+              <span className="text-ink-2">Security reports: see the <Link href="/security" className="underline">security page</Link>.</span>
+            </li>
+          </ul>
         </div>
         <div className="card card-pad">
           <ContactForm />

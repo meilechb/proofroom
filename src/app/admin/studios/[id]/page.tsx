@@ -2,12 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePlatformAdminPage } from "@/lib/auth";
-import { studioForAdmin, studioState } from "@/lib/admin";
+import { studioForAdmin, studioState, type StudioState } from "@/lib/admin";
 import { formatBytes } from "@/lib/assets-shared";
 import { Card, Badge } from "@/components/ui";
 import { StudioControls } from "./controls";
 
 export const metadata: Metadata = { title: "Studio · Admin" };
+
+const STATE_TONE: Record<StudioState, "neutral" | "success" | "warning" | "danger" | "brand"> = {
+  trial: "brand", active: "success", past_due: "warning", comped: "brand", suspended: "danger", read_only: "warning", deleted: "danger",
+};
 
 export default async function AdminStudioDetail({ params }: PageProps<"/admin/studios/[id]">) {
   await requirePlatformAdminPage();
@@ -22,13 +26,13 @@ export default async function AdminStudioDetail({ params }: PageProps<"/admin/st
       <div className="flex items-center justify-between gap-3">
         <div>
           <Link href="/admin" className="text-sm text-muted hover:text-ink">← Studios</Link>
-          <h1 className="text-xl font-semibold mt-1">{studio.name} <Badge>{state.replace("_", " ")}</Badge></h1>
-          <p className="text-sm text-muted">{studio.slug} · owner {studio.owner_email ?? "—"}</p>
+          <h1 className="text-[28px] leading-tight font-normal mt-1 flex items-center gap-3">{studio.name} <Badge tone={STATE_TONE[state]}>{state.replace("_", " ")}</Badge></h1>
+          <p className="mt-1 text-sm text-ink-2">{studio.slug} · owner {studio.owner_email ?? "—"}</p>
         </div>
       </div>
 
       <Card>
-        <h2 className="font-medium mb-3">Overview</h2>
+        <h2 className="text-lg font-medium mb-3">Overview</h2>
         <dl className="grid gap-3 sm:grid-cols-3 text-sm">
           <div><dt className="text-muted text-xs">Clients</dt><dd>{counts.clients}</dd></div>
           <div><dt className="text-muted text-xs">Sessions</dt><dd>{counts.orders}</dd></div>
@@ -43,7 +47,7 @@ export default async function AdminStudioDetail({ params }: PageProps<"/admin/st
       </Card>
 
       <Card>
-        <h2 className="font-medium mb-3">Actions</h2>
+        <h2 className="text-lg font-medium mb-3">Actions</h2>
         <StudioControls
           id={studio.id}
           flags={{ suspended: Boolean(studio.suspended_at), comped: studio.plan_override === "comped", readOnly: Boolean(studio.read_only_since), purging: Boolean(studio.purge_at) }}

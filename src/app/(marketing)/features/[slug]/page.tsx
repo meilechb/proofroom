@@ -37,12 +37,12 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
         </nav>
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
-            <p className="eyebrow">{page.eyebrow}</p>
+            <p className="eyebrow">Features · {page.nav}</p>
             <Heading level={1} className="mt-3 text-4xl sm:text-5xl">{page.title}</Heading>
             <Lead>{page.lead}</Lead>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <StartFreeLink className="btn-primary btn-lg">Start free for {TRIAL_DAYS} days</StartFreeLink>
-              <Link href="/pricing" className="btn-secondary btn-lg">See pricing</Link>
+              <StartFreeLink className="btn-primary btn-lg btn-pill">Start free for {TRIAL_DAYS} days</StartFreeLink>
+              <Link href="/pricing" className="btn-secondary btn-lg btn-pill">See pricing</Link>
             </div>
           </div>
           <Screenshot label={page.screenshot} />
@@ -51,23 +51,29 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
 
       <Section tone="surface">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {page.points.map((p) => (
-            <FeatureCard key={p.title} title={p.title}>{p.body}</FeatureCard>
+          {page.points.map((p, i) => (
+            <div key={p.title} className="card card-pad">
+              <span className="font-display inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand text-lg" aria-hidden>{i + 1}</span>
+              <h3 className="mt-4 text-xl font-normal">{p.title}</h3>
+              <p className="mt-1.5 text-sm text-ink-2 leading-relaxed">{p.body}</p>
+            </div>
           ))}
         </div>
       </Section>
 
       <Section>
-        <SectionHeader eyebrow="How it works" title="Three steps" />
-        <ol className="mt-10 grid gap-6 md:grid-cols-3">
-          {page.steps.map((s, i) => (
-            <li key={s.title} className="card card-pad">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-ink text-paper text-sm font-semibold" aria-hidden>{i + 1}</span>
-              <h3 className="mt-4 text-lg font-semibold">{s.title}</h3>
-              <p className="mt-1.5 text-sm text-ink-2 leading-relaxed">{s.body}</p>
-            </li>
-          ))}
-        </ol>
+        <div className="rounded-[20px] bg-pine-dark text-white p-8 sm:p-12">
+          <Heading className="text-white text-center">Three steps</Heading>
+          <ol className="mt-10 grid gap-8 md:grid-cols-3">
+            {page.steps.map((s, i) => (
+              <li key={s.title}>
+                <span className="font-display italic text-2xl text-gold" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="mt-2 font-display text-xl font-normal">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/80">{s.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </Section>
 
       <Section tone="surface">

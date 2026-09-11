@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { APP_NAME, supportEmail } from "@/lib/env";
 import { GRACE_DAYS, RETENTION_DAYS } from "@/lib/plans";
-import { FinalCta, Heading, Lead, Section, SectionHeader } from "@/components/marketing/sections";
+import { Heading, Lead, Section } from "@/components/marketing/sections";
 
 export const metadata: Metadata = {
   title: "Security",
@@ -48,6 +48,7 @@ const sections: Array<{ title: string; items: Array<{ h: string; p: string }> }>
 ];
 
 export default function SecurityPage() {
+  const [money, ...rest] = sections;
   return (
     <>
       <Section className="pb-8">
@@ -57,21 +58,39 @@ export default function SecurityPage() {
           <Lead>Photographers hand us their work, their clients and their income. This page says plainly what we do with each.</Lead>
         </div>
       </Section>
-      {sections.map((s, i) => (
-        <Section key={s.title} tone={i % 2 === 0 ? "surface" : "paper"} className="py-12 sm:py-16">
-          <SectionHeader title={s.title} />
-          <dl className="mt-8 grid gap-6 md:grid-cols-3">
-            {s.items.map((it) => (
-              <div key={it.h} className="card card-pad">
-                <dt className="font-semibold">{it.h}</dt>
-                <dd className="mt-2 text-sm text-ink-2 leading-relaxed">{it.p}</dd>
-              </div>
-            ))}
-          </dl>
-        </Section>
-      ))}
-      <Section className="py-12">
-        <div className="max-w-3xl">
+
+      <Section className="pt-0">
+        <div className="flex flex-col gap-4">
+          {/* Your money — pine panel, per the design handoff */}
+          <div className="rounded-[20px] bg-pine-dark text-white p-8 sm:p-10">
+            <Heading className="text-white">{money.title}</Heading>
+            <dl className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {money.items.map((it) => (
+                <div key={it.h}>
+                  <dt className="font-semibold text-gold">{it.h}</dt>
+                  <dd className="mt-1.5 text-sm leading-relaxed text-white/80">{it.p}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          {rest.map((s) => (
+            <div key={s.title} className="card p-6 sm:p-10">
+              <Heading>{s.title}</Heading>
+              <dl className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {s.items.map((it) => (
+                  <div key={it.h}>
+                    <dt className="font-semibold">{it.h}</dt>
+                    <dd className="mt-1.5 text-sm text-ink-2 leading-relaxed">{it.p}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="pt-0 pb-16">
+        <div className="max-w-3xl rounded-2xl border border-dashed border-line-2 bg-surface-2 p-6 sm:p-8">
           <Heading level={3}>Reporting a vulnerability</Heading>
           <p className="mt-3 text-ink-2 leading-relaxed">
             Email <a href={`mailto:${supportEmail()}`} className="underline">{supportEmail()}</a> with the details. We reply within two business days, fix confirmed issues promptly and credit reporters who want it. Please do not access other studios&apos; data while testing.
@@ -79,7 +98,6 @@ export default function SecurityPage() {
           <p className="mt-3 text-sm text-muted">Related: <Link href="/privacy" className="underline">Privacy policy</Link>, <Link href="/dpa" className="underline">Data processing terms</Link>.</p>
         </div>
       </Section>
-      <FinalCta />
     </>
   );
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { listStudios, studioState, type StudioState } from "@/lib/admin";
 import { formatBytes } from "@/lib/assets-shared";
-import { Table, Th, Td, Badge, EmptyState } from "@/components/ui";
+import { Table, Th, Td, Badge, EmptyState, PageHeader } from "@/components/ui";
 import { SearchInput } from "@/components/ui/search-input";
 import { AdminStateFilter } from "./state-filter";
 
@@ -20,13 +20,16 @@ export default async function AdminStudiosPage({ searchParams }: PageProps<"/adm
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <h1 className="text-xl font-semibold">Studios <span className="text-muted text-sm font-normal">({studios.length})</span></h1>
-        <div className="flex items-center gap-2">
-          <SearchInput placeholder="Search name, slug or owner" className="w-64" />
-          <AdminStateFilter />
-        </div>
-      </div>
+      <PageHeader
+        title={`Studios (${studios.length})`}
+        description="Every studio on the platform."
+        actions={
+          <>
+            <SearchInput placeholder="Search name, slug or owner" className="w-full sm:w-64" />
+            <AdminStateFilter />
+          </>
+        }
+      />
       {studios.length === 0 ? (
         <EmptyState title="No studios" description="No studios match this filter." />
       ) : (

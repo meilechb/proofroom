@@ -38,14 +38,17 @@ export default function LightroomPage() {
             <p className="eyebrow">Lightroom Classic plugin</p>
             <Heading level={1} className="mt-3 text-4xl sm:text-5xl">Install the plugin</Heading>
             <Lead>Ten minutes from download to your first published gallery. The plugin is a standard Lightroom Classic Publish Service, so it behaves like the ones you already know.</Lead>
-            <ul className="mt-6 space-y-2">
-              <Check>Lightroom Classic 12 or later, macOS or Windows</Check>
-              <Check>A {APP_NAME} studio (the {TRIAL_DAYS}-day trial is enough)</Check>
-              <Check>A token from Settings, Lightroom</Check>
-            </ul>
+            <div className="mt-6 card card-pad">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Before you start</p>
+              <ul className="mt-4 space-y-2">
+                <Check>Lightroom Classic 12 or later, macOS or Windows</Check>
+                <Check>A {APP_NAME} studio (the {TRIAL_DAYS}-day trial is enough)</Check>
+                <Check>A token from Settings, Lightroom</Check>
+              </ul>
+            </div>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <Link href="/studio/settings/lightroom" className="btn-primary btn-lg">Download the plugin</Link>
-              <StartFreeLink className="btn-secondary btn-lg">Create a studio first</StartFreeLink>
+              <Link href="/studio/settings/lightroom" className="btn-primary btn-lg btn-pill">Download the plugin</Link>
+              <StartFreeLink className="btn-secondary btn-lg btn-pill">Create a studio first</StartFreeLink>
             </div>
             <p className="mt-3 text-xs text-muted">The download needs a login so the zip can be stamped with your studio address.</p>
           </div>
@@ -59,8 +62,8 @@ export default function LightroomPage() {
           {steps.map((s, i) => (
             <li key={s.title} className="grid gap-6 lg:grid-cols-[1fr_1.2fr] lg:items-center">
               <div>
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-ink text-paper text-sm font-semibold" aria-hidden>{i + 1}</span>
-                <h3 className="mt-4 text-xl font-semibold">{s.title}</h3>
+                <span className="font-display inline-flex h-11 w-11 items-center justify-center rounded-xl bg-pine-dark text-white text-lg" aria-hidden>{i + 1}</span>
+                <h3 className="mt-4 text-xl font-normal">{s.title}</h3>
                 <p className="mt-2 text-ink-2 leading-relaxed">{s.body}</p>
               </div>
               <Screenshot label={s.shot} />

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { requirePlatformAdminPage } from "@/lib/auth";
 import { adminEmailStats } from "@/lib/admin";
-import { Stat, Card, Table, Th, Td, Badge } from "@/components/ui";
+import { Stat, Card, Table, Th, Td, Badge, PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Emails · Admin" };
 
@@ -14,7 +14,7 @@ export default async function AdminEmailsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Email (all studios)</h1>
+      <PageHeader title="Email (all studios)" description="Sending health across every studio." />
       <div className="grid gap-4 sm:grid-cols-4">
         <Stat label="Sent (30d)" value={totals.sent.toLocaleString()} />
         <Stat label="Failure rate" value={`${failureRate}%`} hint={`${totals.failed} failed`} />
@@ -25,7 +25,9 @@ export default async function AdminEmailsPage() {
         <Table>
           <thead><tr><Th>Studio</Th><Th>Recipient</Th><Th>Subject</Th><Th>Status</Th><Th>When</Th></tr></thead>
           <tbody>
-            {recent.map((e) => (
+            {recent.length === 0 ? (
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-muted">No emails in the last 30 days.</td></tr>
+            ) : recent.map((e) => (
               <tr key={e.id}>
                 <Td><span className="text-xs">{e.studio_name ?? "platform"}</span></Td>
                 <Td><span className="text-xs">{e.to_address}</span></Td>

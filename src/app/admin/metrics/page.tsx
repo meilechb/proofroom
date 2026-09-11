@@ -3,7 +3,7 @@ import { requirePlatformAdminPage } from "@/lib/auth";
 import { platformMetrics } from "@/lib/admin";
 import { formatBytes } from "@/lib/assets-shared";
 import { formatMoney } from "@/lib/types";
-import { Card, Stat, Table, Th, Td } from "@/components/ui";
+import { Card, Stat, Table, Th, Td, PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Metrics · Admin" };
 
@@ -14,7 +14,7 @@ export default async function AdminMetricsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Metrics</h1>
+      <PageHeader title="Metrics" description="Platform health across every studio." />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="MRR" value={formatMoney(m.mrrCents)} hint={`${m.activeSubscriptions} active`} />
@@ -27,7 +27,7 @@ export default async function AdminMetricsPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="font-medium mb-3">Studios by state</h2>
+          <h2 className="text-lg font-medium mb-3">Studios by state</h2>
           <ul className="space-y-1 text-sm">
             {Object.entries(m.byState).sort((a, b) => b[1] - a[1]).map(([state, n]) => (
               <li key={state} className="flex justify-between"><span className="capitalize">{state.replace("_", " ")}</span><span className="tabular-nums">{n}</span></li>
@@ -36,7 +36,7 @@ export default async function AdminMetricsPage() {
         </Card>
 
         <Card>
-          <h2 className="font-medium mb-3">Signups per week</h2>
+          <h2 className="text-lg font-medium mb-3">Signups per week</h2>
           {m.signups.length === 0 ? <p className="text-sm text-muted">No signups yet.</p> : (
             <div className="flex items-end gap-1.5 h-28">
               {m.signups.map((s) => (
@@ -51,7 +51,7 @@ export default async function AdminMetricsPage() {
       </div>
 
       <Card>
-        <h2 className="font-medium mb-3">Top storage</h2>
+        <h2 className="text-lg font-medium mb-3">Top storage</h2>
         {m.topStorage.length === 0 ? <p className="text-sm text-muted">No data.</p> : (
           <Table>
             <thead><tr><Th>Studio</Th><Th className="text-right">Storage</Th></tr></thead>

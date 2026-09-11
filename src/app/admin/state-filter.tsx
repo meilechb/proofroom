@@ -18,7 +18,7 @@ export function AdminStateFilter() {
         router.replace(qs ? `${pathname}?${qs}` : pathname);
       }}
       aria-label="Filter by state"
-      className="h-10 rounded-lg border border-line-2 bg-surface px-2 text-sm capitalize"
+      className="select w-auto capitalize"
     >
       {STATES.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
     </select>
