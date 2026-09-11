@@ -86,6 +86,13 @@ export async function getProductBySlug(studioId: string, slug: string) {
   return one<StoreProduct>(await db()`select * from store_products where slug = ${slug} and studio_id = ${studioId}`);
 }
 
+/** Sellable photos of a gallery (for a pick-any bundle's picker). */
+export async function listSellablePhotos(studioId: string, galleryId: string) {
+  return rows<{ id: string; filename: string }>(
+    await db()`select id, filename from photos where gallery_id = ${galleryId} and studio_id = ${studioId} and deleted_at is null and preview_url <> '' and preview_url not like 'pending:%' order by sort_order, created_at`
+  );
+}
+
 /** A few other active, sellable products for the "more from the shop" module. */
 export async function listRelatedProducts(studioId: string, excludeId: string, limit = 4) {
   return rows<StoreProduct>(

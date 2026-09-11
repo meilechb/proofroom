@@ -13,11 +13,11 @@ import { ImagePicker, type PickerAsset } from "../website/image-picker";
 import { saveProductAction } from "./actions";
 
 type Tier = { dims: Record<string, string>; amount: string };
-type Row = { resolution: StoreResolution; license: StoreLicense; amount: string; tiers: Tier[]; compareAt: string; saleStart: string; saleEnd: string };
+type Row = { resolution: StoreResolution; license: StoreLicense; amount: string; tiers: Tier[]; compareAt: string; saleStart: string; saleEnd: string; minPick: string; maxPick: string };
 
 const RES: StoreResolution[] = ["web", "standard", "original"];
 const LIC: StoreLicense[] = ["personal", "rf", "rm", "extended"];
-const EMPTY_ROW: Row = { resolution: "original", license: "personal", amount: "", tiers: [], compareAt: "", saleStart: "", saleEnd: "" };
+const EMPTY_ROW: Row = { resolution: "original", license: "personal", amount: "", tiers: [], compareAt: "", saleStart: "", saleEnd: "", minPick: "", maxPick: "" };
 
 function tiersFromMatrix(raw: unknown): Tier[] {
   return parseRmMatrix(raw).map((row) => ({
@@ -39,7 +39,7 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(saveProductAction, initialActionState);
   const [assetId, setAssetId] = useState<string | null>(product?.asset_id ?? null);
-  const [kind, setKind] = useState<string>(product?.kind === "gallery_unlock" ? "gallery_unlock" : "image");
+  const [kind, setKind] = useState<string>(product?.kind === "gallery_unlock" ? "gallery_unlock" : product?.kind === "bundle" ? "bundle" : "image");
   const [galleryId, setGalleryId] = useState<string>(product?.gallery_id ?? "");
   const [rows, setRows] = useState<Row[]>(
     prices && prices.length
@@ -51,6 +51,8 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
           compareAt: p.compare_at_cents != null ? (p.compare_at_cents / 100).toString() : "",
           saleStart: toLocalInput(p.sale_starts_at),
           saleEnd: toLocalInput(p.sale_ends_at),
+          minPick: p.min_pick != null ? String(p.min_pick) : "",
+          maxPick: p.max_pick != null ? String(p.max_pick) : "",
         }))
       : [{ ...EMPTY_ROW }]
   );
@@ -67,6 +69,8 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
         compareAt: r.compareAt,
         saleStart: r.saleStart,
         saleEnd: r.saleEnd,
+        minPick: r.minPick,
+        maxPick: r.maxPick,
         ...(r.license === "rm"
           ? {
               rmMatrix: r.tiers
@@ -88,7 +92,7 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
         <form action={action} className="space-y-4" noValidate>
           {product ? <input type="hidden" name="id" value={product.id} /> : null}
           <input type="hidden" name="kind" value={kind} />
-          <input type="hidden" name="galleryId" value={kind === "gallery_unlock" ? galleryId : ""} />
+          <input type="hidden" name="galleryId" value={kind === "gallery_unlock" || kind === "bundle" ? galleryId : ""} />
           <input type="hidden" name="prices" value={pricesJson} />
           <input type="hidden" name="assetId" value={assetId ?? ""} />
           <FormMessage state={state} />
@@ -98,10 +102,11 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
               <Select id="s-kind" value={kind} onChange={(e) => setKind(e.target.value)}>
                 <option value="image">A single image</option>
                 <option value="gallery_unlock">A whole gallery (unlock)</option>
+                <option value="bundle">A pick-any bundle (from a gallery)</option>
               </Select>
             </Field>
-            {kind === "gallery_unlock" ? (
-              <Field label="Gallery" htmlFor="s-gallery" hint="The buyer gets every photo in it.">
+            {kind === "gallery_unlock" || kind === "bundle" ? (
+              <Field label="Gallery" htmlFor="s-gallery" hint={kind === "bundle" ? "The buyer picks photos from it." : "The buyer gets every photo in it."}>
                 <Select id="s-gallery" value={galleryId} onChange={(e) => setGalleryId(e.target.value)}>
                   <option value="">Choose a gallery…</option>
                   {galleries.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}
@@ -131,6 +136,13 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
                     <Input aria-label="Price" inputMode="decimal" placeholder="0.00" value={r.amount} onChange={(e) => setRow(i, { amount: e.target.value })} className="w-24" />
                     {rows.length > 1 ? <button type="button" aria-label="Remove price option" className="text-muted hover:text-ink px-1" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>×</button> : null}
                   </div>
+                  {kind === "bundle" ? (
+                    <div className="mt-1.5 flex flex-wrap items-end gap-2 pl-1">
+                      <span className="text-[11px] text-muted">Price is per photo.</span>
+                      <label className="text-[11px] text-muted">Min photos<Input aria-label="Minimum photos" type="number" min={1} placeholder="1" value={r.minPick} onChange={(e) => setRow(i, { minPick: e.target.value })} className="w-16 h-8 text-xs mt-0.5" /></label>
+                      <label className="text-[11px] text-muted">Max photos<Input aria-label="Maximum photos" type="number" min={1} placeholder="any" value={r.maxPick} onChange={(e) => setRow(i, { maxPick: e.target.value })} className="w-16 h-8 text-xs mt-0.5" /></label>
+                    </div>
+                  ) : null}
                   <div className="mt-1.5 flex flex-wrap items-end gap-2 pl-1">
                     <label className="text-[11px] text-muted">Compare-at<Input aria-label="Compare-at price" inputMode="decimal" placeholder="was…" value={r.compareAt} onChange={(e) => setRow(i, { compareAt: e.target.value })} className="w-20 h-8 text-xs mt-0.5" /></label>
                     <label className="text-[11px] text-muted">Sale from<Input aria-label="Sale start" type="datetime-local" value={r.saleStart} onChange={(e) => setRow(i, { saleStart: e.target.value })} className="h-8 text-xs mt-0.5" /></label>

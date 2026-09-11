@@ -3,12 +3,13 @@ import Link from "next/link";
 import { studioBySlug } from "@/lib/tenant-data";
 import { billingState, entitlements } from "@/lib/plans";
 import { effectivePrice, storeSettings } from "@/lib/store-shared";
-import { getProductBySlug, listFavoriteProductIds, listProductPrices, listRelatedProducts } from "@/lib/store";
+import { getProductBySlug, listFavoriteProductIds, listProductPrices, listRelatedProducts, listSellablePhotos } from "@/lib/store";
 import { readBuyerKey } from "@/lib/store-buyer";
 import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
 import { Container } from "@/components/site/sections";
 import { BuyForm } from "./buy-form";
+import { BundlePicker } from "./bundle-picker";
 import { FavoriteButton } from "../favorite-button";
 import { CartLink } from "../cart-link";
 
@@ -33,6 +34,8 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   const prices = await listProductPrices(studio.id, product.id);
   const asset = product.asset_id ? await assetById(studio.id, product.asset_id) : null;
   const img = asset ? asset.web_url ?? asset.url : null;
+  const bundlePrice = product.kind === "bundle" ? prices.find((p) => p.is_active && p.amount_cents > 0) ?? null : null;
+  const bundlePhotos = bundlePrice && product.gallery_id ? await listSellablePhotos(studio.id, product.gallery_id) : [];
   const buyerKey = await readBuyerKey();
   const favorited = buyerKey ? (await listFavoriteProductIds(studio.id, buyerKey)).has(product.id) : false;
   const related = await Promise.all(
@@ -67,7 +70,11 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
             </div>
             {product.description ? <p className="mt-3 text-[var(--site-ink-2)]">{product.description}</p> : null}
             <div className="mt-6">
-              <BuyForm slug={slug} productId={product.id} productSlug={product.slug} productTitle={product.title} prices={prices} currency={studio.currency} cancelled={sp?.cancelled === "1"} />
+              {product.kind === "bundle" && bundlePrice ? (
+                <BundlePicker slug={slug} productId={product.id} price={bundlePrice} photos={bundlePhotos} currency={studio.currency} cancelled={sp?.cancelled === "1"} />
+              ) : (
+                <BuyForm slug={slug} productId={product.id} productSlug={product.slug} productTitle={product.title} prices={prices} currency={studio.currency} cancelled={sp?.cancelled === "1"} />
+              )}
             </div>
             {product.license_text ? (
               <details className="mt-6 text-sm">

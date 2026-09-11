@@ -48,22 +48,51 @@ export async function POST(request: NextRequest) {
   if (!product || !product.is_active) return new NextResponse("Not found", { status: 404 });
   // Rights-managed licences carry a usage scope; the price is recomputed from it server-side.
   const usage = license === "rm" ? cleanRmUsage(Object.fromEntries(RM_DIMENSIONS.map((d) => [d.key, form.get(`u_${d.key}`)]))) : {};
-  const priced = resolveStorePrice(await listProductPrices(studio.id, productId), resolution, license, usage);
+  const prices = await listProductPrices(studio.id, productId);
+  const priced = resolveStorePrice(prices, resolution, license, usage);
   if (priced == null) return new NextResponse("That option is not for sale.", { status: 409 });
   if ("quote" in priced) return new NextResponse("This licence is priced on request — please contact the studio for a quote.", { status: 409 });
   const amount = priced.amountCents;
 
-  // Optional discount code.
+  // Build the sale items (one per delivered photo) and the order subtotal, then
+  // apply the discount/gift card to that subtotal.
+  let items: Parameters<typeof createSale>[1]["items"];
+  if (product.kind === "bundle" && product.gallery_id) {
+    // Pick-any bundle: the chosen photos, priced per photo; validated against the gallery.
+    const priceRow = prices.find((p) => p.is_active && p.resolution === resolution && p.license === license);
+    let ids: string[];
+    try {
+      const parsed = JSON.parse(String(form.get("photoIds") ?? "[]")) as unknown;
+      ids = Array.isArray(parsed) ? [...new Set(parsed.map(String))].filter((x) => isUuid(x)) : [];
+    } catch {
+      return new NextResponse("Bad request", { status: 400 });
+    }
+    const min = priceRow?.min_pick ?? 1;
+    const max = priceRow?.max_pick ?? ids.length;
+    if (ids.length === 0 || ids.length < min || ids.length > max) return new NextResponse(`Please pick between ${min} and ${max} photos.`, { status: 409 });
+    const valid = rows<{ id: string }>(await db()`select id from photos where studio_id = ${studio.id} and gallery_id = ${product.gallery_id} and deleted_at is null and id = any(${ids}::uuid[])`);
+    if (valid.length !== ids.length) return new NextResponse("One of the chosen photos is no longer available.", { status: 409 });
+    items = valid.map((ph) => ({ productId: product.id, photoId: ph.id, assetId: null, kind: "bundle", resolution, license, usageScope: usage, qty: 1, unitAmountCents: amount, amountCents: amount }));
+  } else if (product.kind === "gallery_unlock" && product.gallery_id) {
+    const photos = rows<{ id: string }>(await db()`select id from photos where gallery_id = ${product.gallery_id} and studio_id = ${studio.id} and deleted_at is null and preview_url <> '' order by sort_order, created_at`);
+    if (photos.length === 0) return new NextResponse("This gallery has no photos to sell yet.", { status: 409 });
+    items = photos.map((ph, i) => ({ productId: product.id, photoId: ph.id, assetId: null, kind: "gallery_unlock", resolution, license, usageScope: usage, qty: 1, unitAmountCents: i === 0 ? amount : 0, amountCents: i === 0 ? amount : 0 }));
+  } else {
+    items = [{ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution, license, usageScope: usage, qty: 1, unitAmountCents: amount, amountCents: amount }];
+  }
+  const subtotal = items.reduce((s, it) => s + it.amountCents, 0);
+
+  // Optional discount code (validated against the order subtotal).
   const codeStr = String(form.get("code") ?? "").trim();
   let discountCents = 0;
   let discountCode: string | null = null;
   if (codeStr) {
-    const dc = await findValidDiscount(studio.id, codeStr, amount);
+    const dc = await findValidDiscount(studio.id, codeStr, subtotal);
     if (!dc) return new NextResponse("That code is not valid for this order.", { status: 409 });
-    discountCents = discountAmount(amount, { kind: dc.kind, value: dc.value, min_subtotal_cents: dc.min_subtotal_cents });
+    discountCents = discountAmount(subtotal, { kind: dc.kind, value: dc.value, min_subtotal_cents: dc.min_subtotal_cents });
     discountCode = dc.code;
   }
-  const afterDiscount = Math.max(0, amount - discountCents);
+  const afterDiscount = Math.max(0, subtotal - discountCents);
   if (afterDiscount <= 0) return new NextResponse("That code makes this order free — please contact the studio to arrange it.", { status: 409 });
 
   // Optional gift card: it draws down at fulfilment, reducing what the card is charged.
@@ -78,17 +107,6 @@ export async function POST(request: NextRequest) {
     giftCardCents = giftCardSpend(afterDiscount, card.balance_cents);
   }
   const netCharge = Math.max(0, afterDiscount - giftCardCents);
-
-  // Build the sale items. A gallery/collection unlock expands into one item per
-  // photo (each gets its own download grant); the price sits on the first item.
-  let items: Parameters<typeof createSale>[1]["items"];
-  if (product.kind === "gallery_unlock" && product.gallery_id) {
-    const photos = rows<{ id: string }>(await db()`select id from photos where gallery_id = ${product.gallery_id} and studio_id = ${studio.id} and deleted_at is null and preview_url <> '' order by sort_order, created_at`);
-    if (photos.length === 0) return new NextResponse("This gallery has no photos to sell yet.", { status: 409 });
-    items = photos.map((ph, i) => ({ productId: product.id, photoId: ph.id, assetId: null, kind: "gallery_unlock", resolution, license, usageScope: usage, qty: 1, unitAmountCents: i === 0 ? amount : 0, amountCents: i === 0 ? amount : 0 }));
-  } else {
-    items = [{ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution, license, usageScope: usage, qty: 1, unitAmountCents: amount, amountCents: amount }];
-  }
 
   const { client } = await createClient(studio.id, { name: name || email.split("@")[0], email, source: "store" });
 

@@ -27,19 +27,26 @@ function parsePrices(raw: string): ProductPriceInput[] | null {
   };
   const out: ProductPriceInput[] = [];
   for (const row of arr) {
-    const r = row as { resolution?: unknown; license?: unknown; amount?: unknown; rmMatrix?: unknown; compareAt?: unknown; saleStart?: unknown; saleEnd?: unknown };
+    const r = row as { resolution?: unknown; license?: unknown; amount?: unknown; rmMatrix?: unknown; compareAt?: unknown; saleStart?: unknown; saleEnd?: unknown; minPick?: unknown; maxPick?: unknown };
     const amountCents = Math.round(Number(r.amount) * 100);
     const parsed = storePriceRowSchema.safeParse({ resolution: r.resolution, license: r.license, amountCents });
     if (!parsed.success) return null;
     const rmMatrix = parsed.data.license === "rm" && r.rmMatrix != null ? parseRmMatrix(r.rmMatrix) : null;
     const compareRaw = typeof r.compareAt === "string" ? r.compareAt.replace(/[^0-9.]/g, "") : "";
     const compareCents = compareRaw ? Math.round(Number(compareRaw) * 100) : null;
+    const pick = (v: unknown): number | null => {
+      if (typeof v !== "string" || !v.trim()) return null;
+      const n = Math.round(Number(v));
+      return Number.isFinite(n) && n >= 1 ? n : null;
+    };
     out.push({
       ...parsed.data,
       rmMatrix,
       compareAtCents: compareCents != null && Number.isFinite(compareCents) && compareCents >= 0 ? compareCents : null,
       saleStartsAt: toIso(r.saleStart),
       saleEndsAt: toIso(r.saleEnd),
+      minPick: pick(r.minPick),
+      maxPick: pick(r.maxPick),
     });
   }
   return out;
@@ -60,7 +67,7 @@ export async function saveProductAction(_prev: ActionState, formData: FormData):
   const kindRaw = str(formData, "kind", 40);
   const kind: StoreProductKind = (KINDS as string[]).includes(kindRaw) ? (kindRaw as StoreProductKind) : "image";
   const galleryId = str(formData, "galleryId", 64) || null;
-  if (kind === "gallery_unlock" && !galleryId) return { error: "Choose a gallery to unlock.", fields: { galleryId: "Pick a gallery." } };
+  if ((kind === "gallery_unlock" || kind === "bundle") && !galleryId) return { error: "Choose a gallery.", fields: { galleryId: "Pick a gallery." } };
   const id = str(formData, "id", 64);
   const input = {
     kind,
