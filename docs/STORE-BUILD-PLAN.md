@@ -12,9 +12,9 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
-- **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document · **S21** digital products (sell presets/LUTs/e-books: private-store upload, `digital` product kind, per-file download grants, admin file manager)
+- **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25** sales analytics + storefront funnel (revenue, AOV, top products/buyers, plus shop/product views, cart adds, checkouts, purchases and conversion) · **S27 (partial)** buyer licence / print-release document · **S21** digital products (sell presets/LUTs/e-books: private-store upload, `digital` product kind, per-file download grants, admin file manager)
 
-Remaining phases: S13 marketplace-collect + Stripe Tax · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S13 marketplace-collect + Stripe Tax · S22 automations + broadcasts · S23 upsell · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -310,7 +310,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S9.10 "Buy" affordances embedded inside the client gallery view (`t/[slug]/(app)/g/[gslug]`) for sellable gallery photos.
 - [ ] S9.11 Search / filter / sort / "featured"/"new" on the shop grid; related products on product pages.
 - [ ] S9.12 Product JSON-LD + Open Graph share images; social-share buttons.
-- [ ] S9.13 Store view/beacon: `product_view`/`store_view` via `/api/track` (see S25).
+- [x] S9.13 Store view/beacon: `store_view` (shop) and `product_view` (product page) fire a one-shot `StoreBeacon` to `/api/track/store`; `cart_add` fires from `addToCart`. DNT/GPC respected; studio resolved from the tenant host (see S25).
 - [ ] S9.14 Website editor: add a "Shop" toggle + panel to `website-editor.tsx` `PagesPanel` (enable page, heading/body, choose featured products/collections).
 - [ ] S9.15 Tests: shop page renders only when enabled; disabled/Free studio 404s; nav includes Shop when on.
 
@@ -431,9 +431,9 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S24.5 Tests: refund→grant revocation, dispute state, resend.
 
 ### Phase S25 — Analytics & reporting (studio)
-- [ ] S25.1 Extend `AnalyticsEvent` union with `store_view`, `product_view`, `cart_add`, `checkout_start`, `purchase`; call `track()` at each point; add a store branch to `/api/track`. _(View/favourite/conversion counts still pending — needs the beacon.)_
-- [x] S25.2 Store dashboard `/studio/store/analytics` (`storeAnalytics` + `Stat` cards + top-products/top-buyers lists): net & gross revenue, orders, AOV, items sold, gift-card balance outstanding.
-- [x] S25.3 Revenue/AOV/top lists computed from `sales`/`sale_items` (gift-card/voucher lines excluded from item counts). _(View-based conversion awaits S25.1.)_
+- [x] S25.1 `AnalyticsEvent` extended with `store_view`/`product_view`/`cart_add`/`checkout_start`/`purchase`. `checkout_start` is counted server-side in both checkout routes and `purchase` once per fulfilled sale (callers guard on firstTime), so the money side can't be spoofed; the view/cart events come from the `/api/track/store` beacon.
+- [x] S25.2 Store dashboard `/studio/store/analytics`: revenue/AOV/top-product/top-buyer cards **plus** a "Last 30 days" funnel row (shop views, product views, cart adds, checkouts, purchases) and a conversion rate; opens on any browsing activity, not only after the first sale.
+- [x] S25.3 Revenue/AOV/top lists computed from `sales`/`sale_items` (gift-card/voucher lines excluded); funnel counts and conversion (purchases ÷ product views) from `analytics_daily`.
 - [ ] S25.4 Tests: aggregation correctness, conversion math — with the S33 store test suite.
 
 ### Phase S26 — Marketing & distribution
