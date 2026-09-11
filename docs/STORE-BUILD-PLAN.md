@@ -305,7 +305,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S9.5 `ShopGrid` + `ProductCard` sections in `src/components/site/sections.tsx` modeled on `PackagesSection`, styled with `var(--site-*)` tokens, linking to the product/buy route.
 - [ ] S9.6 Route `t/[slug]/(site)/shop/page.tsx` mirroring `pricing/page.tsx` (`studioBySlug` → `notFound` → `loadSiteData` → `page.enabled` → sections); `generateMetadata` from `site.seo`.
 - [ ] S9.7 Product detail route `t/[slug]/(site)/shop/[productSlug]/page.tsx` (gallery of watermarked previews, resolution/license selector, price, add-to-cart).
-- [~] S9.8 Collection contents surface on the collection-unlock product page (a "What's included" grid of every image). _(A standalone `/shop/collection/[slug]` browse route is still to come.)_
+- [x] S9.8 Collection detail route `t/[slug]/(site)/shop/collection/[collectionSlug]/page.tsx` — title, description, every image and a "Buy the collection" CTA to its unlock product; hidden 404s, unlisted is no-index and reachable by link only. Public collections also appear in a strip on `/shop`, and the collection-unlock product page shows a "What's included" grid.
 - [ ] S9.9 Watermarked previews served via the public `assets` store (for portfolio images) or a `preview`-signed `/api/photo/[id]` (for private gallery photos); never expose originals.
 - [ ] S9.10 "Buy" affordances embedded inside the client gallery view (`t/[slug]/(app)/g/[gslug]`) for sellable gallery photos.
 - [ ] S9.11 Search / filter / sort / "featured"/"new" on the shop grid; related products on product pages.
