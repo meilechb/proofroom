@@ -68,6 +68,11 @@ export function storeLibraryUrl(studio: StudioHost, token: string) {
   return `${studioBaseUrl(studio)}/library/${token}`;
 }
 
+/** Printable licence / print-release for a purchase. */
+export function storeLicenseUrl(studio: StudioHost, token: string) {
+  return `${studioBaseUrl(studio)}/license/${token}`;
+}
+
 /** Client hub entered through an emailed magic link token. */
 export function clientHubUrl(studio: StudioHost, token: string) {
   return `${studioBaseUrl(studio)}/my/${token}`;

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
-import { verifyLink } from "@/lib/tenant-tokens";
+import { signLink, verifyLink } from "@/lib/tenant-tokens";
 import { getSaleById, grantToken, listGrantsForSale, listSaleItems } from "@/lib/store";
 import { formatDate, formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
 
@@ -33,6 +33,11 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
         Order #{sale.order_number} · {formatMoney(sale.total_cents, cur)}
         {sale.paid_at ? ` · ${formatDate(sale.paid_at)}` : ""}
       </p>
+      {sale.status === "paid" ? (
+        <p className="mt-2">
+          <a href={`/license/${signLink("license", sale.id)}`} className="text-sm underline text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">View your licence &amp; print release →</a>
+        </p>
+      ) : null}
 
       {sale.status !== "paid" ? (
         <p className="mt-6 text-[var(--site-ink-2)]">We&apos;re still confirming your payment. Refresh in a moment — your files appear here once it clears.</p>

@@ -315,6 +315,18 @@ export async function listSaleItems(saleId: string) {
   return rows<SaleItem>(await db()`select * from sale_items where sale_id = ${saleId} order by created_at`);
 }
 
+/** Grouped licence lines for a sale, for the buyer's printable licence document. */
+export async function saleLicenseLines(studioId: string, saleId: string) {
+  return rows<{ license: StoreLicense; resolution: StoreResolution; title: string; license_text: string | null; count: number }>(
+    await db()`
+      select si.license, si.resolution, coalesce(p.title, 'Image') as title, p.license_text, count(*)::int as count
+      from sale_items si left join store_products p on p.id = si.product_id
+      where si.sale_id = ${saleId} and si.studio_id = ${studioId}
+      group by si.license, si.resolution, p.title, p.license_text
+      order by title`
+  );
+}
+
 /**
  * Marks a sale paid from its Checkout Session. Returns { sale, firstTime };
  * firstTime is true only on the pending -> paid transition, so grants and the
