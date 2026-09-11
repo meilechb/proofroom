@@ -250,8 +250,56 @@ export async function createCollection(studioId: string, input: CollectionInput)
   );
 }
 
+export async function getCollection(studioId: string, id: string) {
+  return one<StoreCollection>(await db()`select * from store_collections where id = ${id} and studio_id = ${studioId}`);
+}
+
+export async function getCollectionBySlug(studioId: string, slug: string) {
+  return one<StoreCollection>(await db()`select * from store_collections where slug = ${slug} and studio_id = ${studioId}`);
+}
+
+export async function updateCollection(studioId: string, id: string, input: CollectionInput) {
+  return one<StoreCollection>(
+    await db()`
+      update store_collections set title = ${input.title.trim()}, description = ${input.description ?? null},
+        cover_asset_id = ${input.coverAssetId ?? null}, visibility = ${input.visibility ?? "public"}, updated_at = now()
+      where id = ${id} and studio_id = ${studioId} returning *`
+  );
+}
+
+/** Delete a collection. Any collection_unlock product pointing at it is archived by the caller. */
+export async function deleteCollection(studioId: string, id: string) {
+  await db()`delete from store_collections where id = ${id} and studio_id = ${studioId}`;
+}
+
 export async function listCollectionItems(studioId: string, collectionId: string) {
   return rows<StoreCollectionItem>(await db()`select * from store_collection_items where studio_id = ${studioId} and collection_id = ${collectionId} order by sort_order, created_at`);
+}
+
+/** Add an asset to a collection (idempotent per asset). Photos join via galleries/gallery_unlock. */
+export async function addCollectionAsset(studioId: string, collectionId: string, assetId: string) {
+  const owned = await getCollection(studioId, collectionId);
+  if (!owned) throw new Error("Not found");
+  const exists = await db()`select 1 from store_collection_items where studio_id = ${studioId} and collection_id = ${collectionId} and asset_id = ${assetId} limit 1`;
+  if (exists.length > 0) return;
+  const next = one<{ n: number }>(await db()`select coalesce(max(sort_order), 0) + 1 as n from store_collection_items where collection_id = ${collectionId}`);
+  await db()`insert into store_collection_items (studio_id, collection_id, asset_id, sort_order) values (${studioId}, ${collectionId}, ${assetId}, ${next?.n ?? 1})`;
+}
+
+export async function removeCollectionItem(studioId: string, itemId: string) {
+  await db()`delete from store_collection_items where id = ${itemId} and studio_id = ${studioId}`;
+}
+
+/** Assets in a collection, with their display URLs, for the admin manager and storefront. */
+export async function listCollectionAssets(studioId: string, collectionId: string) {
+  return rows<{ item_id: string; asset_id: string; filename: string; thumb_url: string | null; web_url: string | null; url: string }>(
+    await db()`
+      select ci.id as item_id, a.id as asset_id, a.filename, a.thumb_url, a.web_url, a.url
+      from store_collection_items ci join assets a on a.id = ci.asset_id
+      where ci.studio_id = ${studioId} and ci.collection_id = ${collectionId} and ci.asset_id is not null
+        and a.url not like 'pending:%'
+      order by ci.sort_order, ci.created_at`
+  );
 }
 
 // --- Discount codes ---------------------------------------------------------
