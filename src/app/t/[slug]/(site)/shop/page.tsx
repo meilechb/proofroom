@@ -10,6 +10,7 @@ import { formatMoney } from "@/lib/types";
 import { Container } from "@/components/site/sections";
 import { FavoriteButton } from "./favorite-button";
 import { CartLink } from "./cart-link";
+import { StoreBeacon } from "./store-beacon";
 
 const SELLABLE = ["image", "bundle", "gallery_unlock", "collection_unlock", "digital"];
 
@@ -41,6 +42,7 @@ export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) 
 
   return (
     <div className="py-12 sm:py-16">
+      <StoreBeacon event="store_view" />
       <Container>
         <div className="flex items-baseline justify-between gap-4">
           <h1 className="text-3xl sm:text-4xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>Shop</h1>

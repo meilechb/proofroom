@@ -12,6 +12,7 @@ import { BuyForm } from "./buy-form";
 import { BundlePicker } from "./bundle-picker";
 import { FavoriteButton } from "../favorite-button";
 import { CartLink } from "../cart-link";
+import { StoreBeacon } from "../store-beacon";
 
 export async function generateMetadata({ params }: PageProps<"/t/[slug]/shop/[productSlug]">) {
   const { slug, productSlug } = await params;
@@ -49,6 +50,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
 
   return (
     <div className="py-12 sm:py-16">
+      <StoreBeacon event="product_view" target={product.id} />
       <Container>
         <div className="flex items-center justify-between gap-4">
           <Link href="/shop" className="text-sm text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">← Shop</Link>

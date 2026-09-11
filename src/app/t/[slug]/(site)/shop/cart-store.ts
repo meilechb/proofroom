@@ -1,4 +1,5 @@
 import type { StoreLicense, StoreResolution } from "@/lib/types";
+import { trackStore } from "./track";
 
 /**
  * A tiny client-side cart kept in localStorage, scoped per studio slug (tenants
@@ -46,8 +47,10 @@ function writeCart(slug: string, items: CartItem[]) {
 
 export function addToCart(slug: string, item: CartItem) {
   const items = readCart(slug);
-  if (!items.some((i) => i.key === item.key)) items.push(item);
+  const isNew = !items.some((i) => i.key === item.key);
+  if (isNew) items.push(item);
   writeCart(slug, items);
+  if (isNew) trackStore("cart_add", item.productId);
 }
 
 export function removeFromCart(slug: string, key: string) {
