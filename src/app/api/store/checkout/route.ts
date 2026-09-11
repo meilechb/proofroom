@@ -4,11 +4,12 @@ import { createStoreCheckout } from "@/lib/payments";
 import { canTakeCardPayments } from "@/lib/connect";
 import { clientIp, limited } from "@/lib/rate-limit";
 import { billingState, entitlements } from "@/lib/plans";
-import { discountAmount, selectPrice, storeSettings } from "@/lib/store-shared";
-import { attachSaleSession, createSale, findValidDiscount, getProduct, listProductPrices } from "@/lib/store";
+import { discountAmount, giftCardSpend, selectPrice, storeSettings } from "@/lib/store-shared";
+import { attachSaleSession, createSale, findUsableGiftCard, findValidDiscount, fulfillPaidStoreSale, getProduct, listProductPrices, markSalePaid } from "@/lib/store";
 import { createClient } from "@/lib/clients";
 import { storeLicenseLabels, storeResolutionLabels, type StoreLicense, type StoreResolution, type Studio } from "@/lib/types";
-import { studioBaseUrl } from "@/lib/tenant";
+import { signLink } from "@/lib/tenant-tokens";
+import { storeLibraryUrl, studioBaseUrl } from "@/lib/tenant";
 import { log } from "@/lib/logger";
 
 const RES = ["web", "standard", "original"];
@@ -58,8 +59,21 @@ export async function POST(request: NextRequest) {
     discountCents = discountAmount(amount, { kind: dc.kind, value: dc.value, min_subtotal_cents: dc.min_subtotal_cents });
     discountCode = dc.code;
   }
-  const charged = Math.max(0, amount - discountCents);
-  if (charged <= 0) return new NextResponse("That code makes this order free — please contact the studio to arrange it.", { status: 409 });
+  const afterDiscount = Math.max(0, amount - discountCents);
+  if (afterDiscount <= 0) return new NextResponse("That code makes this order free — please contact the studio to arrange it.", { status: 409 });
+
+  // Optional gift card: it draws down at fulfilment, reducing what the card is charged.
+  const giftStr = String(form.get("gift") ?? "").trim();
+  let giftCardId: string | null = null;
+  let giftCardCents = 0;
+  if (giftStr) {
+    const card = await findUsableGiftCard(studio.id, giftStr);
+    if (!card) return new NextResponse("That gift card is not valid.", { status: 409 });
+    if (card.currency !== studio.currency) return new NextResponse("That gift card can't be used in this store's currency.", { status: 409 });
+    giftCardId = card.id;
+    giftCardCents = giftCardSpend(afterDiscount, card.balance_cents);
+  }
+  const netCharge = Math.max(0, afterDiscount - giftCardCents);
 
   // Build the sale items. A gallery/collection unlock expands into one item per
   // photo (each gets its own download grant); the price sits on the first item.
@@ -82,18 +96,29 @@ export async function POST(request: NextRequest) {
     paymentMode: manual ? "manual" : "connected",
     discountCents,
     discountCode,
+    giftCardId,
+    giftCardCents,
     items,
   });
 
   const base = studioBaseUrl(studio);
+
+  // Gift card covers the order in full: nothing to charge — settle and deliver now.
+  if (netCharge <= 0 && giftCardCents > 0) {
+    const paid = await markSalePaid(sale.id, {});
+    if (paid?.firstTime) await fulfillPaidStoreSale(sale.id).catch((error) => log.error("store.free_fulfil_failed", { sale: sale.id, error: error instanceof Error ? error.message : String(error) }));
+    return NextResponse.redirect(storeLibraryUrl(studio, signLink("download", sale.id)), { status: 303 });
+  }
+
   if (manual) return NextResponse.redirect(`${base}/store/pending?sale=${sale.id}`, { status: 303 });
 
   const urls = { successUrl: `${base}/store/success?session_id={CHECKOUT_SESSION_ID}`, cancelUrl: `${base}/shop/${product.slug}?cancelled=1` };
+  const desc = [storeLicenseLabels[license], discountCode ? `code ${discountCode}` : null, giftCardCents > 0 ? "gift card applied" : null].filter(Boolean).join(" · ");
   try {
     const { url, sessionId } = await createStoreCheckout(
       studio,
       sale,
-      [{ name: `${storeResolutionLabels[resolution]} — ${product.title}`, description: discountCode ? `${storeLicenseLabels[license]} · code ${discountCode}` : storeLicenseLabels[license], amountCents: charged, quantity: 1 }],
+      [{ name: `${storeResolutionLabels[resolution]} — ${product.title}`, description: desc, amountCents: netCharge, quantity: 1 }],
       email,
       urls
     );

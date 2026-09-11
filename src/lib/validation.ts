@@ -99,6 +99,11 @@ export const storeDiscountSchema = z.object({
   maxUses: z.coerce.number().int().min(1).max(1_000_000).optional(),
 });
 
+export const storeGiftCardSchema = z.object({
+  initialCents: z.coerce.number().int().min(1, "Enter an amount.").max(10_000_000),
+  expiresAt: z.string().datetime({ offset: true }).optional().or(z.literal("")),
+});
+
 export const orderSchema = z.object({
   clientId: z.string().uuid(),
   packageId: z.string().uuid().optional().or(z.literal("")),

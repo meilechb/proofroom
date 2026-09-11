@@ -105,6 +105,11 @@ export function giftCardSpend(dueCents: number, balanceCents: number): number {
   return Math.min(cents(dueCents), cents(balanceCents));
 }
 
+/** Normalise a gift-card code for lookup: uppercase, keep only A–Z and 0–9. */
+export function normalizeGiftCode(input: string): string {
+  return input.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
 export type RmUsage = Record<string, string | number | boolean | null>;
 export type RmMatrixRow = { when: RmUsage; amountCents: number };
 

@@ -6,6 +6,7 @@ import {
   discountAmount,
   giftCardSpend,
   lineTotal,
+  normalizeGiftCode,
   rmPrice,
   selectPrice,
   storeSettings,
@@ -78,6 +79,15 @@ describe("giftCardSpend", () => {
     expect(giftCardSpend(8000, 5000)).toBe(5000);
     expect(giftCardSpend(3000, 5000)).toBe(3000);
     expect(giftCardSpend(-1, 5000)).toBe(0);
+  });
+});
+
+describe("normalizeGiftCode", () => {
+  it("uppercases and strips separators and spaces so any typed form matches", () => {
+    expect(normalizeGiftCode("abcd-efgh-jklm-npqr")).toBe("ABCDEFGHJKLMNPQR");
+    expect(normalizeGiftCode("ABCD EFGH")).toBe("ABCDEFGH");
+    expect(normalizeGiftCode(" a1b2 ")).toBe("A1B2");
+    expect(normalizeGiftCode("")).toBe("");
   });
 });
 

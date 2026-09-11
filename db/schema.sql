@@ -1264,3 +1264,9 @@ alter table gallery_downloads add constraint gallery_downloads_kind_check check 
 
 -- Both Stripe webhook routes stamp processed_at; the column was never declared.
 alter table stripe_events add column if not exists processed_at timestamptz;
+
+-- A sale can be part-paid with a studio gift card. The spend is drawn down on
+-- fulfilment (guarded, once) so an abandoned checkout never touches the balance.
+-- Declared here, after gift_cards exists, so the reference resolves.
+alter table sales add column if not exists gift_card_id uuid references gift_cards (id) on delete set null;
+alter table sales add column if not exists gift_card_cents integer not null default 0;

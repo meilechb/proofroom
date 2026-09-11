@@ -506,6 +506,8 @@ export type Sale = {
   status: SaleStatus;
   payment_mode: StorePaymentMode;
   discount_code: string | null;
+  gift_card_id: string | null;
+  gift_card_cents: number;
   stripe_account_id: string | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;

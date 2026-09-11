@@ -1,18 +1,20 @@
 import "server-only";
 
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { db, one, rows } from "@/lib/db";
 import { normalizeSlug } from "@/lib/slug";
 import { hmac } from "@/lib/tokens";
 import { requireEnv } from "@/lib/env";
 import { formatMoney } from "@/lib/types";
-import { storeSettings } from "@/lib/store-shared";
+import { normalizeGiftCode, storeSettings } from "@/lib/store-shared";
 import { signLink } from "@/lib/tenant-tokens";
 import { storeLibraryUrl } from "@/lib/tenant";
 import { sendStoreDeliveryEmail } from "@/lib/emails/studio";
 import type {
   DiscountCode,
   DownloadGrant,
+  GiftCard,
+  GiftCardTxn,
   ProductPrice,
   Sale,
   SaleItem,
@@ -216,6 +218,105 @@ export async function recordSaleRedemption(sale: Pick<Sale, "id" | "studio_id" |
   if (dc) await recordRedemption(sale.studio_id, dc.id, sale.id, sale.discount_cents);
 }
 
+// --- Gift cards -------------------------------------------------------------
+
+// No 0/O/1/I so a code survives being read aloud or typed from a photo.
+const GIFT_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+
+/** A friendly 16-char code shown in four groups, e.g. ABCD-EFGH-JKLM-NPQR. */
+function generateGiftCode() {
+  const bytes = randomBytes(16);
+  let out = "";
+  for (let i = 0; i < 16; i++) out += GIFT_ALPHABET[bytes[i] % GIFT_ALPHABET.length];
+  return out.match(/.{1,4}/g)!.join("-");
+}
+
+/** Keyed hash of a normalised code — we store this, never the code itself. */
+function giftCodeHash(normalized: string) {
+  return hmac(requireEnv("APP_SECRET"), `gift.${normalized}`);
+}
+
+export async function listGiftCards(studioId: string) {
+  return rows<GiftCard>(await db()`select * from gift_cards where studio_id = ${studioId} order by created_at desc`);
+}
+
+/**
+ * Issue a gift card. Returns the row plus its plaintext code, which is shown
+ * only once (the studio hands it to the buyer); we keep only a keyed hash.
+ */
+export async function issueGiftCard(studioId: string, input: { initialCents: number; currency: string; expiresAt?: string | null }) {
+  const code = generateGiftCode();
+  const normalized = normalizeGiftCode(code);
+  const card = one<GiftCard>(
+    await db()`
+      insert into gift_cards (studio_id, code_hash, code_last4, initial_cents, balance_cents, currency, expires_at)
+      values (${studioId}, ${giftCodeHash(normalized)}, ${normalized.slice(-4)}, ${input.initialCents}, ${input.initialCents}, ${input.currency}, ${input.expiresAt ?? null})
+      returning *`
+  );
+  if (!card) throw new Error("Could not issue gift card");
+  await db()`insert into gift_card_txns (studio_id, gift_card_id, delta_cents, reason) values (${studioId}, ${card.id}, ${input.initialCents}, 'issued')`;
+  return { card, code };
+}
+
+export async function setGiftCardActive(studioId: string, id: string, active: boolean) {
+  return one<GiftCard>(await db()`update gift_cards set is_active = ${active} where id = ${id} and studio_id = ${studioId} returning *`);
+}
+
+/** Studio manually credits or debits a balance (comp, correction); logs the delta. Never below zero. */
+export async function adjustGiftCard(studioId: string, id: string, deltaCents: number, reason: string) {
+  const card = one<GiftCard>(
+    await db()`update gift_cards set balance_cents = greatest(0, balance_cents + ${deltaCents}) where id = ${id} and studio_id = ${studioId} returning *`
+  );
+  if (!card) return null;
+  await db()`insert into gift_card_txns (studio_id, gift_card_id, delta_cents, reason) values (${studioId}, ${id}, ${deltaCents}, ${reason})`;
+  return card;
+}
+
+export async function listGiftCardTxns(studioId: string, cardId: string) {
+  return rows<GiftCardTxn>(await db()`select * from gift_card_txns where studio_id = ${studioId} and gift_card_id = ${cardId} order by created_at desc`);
+}
+
+/** An active, unexpired card with a positive balance, matched by its code; else null. */
+export async function findUsableGiftCard(studioId: string, code: string, now = new Date()) {
+  const normalized = normalizeGiftCode(code);
+  if (normalized.length < 8) return null;
+  const card = one<GiftCard>(
+    await db()`select * from gift_cards where studio_id = ${studioId} and code_hash = ${giftCodeHash(normalized)} and is_active and balance_cents > 0 limit 1`
+  );
+  if (!card) return null;
+  if (card.expires_at && new Date(card.expires_at) < now) return null;
+  return card;
+}
+
+/**
+ * Draw down a card's balance for a sale in a single guarded statement, so
+ * concurrent spends can never push it below zero. Returns the cents actually
+ * spent (min of the asked amount and the balance) and logs a ledger entry.
+ */
+export async function spendGiftCard(studioId: string, cardId: string, saleId: string, amountCents: number) {
+  if (amountCents <= 0) return 0;
+  const r = one<{ spent: number }>(
+    await db()`
+      with c as (select balance_cents from gift_cards where id = ${cardId} and studio_id = ${studioId} for update)
+      update gift_cards g set balance_cents = g.balance_cents - least(g.balance_cents, ${amountCents})
+      from c where g.id = ${cardId} and g.studio_id = ${studioId}
+      returning least(c.balance_cents, ${amountCents})::int as spent`
+  );
+  const spent = r?.spent ?? 0;
+  if (spent > 0) {
+    await db()`insert into gift_card_txns (studio_id, gift_card_id, sale_id, delta_cents, reason) values (${studioId}, ${cardId}, ${saleId}, ${-spent}, 'redeemed')`;
+  }
+  return spent;
+}
+
+/** Draws down a paid sale's gift card once (idempotent per sale via the ledger). */
+export async function recordSaleGiftCard(sale: Pick<Sale, "id" | "studio_id" | "gift_card_id" | "gift_card_cents">) {
+  if (!sale.gift_card_id || sale.gift_card_cents <= 0) return;
+  const already = await db()`select 1 from gift_card_txns where sale_id = ${sale.id} limit 1`;
+  if (already.length > 0) return;
+  await spendGiftCard(sale.studio_id, sale.gift_card_id, sale.id, sale.gift_card_cents);
+}
+
 // --- Fast path: sell an existing gallery photo or portfolio asset -----------
 
 export async function markSellable(
@@ -265,16 +366,20 @@ export async function createSale(
     items: NewSaleItem[];
     discountCents?: number;
     discountCode?: string | null;
+    giftCardId?: string | null;
+    giftCardCents?: number;
   }
 ) {
   const subtotal = input.items.reduce((s, i) => s + i.amountCents, 0);
   const discount = Math.min(subtotal, Math.max(0, input.discountCents ?? 0));
-  const total = Math.max(0, subtotal - discount);
+  const afterDiscount = subtotal - discount;
+  const gift = Math.min(afterDiscount, Math.max(0, input.giftCardCents ?? 0));
+  const total = Math.max(0, afterDiscount - gift);
   const number = await nextSaleNumber(studioId);
   const sale = one<Sale>(
     await db()`
-      insert into sales (studio_id, order_number, buyer_email, buyer_name, buyer_client_id, subtotal_cents, discount_cents, total_cents, currency, status, payment_mode, discount_code)
-      values (${studioId}, ${number}, ${input.buyerEmail}, ${input.buyerName ?? null}, ${input.buyerClientId ?? null}, ${subtotal}, ${discount}, ${total}, ${input.currency}, 'pending', ${input.paymentMode}, ${input.discountCode ?? null})
+      insert into sales (studio_id, order_number, buyer_email, buyer_name, buyer_client_id, subtotal_cents, discount_cents, total_cents, currency, status, payment_mode, discount_code, gift_card_id, gift_card_cents)
+      values (${studioId}, ${number}, ${input.buyerEmail}, ${input.buyerName ?? null}, ${input.buyerClientId ?? null}, ${subtotal}, ${discount}, ${total}, ${input.currency}, 'pending', ${input.paymentMode}, ${input.discountCode ?? null}, ${input.giftCardId ?? null}, ${gift})
       returning *`
   );
   if (!sale) throw new Error("Could not create sale");
@@ -414,6 +519,7 @@ export async function fulfillPaidStoreSale(saleId: string) {
   const settings = storeSettings(studio.settings ?? {});
   await mintGrants(sale, { maxDownloads: settings.downloadMaxCount, windowHours: settings.downloadWindowHours });
   await recordSaleRedemption(sale).catch(() => undefined);
+  await recordSaleGiftCard(sale).catch(() => undefined);
   const amount = formatMoney(sale.total_cents, sale.currency);
   const url = storeLibraryUrl(studio, signLink("download", sale.id));
   await sendStoreDeliveryEmail({ id: studio.id, name: studio.name, email: studio.email }, { to: sale.buyer_email, buyerName: sale.buyer_name, amount, orderNumber: sale.order_number, url }).catch(() => undefined);

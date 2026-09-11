@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireEntitledStudio } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { archiveProduct, createDiscount, createProduct, markManualSalePaid, replaceProductPrices, setDiscountActive, updateProduct, type ProductPriceInput } from "@/lib/store";
-import { fieldErrors, storeDiscountSchema, storePriceRowSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
+import { adjustGiftCard, archiveProduct, createDiscount, createProduct, issueGiftCard, markManualSalePaid, replaceProductPrices, setDiscountActive, setGiftCardActive, updateProduct, type ProductPriceInput } from "@/lib/store";
+import { fieldErrors, storeDiscountSchema, storeGiftCardSchema, storePriceRowSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
 import { cents, int, str, type ActionState } from "@/lib/action-state";
 import type { StoreProductKind } from "@/lib/types";
 
@@ -136,6 +136,40 @@ export async function toggleDiscountAction(formData: FormData) {
   const id = str(formData, "id", 64);
   await setDiscountActive(studio.id, id, str(formData, "active", 5) === "true");
   revalidatePath("/studio/store/discounts");
+}
+
+export async function issueGiftCardAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const amount = Number(str(formData, "amount", 20).replace(/[^0-9.]/g, "")) || 0;
+  const expiresDate = str(formData, "expires", 20);
+  const parsed = storeGiftCardSchema.safeParse({
+    initialCents: Math.round(amount * 100),
+    expiresAt: expiresDate ? `${expiresDate}T23:59:59.000Z` : "",
+  });
+  if (!parsed.success) return { error: "Please fix the highlighted fields.", fields: fieldErrors(parsed.error) };
+  const { code } = await issueGiftCard(studio.id, {
+    initialCents: parsed.data.initialCents,
+    currency: studio.currency,
+    expiresAt: parsed.data.expiresAt || null,
+  });
+  revalidatePath("/studio/store/gift-cards");
+  return { ok: true, message: `Gift card created. Code: ${code} — copy it now; it is not shown again.` };
+}
+
+export async function adjustGiftCardAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const id = str(formData, "id", 64);
+  const amount = Number(str(formData, "amount", 20).replace(/[^0-9.-]/g, "")) || 0;
+  const deltaCents = Math.round(amount * 100);
+  if (id && deltaCents !== 0) await adjustGiftCard(studio.id, id, deltaCents, "adjusted");
+  revalidatePath("/studio/store/gift-cards");
+}
+
+export async function toggleGiftCardAction(formData: FormData) {
+  const { studio } = await requireEntitledStudio("store", "admin");
+  const id = str(formData, "id", 64);
+  await setGiftCardActive(studio.id, id, str(formData, "active", 5) === "true");
+  revalidatePath("/studio/store/gift-cards");
 }
 
 export async function markManualPaidAction(formData: FormData) {
