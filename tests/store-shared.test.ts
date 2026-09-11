@@ -13,6 +13,7 @@ import {
   lineTotal,
   normalizeGiftCode,
   parseRmMatrix,
+  parseVolumeTiers,
   resolveStorePrice,
   rmPrice,
   selectPrice,
@@ -193,6 +194,23 @@ describe("cleanRmUsage / isCompleteRmUsage", () => {
     expect(isCompleteRmUsage({ usage: "commercial", term: "3y", territory: "national" })).toBe(true);
     expect(isCompleteRmUsage({ usage: "commercial", term: "3y" })).toBe(false);
     expect(isCompleteRmUsage({ usage: "commercial", term: "3y", territory: "mars" })).toBe(false);
+  });
+});
+
+describe("parseVolumeTiers", () => {
+  it("keeps valid tiers, sorted and deduped by min", () => {
+    expect(parseVolumeTiers([{ min: 10, unitAmountCents: 3000 }, { min: 1, unitAmountCents: 5000 }])).toEqual([
+      { min: 1, unitAmountCents: 5000 },
+      { min: 10, unitAmountCents: 3000 },
+    ]);
+    // last wins on a duplicate min
+    expect(parseVolumeTiers([{ min: 5, unitAmountCents: 4000 }, { min: 5, unitAmountCents: 3500 }])).toEqual([{ min: 5, unitAmountCents: 3500 }]);
+  });
+  it("drops malformed rows and parses a json string", () => {
+    expect(parseVolumeTiers([{ min: 0, unitAmountCents: 100 }, { min: 2, unitAmountCents: -1 }, { min: 3 }])).toEqual([]);
+    expect(parseVolumeTiers('[{"min":1,"unitAmountCents":900}]')).toEqual([{ min: 1, unitAmountCents: 900 }]);
+    expect(parseVolumeTiers(null)).toEqual([]);
+    expect(parseVolumeTiers("not json")).toEqual([]);
   });
 });
 

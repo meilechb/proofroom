@@ -77,6 +77,34 @@ export function bundleTotal(count: number, tiers: VolumeTier[]): number {
   return cents(unit) * n;
 }
 
+/**
+ * Read a stored volume-tiers jsonb into clean {min, unitAmountCents} rows:
+ * positive integer mins and non-negative cents only, deduped by min (last wins)
+ * and sorted ascending. Anything malformed is dropped. Pure and client-safe.
+ */
+export function parseVolumeTiers(raw: unknown): VolumeTier[] {
+  const arr = Array.isArray(raw) ? raw : typeof raw === "string" ? safeJsonArray(raw) : [];
+  const byMin = new Map<number, number>();
+  for (const row of arr) {
+    if (!row || typeof row !== "object") continue;
+    const r = row as { min?: unknown; unitAmountCents?: unknown };
+    const min = Math.floor(Number(r.min));
+    const unit = Math.round(Number(r.unitAmountCents));
+    if (!Number.isFinite(min) || min < 1 || !Number.isFinite(unit) || unit < 0) continue;
+    byMin.set(min, unit);
+  }
+  return [...byMin.entries()].map(([min, unitAmountCents]) => ({ min, unitAmountCents })).sort((a, b) => a.min - b.min);
+}
+
+function safeJsonArray(raw: string): unknown[] {
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
 /** Select the active price for a resolution + licence, or null when none matches. */
 export function selectPrice(
   prices: Pick<ProductPrice, "resolution" | "license" | "amount_cents" | "is_active">[],

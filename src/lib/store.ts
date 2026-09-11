@@ -6,7 +6,7 @@ import { normalizeSlug } from "@/lib/slug";
 import { hmac } from "@/lib/tokens";
 import { requireEnv } from "@/lib/env";
 import { formatMoney } from "@/lib/types";
-import { digitalExtOk, MAX_DIGITAL_BYTES, normalizeGiftCode, storeSettings, type RmMatrixRow } from "@/lib/store-shared";
+import { digitalExtOk, MAX_DIGITAL_BYTES, normalizeGiftCode, storeSettings, type RmMatrixRow, type VolumeTier } from "@/lib/store-shared";
 import { signLink } from "@/lib/tenant-tokens";
 import { shopUrl, storeLibraryUrl } from "@/lib/tenant";
 import { clientUploadToken, deleteBlobs, digitalPath, safeFilename } from "@/lib/storage";
@@ -60,6 +60,7 @@ export type ProductPriceInput = {
   minPick?: number | null;
   maxPick?: number | null;
   rmMatrix?: RmMatrixRow[] | null;
+  volumeTiers?: VolumeTier[] | null;
   saleStartsAt?: string | null;
   saleEndsAt?: string | null;
 };
@@ -157,8 +158,8 @@ export async function replaceProductPrices(studioId: string, productId: string, 
   let i = 0;
   for (const r of priceRows) {
     await db()`
-      insert into product_prices (studio_id, product_id, resolution, license, amount_cents, compare_at_cents, min_pick, max_pick, rm_matrix, sale_starts_at, sale_ends_at, sort_order)
-      values (${studioId}, ${productId}, ${r.resolution}, ${r.license}, ${r.amountCents}, ${r.compareAtCents ?? null}, ${r.minPick ?? null}, ${r.maxPick ?? null}, ${r.rmMatrix && r.rmMatrix.length ? JSON.stringify(r.rmMatrix) : null}, ${r.saleStartsAt ?? null}, ${r.saleEndsAt ?? null}, ${i++})`;
+      insert into product_prices (studio_id, product_id, resolution, license, amount_cents, compare_at_cents, min_pick, max_pick, rm_matrix, volume_tiers, sale_starts_at, sale_ends_at, sort_order)
+      values (${studioId}, ${productId}, ${r.resolution}, ${r.license}, ${r.amountCents}, ${r.compareAtCents ?? null}, ${r.minPick ?? null}, ${r.maxPick ?? null}, ${r.rmMatrix && r.rmMatrix.length ? JSON.stringify(r.rmMatrix) : null}, ${r.volumeTiers && r.volumeTiers.length ? JSON.stringify(r.volumeTiers) : null}, ${r.saleStartsAt ?? null}, ${r.saleEndsAt ?? null}, ${i++})`;
   }
   return listProductPrices(studioId, productId);
 }

@@ -1275,3 +1275,7 @@ alter table sales add column if not exists gift_card_cents integer not null defa
 -- so fulfilment issues it exactly once.
 alter table gift_cards add column if not exists sale_item_id uuid references sale_items (id) on delete set null;
 create unique index if not exists gift_cards_sale_item_idx on gift_cards (sale_item_id) where sale_item_id is not null;
+
+-- Pick-N bundles can price per photo by volume: a jsonb array of
+-- {min, unitAmountCents} tiers, applied server-side (see store-shared.bundleTotal).
+alter table product_prices add column if not exists volume_tiers jsonb;

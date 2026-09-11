@@ -432,6 +432,7 @@ export type ProductPrice = {
   min_pick: number | null;
   max_pick: number | null;
   rm_matrix: unknown | null;
+  volume_tiers: unknown | null;
   sale_starts_at: string | null;
   sale_ends_at: string | null;
   is_active: boolean;
