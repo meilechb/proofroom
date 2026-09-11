@@ -30,7 +30,7 @@ const rank: Record<MembershipRole, number> = { member: 0, admin: 1, owner: 2 };
 export function StudioNav({ role }: { role: MembershipRole }) {
   const pathname = usePathname();
   return (
-    <nav className="px-2 pb-3 lg:pb-0 flex lg:flex-col gap-1 overflow-x-auto" aria-label="Studio">
+    <nav className="px-2 pb-3 lg:pb-0 lg:pt-1 flex lg:flex-col gap-0.5 overflow-x-auto" aria-label="Studio">
       {items
         .filter((i) => !i.minRole || rank[role] >= rank[i.minRole])
         .map((i) => {
@@ -40,7 +40,10 @@ export function StudioNav({ role }: { role: MembershipRole }) {
               key={i.href}
               href={i.href}
               aria-current={active ? "page" : undefined}
-              className={cx("rounded-md px-3 py-2 text-sm whitespace-nowrap", active ? "bg-surface-2 text-ink font-medium" : "text-ink-2 hover:bg-surface-2 hover:text-ink")}
+              className={cx(
+                "rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-colors",
+                active ? "bg-white/12 text-white font-medium" : "text-white/70 hover:bg-white/8 hover:text-white",
+              )}
             >
               {i.label}
             </Link>
