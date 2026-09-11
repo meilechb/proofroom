@@ -3,29 +3,24 @@ import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { billingState, entitlements } from "@/lib/plans";
 import { storeSettings } from "@/lib/store-shared";
-import { listFavoriteProductIds, listProductPrices, listProducts } from "@/lib/store";
+import { listFavoriteProducts, listProductPrices } from "@/lib/store";
 import { readBuyerKey } from "@/lib/store-buyer";
 import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
 import { Container } from "@/components/site/sections";
-import { FavoriteButton } from "./favorite-button";
+import { FavoriteButton } from "../favorite-button";
 
-const SELLABLE = ["image", "bundle", "gallery_unlock", "collection_unlock", "digital"];
+export const metadata = { robots: { index: false, follow: false } };
 
-export async function generateMetadata({ params }: PageProps<"/t/[slug]/shop">) {
-  const { slug } = await params;
-  const studio = await studioBySlug(slug);
-  return { title: studio ? `Shop — ${studio.name}` : "Shop" };
-}
-
-export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) {
+export default async function FavoritesPage({ params }: PageProps<"/t/[slug]/shop/favorites">) {
   const { slug } = await params;
   const studio = await studioBySlug(slug);
   if (!studio) notFound();
   const settings = storeSettings((studio.settings ?? {}) as Record<string, unknown>);
   if (!settings.enabled || !entitlements(billingState(studio).effectivePlan).store) notFound();
 
-  const products = (await listProducts(studio.id, { activeOnly: true })).filter((p) => SELLABLE.includes(p.kind));
+  const buyerKey = await readBuyerKey();
+  const products = buyerKey ? await listFavoriteProducts(studio.id, buyerKey) : [];
   const cards = await Promise.all(
     products.map(async (p) => {
       const active = (await listProductPrices(studio.id, p.id)).filter((r) => r.is_active && r.amount_cents > 0);
@@ -35,24 +30,19 @@ export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) 
     })
   );
   const cur = studio.currency;
-  const buyerKey = await readBuyerKey();
-  const favorites = buyerKey ? await listFavoriteProductIds(studio.id, buyerKey) : new Set<string>();
 
   return (
     <div className="py-12 sm:py-16">
       <Container>
-        <div className="flex items-baseline justify-between gap-4">
-          <h1 className="text-3xl sm:text-4xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>Shop</h1>
-          {favorites.size > 0 ? <Link href="/shop/favorites" className="text-sm underline text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">Favourites ({favorites.size})</Link> : null}
-        </div>
-        <p className="mt-2 text-[var(--site-ink-2)]">Prints and downloads from {studio.name}.</p>
+        <Link href="/shop" className="text-sm text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">← Shop</Link>
+        <h1 className="mt-3 text-3xl sm:text-4xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>Favourites</h1>
         {cards.length === 0 ? (
-          <p className="mt-10 text-[var(--site-ink-2)]">Nothing here yet — check back soon.</p>
+          <p className="mt-10 text-[var(--site-ink-2)]">No favourites yet. Tap the heart on anything in the shop to save it here.</p>
         ) : (
           <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {cards.map(({ p, from, img }) => (
               <div key={p.id} className="group relative">
-                <FavoriteButton slug={slug} productId={p.id} favorited={favorites.has(p.id)} className="absolute right-2 top-2 z-10" />
+                <FavoriteButton slug={slug} productId={p.id} favorited className="absolute right-2 top-2 z-10" />
                 <Link href={`/shop/${p.slug}`} className="block">
                   <div className="aspect-[4/5] overflow-hidden rounded-xl bg-[var(--site-bg-2)]">
                     {img ? (

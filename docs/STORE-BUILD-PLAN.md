@@ -11,10 +11,10 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S4** store settings · **S5/S8** catalog admin (products with image picker, resolution×licence price rows, orders view)
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
-- **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
+- **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
 - **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** net revenue + orders view · **S27 (partial)** buyer licence / print-release document
 
-Remaining phases: S6 price sheets · S7 rights-managed matrix · S10 favorites · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S6 price sheets · S7 rights-managed matrix · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -315,11 +315,11 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S9.15 Tests: shop page renders only when enabled; disabled/Free studio 404s; nav includes Shop when on.
 
 ### Phase S10 — Favorites / wishlist
-- [ ] S10.1 `store_favorites` writers/readers in `store.ts` keyed by a buyer key (client token / hashed email).
-- [ ] S10.2 Favorite toggle on product cards & lightbox (reuse `Icon.Heart`/`HeartFilled`).
-- [ ] S10.3 "Favorites" view + "add favorites to cart" flow.
-- [ ] S10.4 `track(studio, "favorite", productId)`.
-- [ ] S10.5 Tests: favorite toggle idempotency, favorites→cart.
+- [x] S10.1 `store_favorites` writers/readers in `store.ts` (`toggleFavorite`, `listFavoriteProductIds`, `listFavoriteProducts`) keyed by an anonymous cookie buyer key (`store-buyer.ts`: `readBuyerKey`/`ensureBuyerKey`).
+- [x] S10.2 Heart toggle on shop cards and the product page (`FavoriteButton` server component + `toggleFavoriteAction`, progressively enhanced — works without JS).
+- [x] S10.3 "Favourites" view at `/shop/favorites` + a count link from the shop header.
+- [ ] S10.4 `track(studio, "favorite", productId)` — deferred to S25 store analytics.
+- [ ] S10.5 Tests — deferred to the S33 store test suite; toggle idempotency is guarded by the `unique (studio_id, buyer_key, product_id)` index + `on conflict do nothing`.
 
 ### Phase S11 — Cart & checkout (guest, wallet, discounts, gift cards)
 - [ ] S11.1 Client-side stateless cart (React state + `localStorage`, hydrated safely) — no server cart table required for the happy path.

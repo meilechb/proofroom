@@ -345,6 +345,35 @@ export async function issueSoldGiftCards(sale: Pick<Sale, "id" | "studio_id" | "
   return issued;
 }
 
+// --- Favorites / wishlist ---------------------------------------------------
+
+/** The product ids a buyer has favourited at one studio, for marking the grid. */
+export async function listFavoriteProductIds(studioId: string, buyerKey: string) {
+  const r = rows<{ product_id: string }>(await db()`select product_id from store_favorites where studio_id = ${studioId} and buyer_key = ${buyerKey} and product_id is not null`);
+  return new Set(r.map((x) => x.product_id));
+}
+
+/** Toggle a product favourite; returns the new state (true = now favourited). */
+export async function toggleFavorite(studioId: string, buyerKey: string, productId: string) {
+  const existing = await db()`select 1 from store_favorites where studio_id = ${studioId} and buyer_key = ${buyerKey} and product_id = ${productId} limit 1`;
+  if (existing.length > 0) {
+    await db()`delete from store_favorites where studio_id = ${studioId} and buyer_key = ${buyerKey} and product_id = ${productId}`;
+    return false;
+  }
+  await db()`insert into store_favorites (studio_id, buyer_key, product_id) values (${studioId}, ${buyerKey}, ${productId}) on conflict (studio_id, buyer_key, product_id) do nothing`;
+  return true;
+}
+
+/** A buyer's favourited, still-active products (most recent first). */
+export async function listFavoriteProducts(studioId: string, buyerKey: string) {
+  return rows<StoreProduct>(
+    await db()`
+      select p.* from store_favorites f join store_products p on p.id = f.product_id
+      where f.studio_id = ${studioId} and f.buyer_key = ${buyerKey} and p.is_active
+      order by f.created_at desc`
+  );
+}
+
 // --- Fast path: sell an existing gallery photo or portfolio asset -----------
 
 export async function markSellable(
