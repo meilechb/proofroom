@@ -10,6 +10,19 @@ import { NewSessionButton } from "./new-session-dialog";
 
 export const metadata = { title: "Sessions" };
 
+type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info" | "brand" | "gold";
+const ORDER_STATUS_TONE: Record<OrderStatus, BadgeTone> = {
+  draft: "neutral",
+  pending_payment: "danger",
+  paid: "success",
+  scheduled: "info",
+  editing: "warning",
+  proofing: "warning",
+  final_delivered: "success",
+  completed: "success",
+  cancelled: "neutral",
+};
+
 export default async function SessionsPage({ searchParams }: PageProps<"/studio/sessions">) {
   const ctx = await requireStudioPage();
   const sp = await searchParams;
@@ -61,7 +74,7 @@ export default async function SessionsPage({ searchParams }: PageProps<"/studio/
                         <div className="text-xs text-muted"><Link href={`/studio/clients/${o.client_id}`} className="hover:underline">{o.client_name}</Link></div>
                       </td>
                       <td className="px-4 py-3 border-b border-line hidden sm:table-cell text-ink-2">{o.scheduled_at ? formatDate(o.scheduled_at, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—"}</td>
-                      <td className="px-4 py-3 border-b border-line"><Badge tone={o.status === "completed" ? "success" : o.status === "cancelled" ? "neutral" : o.status === "pending_payment" ? "warning" : "brand"}>{orderStatusLabels[o.status as OrderStatus] ?? o.status}</Badge></td>
+                      <td className="px-4 py-3 border-b border-line"><Badge tone={ORDER_STATUS_TONE[o.status as OrderStatus] ?? "neutral"}>{orderStatusLabels[o.status as OrderStatus] ?? o.status}</Badge></td>
                       <td className="px-4 py-3 border-b border-line text-right">{formatMoney(o.amount_cents - o.discount_cents, cur)}</td>
                       <td className="px-4 py-3 border-b border-line text-right">{balance > 0 ? <span className="text-danger font-medium">{formatMoney(balance, cur)}</span> : <span className="text-muted">Paid</span>}</td>
                       <td className="px-4 py-3 border-b border-line text-center hidden md:table-cell">{o.contract_signed_at ? <Badge tone="success">Signed</Badge> : <Badge>Unsigned</Badge>}</td>

@@ -8,6 +8,7 @@ import { appDomain } from "@/lib/env";
 import { Field, Input } from "@/components/ui";
 import { FormMessage } from "@/components/forms/form-message";
 import { SubmitButton } from "@/components/forms/submit-button";
+import { GoogleAuthButton } from "../google-auth";
 
 export function SignupForm({ refCode = "" }: { refCode?: string }) {
   const [state, action] = useActionState(signupAction, initialActionState);
@@ -58,6 +59,7 @@ export function SignupForm({ refCode = "" }: { refCode?: string }) {
 
   return (
     <form action={action} className="mt-6 space-y-4" noValidate>
+      <GoogleAuthButton label="Sign up with Google" />
       <FormMessage state={state} />
       <input type="hidden" name="ref" value={refCode} />
       <input type="hidden" name="timezone" ref={timezoneRef} defaultValue="" />

@@ -9,6 +9,19 @@ import { Tabs } from "@/components/ui/tabs";
 import { EditClientButton, StageSelect, TimelineComposer } from "./client-forms";
 import { archiveClientAction } from "../actions";
 
+type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info" | "brand" | "gold";
+const ORDER_STATUS_TONE: Record<OrderStatus, BadgeTone> = {
+  draft: "neutral",
+  pending_payment: "danger",
+  paid: "success",
+  scheduled: "info",
+  editing: "warning",
+  proofing: "warning",
+  final_delivered: "success",
+  completed: "success",
+  cancelled: "neutral",
+};
+
 export async function generateMetadata({ params }: PageProps<"/studio/clients/[id]">) {
   const { id } = await params;
   const ctx = await requireStudioPage();
@@ -142,7 +155,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                       <tr key={o.id} className="hover:bg-surface-2/60">
                         <td className="px-4 py-3 border-b border-line"><Link href={`/studio/sessions/${o.id}`} className="font-medium hover:underline">#{o.order_number} {o.title}</Link></td>
                         <td className="px-4 py-3 border-b border-line text-ink-2">{o.scheduled_at ? formatDate(o.scheduled_at) : "—"}</td>
-                        <td className="px-4 py-3 border-b border-line"><Badge tone={o.status === "completed" ? "success" : o.status === "cancelled" ? "neutral" : "brand"}>{orderStatusLabels[o.status as OrderStatus] ?? o.status}</Badge></td>
+                        <td className="px-4 py-3 border-b border-line"><Badge tone={ORDER_STATUS_TONE[o.status as OrderStatus] ?? "neutral"}>{orderStatusLabels[o.status as OrderStatus] ?? o.status}</Badge></td>
                         <td className="px-4 py-3 border-b border-line text-right">{formatMoney(o.amount_cents - o.discount_cents, o.currency)}</td>
                         <td className="px-4 py-3 border-b border-line text-right">{bal > 0 ? <span className="text-danger font-medium">{formatMoney(bal, o.currency)}</span> : <span className="text-muted">—</span>}</td>
                       </tr>
@@ -163,7 +176,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                 <Link key={g.id} href={`/studio/galleries/${g.id}`} className="card card-pad hover:border-line-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium">{g.title}</span>
-                    <Badge tone={g.status === "published" ? "success" : "neutral"}>{g.status}</Badge>
+                    <Badge tone={g.status === "published" ? "success" : "neutral"}>{g.status === "published" ? "Live" : "Draft"}</Badge>
                   </div>
                   <p className="mt-1 text-xs text-muted">{g.photos} photos · {g.favorites} favorited · {formatDate(g.created_at)}</p>
                 </Link>

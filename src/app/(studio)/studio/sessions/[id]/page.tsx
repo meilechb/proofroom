@@ -15,6 +15,19 @@ import { CancelSessionButton, EditSessionButton, ManualPaymentButton, NoShowButt
 import { PlanCard } from "./plan-card";
 import { undoManualPaymentAction } from "./session-actions";
 
+type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info" | "brand" | "gold";
+const ORDER_STATUS_TONE: Record<OrderStatus, BadgeTone> = {
+  draft: "neutral",
+  pending_payment: "danger",
+  paid: "success",
+  scheduled: "info",
+  editing: "warning",
+  proofing: "warning",
+  final_delivered: "success",
+  completed: "success",
+  cancelled: "neutral",
+};
+
 export async function generateMetadata({ params }: PageProps<"/studio/sessions/[id]">) {
   const { id } = await params;
   const ctx = await requireStudioPage();
@@ -52,7 +65,7 @@ export default async function SessionDetailPage({ params }: PageProps<"/studio/s
         description={[client?.name, order.scheduled_at ? formatDate(order.scheduled_at, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Not scheduled", order.location].filter(Boolean).join(" · ")}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={order.status === "completed" ? "success" : order.status === "cancelled" ? "neutral" : order.status === "pending_payment" ? "warning" : "brand"}>{orderStatusLabels[order.status as OrderStatus] ?? order.status}</Badge>
+            <Badge tone={ORDER_STATUS_TONE[order.status as OrderStatus] ?? "neutral"}>{orderStatusLabels[order.status as OrderStatus] ?? order.status}</Badge>
             {slot?.status === "no_show" ? <Badge tone="neutral">No-show</Badge> : null}
             {slot && slot.status === "confirmed" && slotPast && order.status !== "cancelled" ? <NoShowButton orderId={order.id} /> : null}
             {order.status !== "cancelled" ? <EditSessionButton order={order} timezone={ctx.studio.timezone} /> : null}
@@ -70,10 +83,10 @@ export default async function SessionDetailPage({ params }: PageProps<"/studio/s
               <ManualPaymentButton orderId={order.id} currency={cur} />
             </div>
             <dl className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-              <div><dt className="text-muted text-xs">Total</dt><dd className="text-lg font-semibold">{formatMoney(money.total_cents, cur)}</dd></div>
-              <div><dt className="text-muted text-xs">Deposit</dt><dd className="text-lg font-semibold">{formatMoney(money.deposit_cents, cur)}</dd></div>
-              <div><dt className="text-muted text-xs">Paid</dt><dd className="text-lg font-semibold text-success">{formatMoney(money.paid_cents, cur)}</dd></div>
-              <div><dt className="text-muted text-xs">Balance</dt><dd className={cx("text-lg font-semibold", money.due_cents > 0 ? "text-danger" : "text-ink")}>{formatMoney(money.due_cents, cur)}</dd></div>
+              <div><dt className="text-muted text-xs uppercase tracking-wide">Total</dt><dd className="mt-1 font-display text-2xl leading-tight">{formatMoney(money.total_cents, cur)}</dd></div>
+              <div><dt className="text-muted text-xs uppercase tracking-wide">Deposit</dt><dd className="mt-1 font-display text-2xl leading-tight">{formatMoney(money.deposit_cents, cur)}</dd></div>
+              <div><dt className="text-muted text-xs uppercase tracking-wide">Paid</dt><dd className="mt-1 font-display text-2xl leading-tight text-success">{formatMoney(money.paid_cents, cur)}</dd></div>
+              <div><dt className="text-muted text-xs uppercase tracking-wide">Balance</dt><dd className={cx("mt-1 font-display text-2xl leading-tight", money.due_cents > 0 ? "text-danger" : "text-ink")}>{formatMoney(money.due_cents, cur)}</dd></div>
             </dl>
             {money.extras_cents > 0 ? <p className="mt-2 text-xs text-muted">Includes {formatMoney(money.extras_cents, cur)} in extra photo picks.</p> : null}
 
@@ -125,7 +138,7 @@ export default async function SessionDetailPage({ params }: PageProps<"/studio/s
                 {galleries.map((g) => (
                   <li key={g.id} className="flex items-center justify-between text-sm">
                     <Link href={`/studio/galleries/${g.id}`} className="font-medium hover:underline">{g.title}</Link>
-                    <Badge tone={g.status === "published" ? "success" : "neutral"}>{g.status}</Badge>
+                    <Badge tone={g.status === "published" ? "success" : "neutral"}>{g.status === "published" ? "Live" : "Draft"}</Badge>
                   </li>
                 ))}
               </ul>
