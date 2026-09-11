@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { studioBySlug } from "@/lib/tenant-data";
 import { billingState, entitlements } from "@/lib/plans";
-import { storeSettings } from "@/lib/store-shared";
+import { effectivePrice, storeSettings } from "@/lib/store-shared";
 import { getProductBySlug, listFavoriteProductIds, listProductPrices, listRelatedProducts } from "@/lib/store";
 import { readBuyerKey } from "@/lib/store-buyer";
 import { assetById } from "@/lib/assets";
@@ -38,7 +38,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   const related = await Promise.all(
     (await listRelatedProducts(studio.id, product.id)).map(async (r) => {
       const active = (await listProductPrices(studio.id, r.id)).filter((row) => row.is_active && row.amount_cents > 0);
-      const from = active.length ? Math.min(...active.map((row) => row.amount_cents)) : null;
+      const from = active.length ? Math.min(...active.map((row) => effectivePrice(row).priceCents)) : null;
       const a = r.asset_id ? await assetById(studio.id, r.asset_id) : null;
       return { r, from, img: a ? a.thumb_url ?? a.web_url ?? a.url : null };
     })

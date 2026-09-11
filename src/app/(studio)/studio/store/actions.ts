@@ -20,14 +20,27 @@ function parsePrices(raw: string): ProductPriceInput[] | null {
     return null;
   }
   if (!Array.isArray(arr)) return null;
+  const toIso = (v: unknown): string | null => {
+    if (typeof v !== "string" || !v.trim()) return null;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  };
   const out: ProductPriceInput[] = [];
   for (const row of arr) {
-    const r = row as { resolution?: unknown; license?: unknown; amount?: unknown; rmMatrix?: unknown };
+    const r = row as { resolution?: unknown; license?: unknown; amount?: unknown; rmMatrix?: unknown; compareAt?: unknown; saleStart?: unknown; saleEnd?: unknown };
     const amountCents = Math.round(Number(r.amount) * 100);
     const parsed = storePriceRowSchema.safeParse({ resolution: r.resolution, license: r.license, amountCents });
     if (!parsed.success) return null;
     const rmMatrix = parsed.data.license === "rm" && r.rmMatrix != null ? parseRmMatrix(r.rmMatrix) : null;
-    out.push({ ...parsed.data, rmMatrix });
+    const compareRaw = typeof r.compareAt === "string" ? r.compareAt.replace(/[^0-9.]/g, "") : "";
+    const compareCents = compareRaw ? Math.round(Number(compareRaw) * 100) : null;
+    out.push({
+      ...parsed.data,
+      rmMatrix,
+      compareAtCents: compareCents != null && Number.isFinite(compareCents) && compareCents >= 0 ? compareCents : null,
+      saleStartsAt: toIso(r.saleStart),
+      saleEndsAt: toIso(r.saleEnd),
+    });
   }
   return out;
 }

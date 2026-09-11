@@ -14,7 +14,7 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
 - **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document
 
-Remaining phases: S6 tiers/scheduled/sale prices · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N selection UI · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S6.4/S6.6 bundle tier config · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N selection UI · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -265,7 +265,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [x] S6.2 Apply a sheet to a product (`applyPriceSheetToProduct` → `replaceProductPrices`) from a per-product "Apply sheet…" control on the store list. _(Apply-to-whole-gallery/collection: deferred with the bulk mark-sellable flow.)_
 - [ ] S6.3 Per-product price override editor. _(Already covered by the product dialog's price rows.)_
 - [ ] S6.4 Volume/tier pricing config for bundles (N ranges → per-image price) — with S20.
-- [ ] S6.5 Compare-at / sale price + optional scheduled start/end (cron flips them — see S29).
+- [x] S6.5 Compare-at / sale price + optional scheduled start/end per price row (`effectivePrice`, unit-tested): inside the window the sale price is charged and the was-price struck through; outside it the regular price is charged. Computed at read time, so no cron flip is needed; `resolveStorePrice` uses it, storefront shows the strike-through and sale "from" prices.
 - [ ] S6.6 Min/max pick config for pick-N bundles — with S20.
 - [ ] S6.7 Free "web-share" tier toggle (share-size, watermarked, no print release).
 - [ ] S6.8 Tests: sheet application, tier math via `store-shared`, scheduled-price transitions.

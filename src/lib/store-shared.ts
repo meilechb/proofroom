@@ -190,6 +190,32 @@ export function isCompleteRmUsage(usage: RmUsage): boolean {
   return RM_DIMENSIONS.every((d) => isRmOption(d.key, usage[d.key]));
 }
 
+export type EffectivePrice = { priceCents: number; compareAtCents: number | null; onSale: boolean };
+
+/**
+ * The price to charge for a row plus an optional struck-through "compare at".
+ * `amount_cents` is the sale price and `compare_at_cents` the higher "was"
+ * price. With no window a compare-at is a standing sale. With a window, inside
+ * it the sale price applies and the was-price is struck through; outside it the
+ * regular (compare-at) price is charged and nothing is struck through.
+ */
+export function effectivePrice(
+  row: Pick<ProductPrice, "amount_cents" | "compare_at_cents" | "sale_starts_at" | "sale_ends_at">,
+  now: Date = new Date()
+): EffectivePrice {
+  const compare = row.compare_at_cents;
+  const hasWindow = row.sale_starts_at != null || row.sale_ends_at != null;
+  const inWindow = (!row.sale_starts_at || new Date(row.sale_starts_at) <= now) && (!row.sale_ends_at || new Date(row.sale_ends_at) >= now);
+  if (compare != null && compare > 0) {
+    if (!hasWindow || inWindow) {
+      const onSale = compare > row.amount_cents;
+      return { priceCents: row.amount_cents, compareAtCents: onSale ? compare : null, onSale };
+    }
+    return { priceCents: compare, compareAtCents: null, onSale: false }; // outside the window → regular price
+  }
+  return { priceCents: row.amount_cents, compareAtCents: null, onSale: false };
+}
+
 export type PriceResolution = { amountCents: number } | { quote: true } | null;
 
 /**
@@ -201,10 +227,11 @@ export type PriceResolution = { amountCents: number } | { quote: true } | null;
  * no matrix it is a flat `amount_cents` and the usage is just recorded.
  */
 export function resolveStorePrice(
-  prices: Pick<ProductPrice, "resolution" | "license" | "amount_cents" | "is_active" | "rm_matrix">[],
+  prices: Pick<ProductPrice, "resolution" | "license" | "amount_cents" | "compare_at_cents" | "sale_starts_at" | "sale_ends_at" | "is_active" | "rm_matrix">[],
   resolution: StoreResolution,
   license: StoreLicense,
-  usage?: RmUsage
+  usage?: RmUsage,
+  now: Date = new Date()
 ): PriceResolution {
   const row = prices.find((p) => p.is_active && p.resolution === resolution && p.license === license);
   if (!row) return null;
@@ -215,9 +242,11 @@ export function resolveStorePrice(
       const priced = rmPrice(u, matrix);
       return isCompleteRmUsage(u) && priced != null ? { amountCents: priced } : { quote: true };
     }
-    return row.amount_cents > 0 ? { amountCents: row.amount_cents } : { quote: true };
+    const flat = effectivePrice(row, now).priceCents;
+    return flat > 0 ? { amountCents: flat } : { quote: true };
   }
-  return row.amount_cents > 0 ? { amountCents: row.amount_cents } : null;
+  const eff = effectivePrice(row, now).priceCents;
+  return eff > 0 ? { amountCents: eff } : null;
 }
 
 export type CartLine = { unitAmountCents: number; qty: number };

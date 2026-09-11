@@ -5,6 +5,7 @@ import {
   cleanRmUsage,
   DEFAULT_STORE,
   discountAmount,
+  effectivePrice,
   giftCardSpend,
   isCompleteRmUsage,
   lineTotal,
@@ -136,13 +137,33 @@ describe("parseRmMatrix", () => {
   });
 });
 
+describe("effectivePrice", () => {
+  const now = new Date("2026-06-15T12:00:00Z");
+  it("no compare-at → just the amount", () => {
+    expect(effectivePrice({ amount_cents: 7500, compare_at_cents: null, sale_starts_at: null, sale_ends_at: null }, now)).toEqual({ priceCents: 7500, compareAtCents: null, onSale: false });
+  });
+  it("compare-at with no window is a standing sale (amount is the sale price)", () => {
+    expect(effectivePrice({ amount_cents: 5000, compare_at_cents: 8000, sale_starts_at: null, sale_ends_at: null }, now)).toEqual({ priceCents: 5000, compareAtCents: 8000, onSale: true });
+  });
+  it("inside the window charges the sale price and strikes through the was-price", () => {
+    expect(effectivePrice({ amount_cents: 5000, compare_at_cents: 8000, sale_starts_at: "2026-06-01T00:00:00Z", sale_ends_at: "2026-06-30T00:00:00Z" }, now)).toEqual({ priceCents: 5000, compareAtCents: 8000, onSale: true });
+  });
+  it("outside the window charges the regular (compare-at) price, no strikethrough", () => {
+    expect(effectivePrice({ amount_cents: 5000, compare_at_cents: 8000, sale_starts_at: "2026-07-01T00:00:00Z", sale_ends_at: null }, now)).toEqual({ priceCents: 8000, compareAtCents: null, onSale: false });
+    expect(effectivePrice({ amount_cents: 5000, compare_at_cents: 8000, sale_starts_at: null, sale_ends_at: "2026-06-01T00:00:00Z" }, now)).toEqual({ priceCents: 8000, compareAtCents: null, onSale: false });
+  });
+  it("a compare-at at or below the amount is not a sale", () => {
+    expect(effectivePrice({ amount_cents: 5000, compare_at_cents: 4000, sale_starts_at: null, sale_ends_at: null }, now)).toEqual({ priceCents: 5000, compareAtCents: null, onSale: false });
+  });
+});
+
 describe("resolveStorePrice", () => {
-  const base = { is_active: true, rm_matrix: null };
+  const base = { is_active: true, rm_matrix: null, compare_at_cents: null, sale_starts_at: null, sale_ends_at: null };
   const prices = [
     { resolution: "original" as const, license: "personal" as const, amount_cents: 7500, ...base },
     { resolution: "original" as const, license: "rf" as const, amount_cents: 0, ...base }, // zero → not for sale
-    { resolution: "original" as const, license: "rm" as const, amount_cents: 30000, rm_matrix: [{ when: { usage: "commercial" }, amountCents: 50000 }], is_active: true },
-    { resolution: "web" as const, license: "rm" as const, amount_cents: 12000, is_active: true, rm_matrix: null }, // flat rm, no matrix
+    { resolution: "original" as const, license: "rm" as const, amount_cents: 30000, ...base, rm_matrix: [{ when: { usage: "commercial" }, amountCents: 50000 }] },
+    { resolution: "web" as const, license: "rm" as const, amount_cents: 12000, ...base }, // flat rm, no matrix
   ];
   it("flat licences use amount_cents (or null when zero)", () => {
     expect(resolveStorePrice(prices, "original", "personal")).toEqual({ amountCents: 7500 });

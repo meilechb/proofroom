@@ -13,16 +13,26 @@ import { ImagePicker, type PickerAsset } from "../website/image-picker";
 import { saveProductAction } from "./actions";
 
 type Tier = { dims: Record<string, string>; amount: string };
-type Row = { resolution: StoreResolution; license: StoreLicense; amount: string; tiers: Tier[] };
+type Row = { resolution: StoreResolution; license: StoreLicense; amount: string; tiers: Tier[]; compareAt: string; saleStart: string; saleEnd: string };
 
 const RES: StoreResolution[] = ["web", "standard", "original"];
 const LIC: StoreLicense[] = ["personal", "rf", "rm", "extended"];
+const EMPTY_ROW: Row = { resolution: "original", license: "personal", amount: "", tiers: [], compareAt: "", saleStart: "", saleEnd: "" };
 
 function tiersFromMatrix(raw: unknown): Tier[] {
   return parseRmMatrix(raw).map((row) => ({
     dims: Object.fromEntries(RM_DIMENSIONS.map((d) => [d.key, typeof row.when[d.key] === "string" ? (row.when[d.key] as string) : ""])),
     amount: (row.amountCents / 100).toString(),
   }));
+}
+
+/** ISO → a `datetime-local` value (local wall time), for editing a stored sale window. */
+function toLocalInput(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export function ProductDialog({ product, prices, trigger, assets, galleries }: { product?: StoreProduct; prices?: ProductPrice[]; trigger: "add" | "edit"; assets: PickerAsset[]; galleries: { id: string; title: string }[] }) {
@@ -33,8 +43,16 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
   const [galleryId, setGalleryId] = useState<string>(product?.gallery_id ?? "");
   const [rows, setRows] = useState<Row[]>(
     prices && prices.length
-      ? prices.map((p) => ({ resolution: p.resolution, license: p.license, amount: (p.amount_cents / 100).toString(), tiers: p.license === "rm" ? tiersFromMatrix(p.rm_matrix) : [] }))
-      : [{ resolution: "original", license: "personal", amount: "", tiers: [] }]
+      ? prices.map((p) => ({
+          resolution: p.resolution,
+          license: p.license,
+          amount: (p.amount_cents / 100).toString(),
+          tiers: p.license === "rm" ? tiersFromMatrix(p.rm_matrix) : [],
+          compareAt: p.compare_at_cents != null ? (p.compare_at_cents / 100).toString() : "",
+          saleStart: toLocalInput(p.sale_starts_at),
+          saleEnd: toLocalInput(p.sale_ends_at),
+        }))
+      : [{ ...EMPTY_ROW }]
   );
   const setRow = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const setTier = (i: number, ti: number, patch: Partial<Tier>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, tiers: r.tiers.map((t, k) => (k === ti ? { ...t, ...patch } : t)) } : r)));
@@ -46,6 +64,9 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
         resolution: r.resolution,
         license: r.license,
         amount: r.amount,
+        compareAt: r.compareAt,
+        saleStart: r.saleStart,
+        saleEnd: r.saleEnd,
         ...(r.license === "rm"
           ? {
               rmMatrix: r.tiers
@@ -94,7 +115,7 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
           <div>
             <div className="flex items-center justify-between">
               <span className="label">Price options</span>
-              <button type="button" className="text-xs text-muted hover:text-ink" onClick={() => setRows((rs) => [...rs, { resolution: "original", license: "personal", amount: "", tiers: [] }])}>Add option</button>
+              <button type="button" className="text-xs text-muted hover:text-ink" onClick={() => setRows((rs) => [...rs, { ...EMPTY_ROW }])}>Add option</button>
             </div>
             {state.fields?.prices ? <p className="field-error" role="alert">{state.fields.prices}</p> : null}
             <div className="mt-2 space-y-3">
@@ -109,6 +130,11 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
                     </Select>
                     <Input aria-label="Price" inputMode="decimal" placeholder="0.00" value={r.amount} onChange={(e) => setRow(i, { amount: e.target.value })} className="w-24" />
                     {rows.length > 1 ? <button type="button" aria-label="Remove price option" className="text-muted hover:text-ink px-1" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>×</button> : null}
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-end gap-2 pl-1">
+                    <label className="text-[11px] text-muted">Compare-at<Input aria-label="Compare-at price" inputMode="decimal" placeholder="was…" value={r.compareAt} onChange={(e) => setRow(i, { compareAt: e.target.value })} className="w-20 h-8 text-xs mt-0.5" /></label>
+                    <label className="text-[11px] text-muted">Sale from<Input aria-label="Sale start" type="datetime-local" value={r.saleStart} onChange={(e) => setRow(i, { saleStart: e.target.value })} className="h-8 text-xs mt-0.5" /></label>
+                    <label className="text-[11px] text-muted">Sale until<Input aria-label="Sale end" type="datetime-local" value={r.saleEnd} onChange={(e) => setRow(i, { saleEnd: e.target.value })} className="h-8 text-xs mt-0.5" /></label>
                   </div>
                   {r.license === "rm" ? (
                     <div className="mt-2 pl-1">

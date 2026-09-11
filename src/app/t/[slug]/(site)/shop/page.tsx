@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { billingState, entitlements } from "@/lib/plans";
-import { storeSettings } from "@/lib/store-shared";
+import { effectivePrice, storeSettings } from "@/lib/store-shared";
 import { listFavoriteProductIds, listProductPrices, listProducts } from "@/lib/store";
 import { readBuyerKey } from "@/lib/store-buyer";
 import { assetById } from "@/lib/assets";
@@ -30,7 +30,7 @@ export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) 
   const cards = await Promise.all(
     products.map(async (p) => {
       const active = (await listProductPrices(studio.id, p.id)).filter((r) => r.is_active && r.amount_cents > 0);
-      const from = active.length ? Math.min(...active.map((r) => r.amount_cents)) : null;
+      const from = active.length ? Math.min(...active.map((r) => effectivePrice(r).priceCents)) : null;
       const asset = p.asset_id ? await assetById(studio.id, p.asset_id) : null;
       return { p, from, img: asset ? asset.thumb_url ?? asset.web_url ?? asset.url : null };
     })

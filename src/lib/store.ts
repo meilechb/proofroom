@@ -57,6 +57,8 @@ export type ProductPriceInput = {
   minPick?: number | null;
   maxPick?: number | null;
   rmMatrix?: RmMatrixRow[] | null;
+  saleStartsAt?: string | null;
+  saleEndsAt?: string | null;
 };
 
 async function uniqueProductSlug(studioId: string, base: string) {
@@ -145,8 +147,8 @@ export async function replaceProductPrices(studioId: string, productId: string, 
   let i = 0;
   for (const r of priceRows) {
     await db()`
-      insert into product_prices (studio_id, product_id, resolution, license, amount_cents, compare_at_cents, min_pick, max_pick, rm_matrix, sort_order)
-      values (${studioId}, ${productId}, ${r.resolution}, ${r.license}, ${r.amountCents}, ${r.compareAtCents ?? null}, ${r.minPick ?? null}, ${r.maxPick ?? null}, ${r.rmMatrix && r.rmMatrix.length ? JSON.stringify(r.rmMatrix) : null}, ${i++})`;
+      insert into product_prices (studio_id, product_id, resolution, license, amount_cents, compare_at_cents, min_pick, max_pick, rm_matrix, sale_starts_at, sale_ends_at, sort_order)
+      values (${studioId}, ${productId}, ${r.resolution}, ${r.license}, ${r.amountCents}, ${r.compareAtCents ?? null}, ${r.minPick ?? null}, ${r.maxPick ?? null}, ${r.rmMatrix && r.rmMatrix.length ? JSON.stringify(r.rmMatrix) : null}, ${r.saleStartsAt ?? null}, ${r.saleEndsAt ?? null}, ${i++})`;
   }
   return listProductPrices(studioId, productId);
 }
