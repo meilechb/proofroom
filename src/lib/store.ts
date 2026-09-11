@@ -573,8 +573,23 @@ export async function storeAnalytics(studioId: string) {
       from sales where studio_id = ${studioId} and status in ('paid', 'partially_refunded')
       group by buyer_email order by spend desc limit 5`
   );
+  // Last-30-day funnel counts from the daily analytics rollup (S25).
+  const funnel = one<{ store_views: number; product_views: number; cart_adds: number; checkout_starts: number; purchases: number }>(
+    await db()`
+      select
+        coalesce(sum(count) filter (where event = 'store_view'), 0)::int as store_views,
+        coalesce(sum(count) filter (where event = 'product_view'), 0)::int as product_views,
+        coalesce(sum(count) filter (where event = 'cart_add'), 0)::int as cart_adds,
+        coalesce(sum(count) filter (where event = 'checkout_start'), 0)::int as checkout_starts,
+        coalesce(sum(count) filter (where event = 'purchase'), 0)::int as purchases
+      from analytics_daily
+      where studio_id = ${studioId} and day >= current_date - 30
+        and event in ('store_view', 'product_view', 'cart_add', 'checkout_start', 'purchase')`
+  );
   const orders = totals?.orders ?? 0;
   const net = totals?.net ?? 0;
+  const productViews = funnel?.product_views ?? 0;
+  const purchases = funnel?.purchases ?? 0;
   return {
     grossCents: totals?.gross ?? 0,
     netCents: net,
@@ -584,6 +599,15 @@ export async function storeAnalytics(studioId: string) {
     giftCardOutstandingCents: giftOutstanding?.n ?? 0,
     topProducts,
     topBuyers,
+    funnel: {
+      storeViews: funnel?.store_views ?? 0,
+      productViews,
+      cartAdds: funnel?.cart_adds ?? 0,
+      checkoutStarts: funnel?.checkout_starts ?? 0,
+      purchases,
+    },
+    // Purchases per product view, last 30 days; the headline storefront conversion.
+    conversionPct: productViews > 0 ? Math.round((purchases / productViews) * 1000) / 10 : 0,
   };
 }
 

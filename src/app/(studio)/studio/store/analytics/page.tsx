@@ -31,8 +31,8 @@ export default async function StoreAnalyticsPage() {
           </div>
         }
       />
-      {a.orders === 0 ? (
-        <EmptyState title="No sales yet" description="Once you make your first sale, revenue and your top products appear here." />
+      {a.orders === 0 && a.funnel.storeViews === 0 && a.funnel.productViews === 0 ? (
+        <EmptyState title="No store activity yet" description="Once shoppers visit your shop or you make a sale, views, conversion and revenue appear here." />
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -46,6 +46,20 @@ export default async function StoreAnalyticsPage() {
             <p className="mt-3 text-xs text-muted">Gift-card balance outstanding: {formatMoney(a.giftCardOutstandingCents, cur)}</p>
           ) : null}
 
+          <section className="mt-8">
+            <h2 className="text-sm font-medium mb-2">Last 30 days</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <Stat label="Shop views" value={String(a.funnel.storeViews)} />
+              <Stat label="Product views" value={String(a.funnel.productViews)} />
+              <Stat label="Added to cart" value={String(a.funnel.cartAdds)} />
+              <Stat label="Checkouts" value={String(a.funnel.checkoutStarts)} />
+              <Stat label="Purchases" value={String(a.funnel.purchases)} />
+              <Stat label="Conversion" value={`${a.conversionPct}%`} />
+            </div>
+            <p className="mt-2 text-xs text-muted">Conversion is purchases per product view, last 30 days.</p>
+          </section>
+
+          {a.orders > 0 ? (
           <div className="mt-8 grid gap-8 lg:grid-cols-2">
             <section>
               <h2 className="text-sm font-medium mb-2">Top products</h2>
@@ -70,6 +84,7 @@ export default async function StoreAnalyticsPage() {
               </ul>
             </section>
           </div>
+          ) : null}
         </>
       )}
     </>
