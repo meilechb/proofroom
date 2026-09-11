@@ -9,6 +9,7 @@ import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
 import { productUrl } from "@/lib/tenant";
 import { Container } from "@/components/site/sections";
+import { JsonLd } from "@/components/site/json-ld";
 import { BuyForm } from "./buy-form";
 import { BundlePicker } from "./bundle-picker";
 import { ShareRow } from "./share-row";
@@ -77,7 +78,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   return (
     <div className="py-12 sm:py-16">
       <StoreBeacon event="product_view" target={product.id} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd data={jsonLd} />
       <Container>
         <div className="flex items-center justify-between gap-4">
           <Link href="/shop" className="text-sm text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">← Shop</Link>
