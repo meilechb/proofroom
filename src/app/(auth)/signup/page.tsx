@@ -24,7 +24,7 @@ export default async function SignupPage({ searchParams }: PageProps<"/signup">)
   return (
     <div className="card card-pad">
       <h1 className="text-xl font-semibold">Create your studio</h1>
-      <p className="mt-1 text-sm text-ink-2">14-day free trial. No card needed. One plan, everything included.</p>
+      <p className="mt-1 text-sm text-ink-2">Start free, no card needed. Every new studio also gets 14 days of Pro.</p>
       {referrer ? (
         <Notice tone="success" className="mt-4">
           Referred by <strong>{referrer}</strong>: you both get {REFERRAL_REWARD_TEXT} once your subscription starts.

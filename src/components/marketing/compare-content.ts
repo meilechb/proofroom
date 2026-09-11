@@ -36,7 +36,7 @@ export const COMPARE_PAGES: ComparePage[] = [
     lastChecked: "September 2026",
     pricing: [
       { label: "Unlimited-storage gallery plan", us: "$40 a month, everything included", them: "$40 a month (Ultimate)" },
-      { label: "Entry paid plan", us: "One plan only", them: "$8 a month for 10 GB" },
+      { label: "Entry paid plan", us: "Free, then $18/seat Pro", them: "$8 a month for 10 GB" },
       { label: "Free tier", us: "14-day trial, no card", them: "3 GB with a 15% commission on sales" },
       { label: "Commission on sales", us: "0%, always", them: "15% on the free plan, 0% on paid plans" },
       { label: "Studio management / CRM", us: "Included", them: "Separate Studio Manager: free, $12 or $18 a month; Suite bundles $28 to $55" },
@@ -82,7 +82,7 @@ export const COMPARE_PAGES: ComparePage[] = [
     lastChecked: "September 2026",
     pricing: [
       { label: "Unlimited-storage gallery plan", us: "$40 a month, everything included", them: "$42 a month" },
-      { label: "Entry paid plan", us: "One plan only", them: "$7 a month for 20 GB" },
+      { label: "Entry paid plan", us: "Free, then $18/seat Pro", them: "$7 a month for 20 GB" },
       { label: "Free tier", us: "14-day trial, no card", them: "10 GB, drops to 3 GB after 6 months" },
       { label: "Commission on sales", us: "0%, always", them: "6% to 15% of markup depending on plan" },
       { label: "Studio management / CRM", us: "Included", them: "Not offered; reviewers ask for client management" },
@@ -127,7 +127,7 @@ export const COMPARE_PAGES: ComparePage[] = [
     lastChecked: "September 2026",
     pricing: [
       { label: "Unlimited-storage gallery plan", us: "$40 a month, everything included", them: "$50 a month" },
-      { label: "Entry paid plan", us: "One plan only", them: "$10.99 a month" },
+      { label: "Entry paid plan", us: "Free, then $18/seat Pro", them: "$10.99 a month" },
       { label: "Free tier", us: "14-day trial, no card", them: "100 photos (3 GB from September 23, 2026)" },
       { label: "Commission on sales", us: "0%, always", them: "0%, always" },
       { label: "Studio management / CRM", us: "Included: inbox, clients, sessions, tasks, calendar", them: "Contracts and invoices; reviewers say gallery, contract and invoice do not all connect" },
@@ -173,7 +173,7 @@ export const COMPARE_PAGES: ComparePage[] = [
     lastChecked: "September 2026",
     pricing: [
       { label: "Unlimited-storage gallery plan", us: "$40 a month, everything included", them: "$50 a month" },
-      { label: "Entry paid plan", us: "One plan only", them: "$7 a month for 15 GB (Lite)" },
+      { label: "Entry paid plan", us: "Free, then $18/seat Pro", them: "$7 a month for 15 GB (Lite)" },
       { label: "Free tier", us: "14-day trial, no card", them: "5 GB, 3 galleries, 15% commission" },
       { label: "Commission on sales", us: "0%, always", them: "15% on free, 0% from Lite" },
       { label: "Studio management / CRM", us: "Included", them: "Included from the $17 plan" },

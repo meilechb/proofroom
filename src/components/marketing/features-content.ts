@@ -160,7 +160,7 @@ export const FEATURE_PAGES: FeaturePage[] = [
     faq: [
       { q: "Does it work with Lightroom (cloud) or Capture One?", a: "No. Adobe's plugin SDK exists only for Lightroom Classic. You can still upload from the web app with any tool." },
       { q: "Will it slow Lightroom down?", a: "Uploads run in the background like any Publish Service. Syncing favorites is a single request." },
-      { q: "Is the plugin included?", a: "Yes, for every studio on the one plan." },
+      { q: "Is the plugin included?", a: "Yes, on both Free and Pro." },
     ],
     related: ["galleries", "payments", "crm"],
   },
