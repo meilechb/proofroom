@@ -6,8 +6,8 @@ import { PLANS, PRO_SEAT_CENTS, TRIAL_DAYS, formatPrice } from "@/lib/plans";
 
 /** Building blocks shared by every marketing page (plan 8.3 to 8.15). */
 
-export function Section({ children, className, tone = "paper", id }: { children: ReactNode; className?: string; tone?: "paper" | "surface" | "ink"; id?: string }) {
-  const tones = { paper: "", surface: "bg-surface border-y border-line", ink: "bg-ink text-paper" } as const;
+export function Section({ children, className, tone = "paper", id }: { children: ReactNode; className?: string; tone?: "paper" | "surface" | "ink" | "pine"; id?: string }) {
+  const tones = { paper: "", surface: "bg-surface border-y border-line", ink: "bg-ink text-paper", pine: "bg-pine-deep text-white" } as const;
   return (
     <section id={id} className={cx("py-16 sm:py-24", tones[tone], className)}>
       <div className="container-x">{children}</div>
@@ -16,11 +16,11 @@ export function Section({ children, className, tone = "paper", id }: { children:
 }
 
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cx("text-xs font-semibold uppercase tracking-wider text-muted", className)}>{children}</p>;
+  return <p className={cx("eyebrow", className)}>{children}</p>;
 }
 
 export function Heading({ children, level = 2, className }: { children: ReactNode; level?: 1 | 2 | 3; className?: string }) {
-  const cls = cx(level === 1 ? "text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]" : level === 2 ? "text-3xl sm:text-4xl font-semibold tracking-tight" : "text-xl font-semibold tracking-tight", className);
+  const cls = cx(level === 1 ? "text-[2.75rem] sm:text-6xl lg:text-[4.25rem] font-normal leading-[1.03]" : level === 2 ? "text-3xl sm:text-[2.6rem] font-normal leading-[1.1]" : "text-xl font-medium", className);
   if (level === 1) return <h1 className={cls}>{children}</h1>;
   if (level === 3) return <h3 className={cls}>{children}</h3>;
   return <h2 className={cls}>{children}</h2>;
@@ -62,15 +62,15 @@ export function Screenshot({ label, ratio = "16/10", className }: { label: strin
 export function FeatureCard({ icon, title, children, href }: { icon?: ReactNode; title: string; children: ReactNode; href?: string }) {
   const body = (
     <>
-      {icon ? <div className="h-10 w-10 rounded-lg bg-surface-2 text-ink flex items-center justify-center">{icon}</div> : null}
-      <h3 className="mt-4 font-semibold">{title}</h3>
+      {icon ? <div className="h-11 w-11 rounded-xl bg-brand/10 text-brand flex items-center justify-center">{icon}</div> : null}
+      <h3 className="mt-4 text-xl font-normal">{title}</h3>
       <p className="mt-1.5 text-sm text-ink-2 leading-relaxed">{children}</p>
     </>
   );
   return href ? (
-    <Link href={href} className="card card-pad block hover:border-line-2 transition-colors">
+    <Link href={href} className="card card-pad block transition-all hover:border-brand/30 hover:shadow-[var(--shadow-lift)]">
       {body}
-      <span className="mt-3 inline-block text-sm font-medium underline">Learn more</span>
+      <span className="mt-3 inline-block text-sm font-semibold text-brand">Learn more →</span>
     </Link>
   ) : (
     <div className="card card-pad">{body}</div>
@@ -112,7 +112,7 @@ export function Faq({ items, title = "Questions" }: { items: Array<{ q: string; 
 export function PriceLine({ className }: { className?: string }) {
   return (
     <p className={cx("flex items-baseline gap-2", className)}>
-      <span className="text-5xl font-semibold tracking-tight">{formatPrice(PRO_SEAT_CENTS)}</span>
+      <span className="font-display text-5xl font-normal">{formatPrice(PRO_SEAT_CENTS)}</span>
       <span className="text-ink-2">per seat, per month</span>
     </p>
   );
@@ -127,27 +127,27 @@ export function PricingCards({ className }: { className?: string }) {
   return (
     <div className={cx("grid gap-6 md:grid-cols-2 max-w-4xl mx-auto items-start", className)}>
       <div className="card card-pad flex flex-col">
-        <h3 className="text-xl font-semibold">Free</h3>
+        <h3 className="text-xl font-normal">Free</h3>
         <p className="mt-1 text-sm text-ink-2">For solo photographers getting started.</p>
         <p className="mt-6 flex items-baseline gap-1.5">
-          <span className="text-4xl font-semibold tracking-tight">$0</span>
+          <span className="font-display text-4xl font-normal">$0</span>
           <span className="text-ink-2">forever</span>
         </p>
-        <StartFreeLink className="btn-secondary btn-lg mt-6 w-full justify-center">Start free</StartFreeLink>
+        <StartFreeLink className="btn-secondary btn-lg btn-pill mt-6 w-full justify-center">Start free</StartFreeLink>
         <p className="mt-2 text-center text-xs text-muted">No card needed.</p>
         <ul className="mt-8 space-y-3">
           {PLANS.free.highlights.map((h) => <Check key={h}>{h}</Check>)}
         </ul>
       </div>
-      <div className="card card-pad relative flex flex-col ring-2 ring-ink">
-        <span className="absolute -top-3 left-6 rounded-full bg-ink px-3 py-1 text-xs font-medium text-paper">Most popular</span>
-        <h3 className="text-xl font-semibold">Pro</h3>
+      <div className="card card-pad relative flex flex-col ring-2 ring-brand">
+        <span className="absolute -top-3 left-6 rounded-full bg-brand px-3 py-1 text-xs font-semibold text-brand-ink">Most popular</span>
+        <h3 className="text-xl font-normal">Pro</h3>
         <p className="mt-1 text-sm text-ink-2">Everything, for your whole team.</p>
         <p className="mt-6 flex items-baseline gap-1.5">
-          <span className="text-4xl font-semibold tracking-tight">{formatPrice(PRO_SEAT_CENTS)}</span>
+          <span className="font-display text-4xl font-normal">{formatPrice(PRO_SEAT_CENTS)}</span>
           <span className="text-ink-2">per seat / month</span>
         </p>
-        <StartFreeLink className="btn-primary btn-lg mt-6 w-full justify-center">Start free</StartFreeLink>
+        <StartFreeLink className="btn-primary btn-lg btn-pill mt-6 w-full justify-center">Start free</StartFreeLink>
         <p className="mt-2 text-center text-xs text-muted">Every new studio gets {TRIAL_DAYS} days of Pro, free. No card.</p>
         <ul className="mt-8 space-y-3">
           {PLANS.pro.highlights.map((h) => <Check key={h}>{h}</Check>)}
@@ -159,15 +159,15 @@ export function PricingCards({ className }: { className?: string }) {
 
 export function FinalCta({ title = "Start your free trial", lead }: { title?: string; lead?: ReactNode }) {
   return (
-    <Section tone="ink">
+    <Section tone="pine">
       <div className="max-w-2xl mx-auto text-center">
-        <Heading>{title}</Heading>
-        <p className="mt-4 text-lg text-paper/80">
+        <Heading className="text-white">{title}</Heading>
+        <p className="mt-4 text-lg text-white/80">
           {lead ?? `Start free, no card needed. Every new studio gets ${TRIAL_DAYS} days of Pro, then stays on Free or upgrades for ${formatPrice(PRO_SEAT_CENTS)} per seat.`}
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-          <StartFreeLink className="btn-lg inline-flex items-center justify-center rounded-xl bg-paper text-ink px-6 h-12 text-base font-medium hover:opacity-90">Start free</StartFreeLink>
-          <Link href="/pricing" className="btn-lg inline-flex items-center justify-center rounded-xl border border-paper/30 text-paper px-6 h-12 text-base font-medium hover:bg-paper/10">See pricing</Link>
+          <StartFreeLink className="btn-lg btn-pill inline-flex items-center justify-center bg-white text-pine px-7 h-12 text-base font-semibold hover:opacity-90">Start free</StartFreeLink>
+          <Link href="/pricing" className="btn-lg btn-pill inline-flex items-center justify-center border border-white/40 text-white px-6 h-12 text-base font-semibold hover:bg-white/10">See pricing</Link>
         </div>
       </div>
     </Section>
@@ -183,7 +183,7 @@ export function CompareTable({ caption, columns, rows }: { caption: string; colu
         <thead>
           <tr>
             {columns.map((c, i) => (
-              <th key={c} scope="col" className={cx("text-left font-medium text-xs uppercase tracking-wide px-4 py-3 border-b border-line", i === 1 ? "text-ink" : "text-muted")}>{c}</th>
+              <th key={c} scope="col" className={cx("text-left font-semibold text-xs uppercase tracking-wide px-4 py-3 border-b border-line", i === 1 ? "text-ink bg-warning-bg/45" : "text-muted")}>{c}</th>
             ))}
           </tr>
         </thead>
@@ -191,7 +191,7 @@ export function CompareTable({ caption, columns, rows }: { caption: string; colu
           {rows.map((r, i) => (
             <tr key={i}>
               {r.map((cell, j) => (
-                <td key={j} className={cx("px-4 py-3 border-b border-line align-top", j === 0 && "font-medium", j === 1 && "bg-success-bg/40")}>{cell}</td>
+                <td key={j} className={cx("px-4 py-3 border-b border-line align-top", j === 0 && "font-medium", j === 1 && "bg-warning-bg/45")}>{cell}</td>
               ))}
             </tr>
           ))}

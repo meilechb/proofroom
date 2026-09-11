@@ -77,7 +77,7 @@ export function MarketingHeader({ appName }: { appName: string }) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75">
       <div className="container-x h-16 flex items-center justify-between gap-6">
-        <Link href="/" className="inline-flex items-center gap-2 font-semibold" aria-label={`${appName} home`}>
+        <Link href="/" className="inline-flex items-center gap-2 font-display text-lg" aria-label={`${appName} home`}>
           <Logo name={appName} /> {appName}
         </Link>
         <nav className="hidden md:flex items-center gap-1" aria-label="Main">
@@ -94,7 +94,7 @@ export function MarketingHeader({ appName }: { appName: string }) {
         </nav>
         <div className="hidden md:flex items-center gap-2">
           <Link href="/login" className="btn-ghost">Log in</Link>
-          <StartFreeLink className="btn-primary">Start free</StartFreeLink>
+          <StartFreeLink className="btn-primary btn-pill">Start free</StartFreeLink>
         </div>
         <button
           ref={toggleRef}
@@ -128,8 +128,8 @@ export function MarketingHeader({ appName }: { appName: string }) {
             <Link href="/contact" className="rounded-md px-3 py-3 text-base text-ink hover:bg-surface-2">Contact</Link>
           </nav>
           <div className="container-x pb-8 flex flex-col gap-2">
-            <StartFreeLink className="btn-primary btn-lg">Start free</StartFreeLink>
-            <Link href="/login" className="btn-secondary btn-lg">Log in</Link>
+            <StartFreeLink className="btn-primary btn-lg btn-pill">Start free</StartFreeLink>
+            <Link href="/login" className="btn-secondary btn-lg btn-pill">Log in</Link>
           </div>
         </div>
       ) : null}

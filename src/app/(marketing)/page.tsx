@@ -50,7 +50,7 @@ export default function HomePage() {
         <div className="grid gap-12 lg:grid-cols-[1.05fr_1fr] lg:items-center">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-ink-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden /> Built for photographers who bill for their time
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden /> Built for photographers who bill for their time
             </p>
             <Heading level={1} className="mt-6">
               Cull in Lightroom.<br />Deliver in one click.<br />Get paid in your own Stripe.
@@ -59,8 +59,8 @@ export default function HomePage() {
               {APP_NAME} is the gallery, website, CRM and email tool for working photographers. Favorites and notes sync back into Lightroom Classic, clients pay you directly, and you keep 100% of what you charge.
             </Lead>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <StartFreeLink className="btn-primary btn-lg">Start free</StartFreeLink>
-              <Link href="/lightroom" className="btn-secondary btn-lg">See the Lightroom plugin</Link>
+              <StartFreeLink className="btn-primary btn-lg btn-pill">Start free</StartFreeLink>
+              <Link href="/lightroom" className="btn-secondary btn-lg btn-pill">See the Lightroom plugin</Link>
             </div>
             <p className="mt-4 text-sm text-muted">Free forever for solo photographers, no card. Every new studio also gets {TRIAL_DAYS} days of Pro.</p>
           </div>
@@ -82,8 +82,8 @@ export default function HomePage() {
         <ol className="mt-12 grid gap-6 md:grid-cols-3">
           {steps.map((s) => (
             <li key={s.n} className="card card-pad">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-ink text-paper text-sm font-semibold" aria-hidden>{s.n}</span>
-              <h3 className="mt-4 text-lg font-semibold">{s.title}</h3>
+              <span className="font-display inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent/12 text-accent text-lg italic" aria-hidden>{s.n}</span>
+              <h3 className="mt-4 text-xl font-normal">{s.title}</h3>
               <p className="mt-1.5 text-sm text-ink-2 leading-relaxed">{s.body}</p>
             </li>
           ))}

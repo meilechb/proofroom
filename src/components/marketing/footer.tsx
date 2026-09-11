@@ -51,36 +51,36 @@ const columns: Array<{ title: string; links: Array<{ href: string; label: string
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-line bg-surface mt-auto">
-      <div className="container-x py-12 grid gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
+    <footer className="bg-pine-deep text-white/70 mt-auto">
+      <div className="container-x py-14 grid gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
         <div>
-          <Link href="/" className="inline-flex items-center gap-2 font-semibold">
+          <Link href="/" className="inline-flex items-center gap-2 font-display text-lg text-white">
             <Logo name={APP_NAME} /> {APP_NAME}
           </Link>
-          <p className="mt-3 text-sm text-ink-2 max-w-xs">Client galleries, a Lightroom plugin, a website and a CRM for photographers. Paid into your own Stripe account, with no commission.</p>
-          <p className="mt-4 text-sm text-ink-2">
-            <a href={`mailto:${supportEmail()}`} className="underline hover:text-ink">{supportEmail()}</a>
+          <p className="mt-3 text-sm text-white/60 max-w-xs">Client galleries, a Lightroom plugin, a website and a CRM for photographers. Paid into your own Stripe account, with no commission.</p>
+          <p className="mt-4 text-sm">
+            <a href={`mailto:${supportEmail()}`} className="text-white/70 underline hover:text-white">{supportEmail()}</a>
           </p>
         </div>
         {columns.map((col) => (
           <nav key={col.title} aria-label={col.title}>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">{col.title}</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-white/45">{col.title}</h2>
             <ul className="mt-3 space-y-2">
               {col.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-ink-2 hover:text-ink">{l.label}</Link>
+                  <Link href={l.href} className="text-sm text-white/70 hover:text-white">{l.label}</Link>
                 </li>
               ))}
             </ul>
           </nav>
         ))}
       </div>
-      <div className="border-t border-line">
-        <div className="container-x py-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-xs text-muted">
+      <div className="border-t border-white/10">
+        <div className="container-x py-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-xs text-white/50">
           <p>© {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
           <p className="inline-flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-success" aria-hidden />
-            <Link href="/api/health" className="hover:text-ink">System status</Link>
+            <span className="inline-block h-2 w-2 rounded-full bg-gold" aria-hidden />
+            <Link href="/api/health" className="hover:text-white">System status</Link>
           </p>
         </div>
       </div>
