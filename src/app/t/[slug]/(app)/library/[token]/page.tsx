@@ -3,6 +3,7 @@ import { studioBySlug } from "@/lib/tenant-data";
 import { signLink, verifyLink } from "@/lib/tenant-tokens";
 import { getSaleById, grantToken, listGrantsForSale, listPaidSalesForBuyer, listSaleItems } from "@/lib/store";
 import { formatDate, formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
+import { ResendForm } from "../resend-form";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -16,7 +17,8 @@ export default async function LibraryPage({ params }: PageProps<"/t/[slug]/libra
     return (
       <div className="mx-auto w-full max-w-md px-5 py-24 text-center">
         <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>This link has expired</h1>
-        <p className="mt-3 text-[var(--site-ink-2)]">Ask {studio.name} to resend your download link.</p>
+        <p className="mt-3 text-[var(--site-ink-2)]">Enter your email to get a fresh link to your latest order.</p>
+        <div className="mt-4 text-left"><ResendForm slug={slug} /></div>
       </div>
     );
   }

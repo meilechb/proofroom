@@ -370,7 +370,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S16.2 Buyer library page `t/[slug]/(app)/library/[token]/page.tsx`: `verifyLink("download", token)` → sale(s) for that buyer; list items, downloads, receipts, license docs; re-download within window.
 - [x] S16.3 Per-item download + "Download all (ZIP)" (`/api/store/library/[token]/zip` streams `zipStream` of every still-downloadable grant, files rendered lazily; `resolveGrantFile` shared with the single-download route). Each included grant counts as one download; capped/expired grants are skipped.
 - [ ] S16.4 **ZIP splitting** for very large orders — a later refinement (the stream already avoids holding the order in memory).
-- [ ] S16.5 "Link expired / reset" flow: buyer requests a fresh library link by email (re-mint `signLink`); grant reset within policy.
+- [x] S16.5 Recover-by-email: a `/library` page (and the expired-token state) lets a buyer who lost their delivery email get a fresh link to their latest order (`resendLibraryAction` re-mints `signLink`, no order enumeration, rate-limited).
 - [ ] S16.6 `download_ready` email template + send from the webhook with the library link.
 - [ ] S16.7 Tests: library link verify/expiry, ZIP contents, split threshold, reset flow.
 
