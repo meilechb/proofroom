@@ -3,7 +3,7 @@ import Link from "next/link";
 import { studioBySlug } from "@/lib/tenant-data";
 import { billingState, entitlements } from "@/lib/plans";
 import { effectivePrice, storeSettings } from "@/lib/store-shared";
-import { getProductBySlug, listFavoriteProductIds, listProductPrices, listRelatedProducts, listSellablePhotos } from "@/lib/store";
+import { getProductBySlug, listCollectionAssets, listFavoriteProductIds, listProductPrices, listRelatedProducts, listSellablePhotos } from "@/lib/store";
 import { readBuyerKey } from "@/lib/store-buyer";
 import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
@@ -37,6 +37,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   const img = asset ? asset.web_url ?? asset.url : null;
   const bundlePrice = product.kind === "bundle" ? prices.find((p) => p.is_active && p.amount_cents > 0) ?? null : null;
   const bundlePhotos = bundlePrice && product.gallery_id ? await listSellablePhotos(studio.id, product.gallery_id) : [];
+  const collectionImages = product.kind === "collection_unlock" && product.collection_id ? await listCollectionAssets(studio.id, product.collection_id) : [];
   const buyerKey = await readBuyerKey();
   const favorited = buyerKey ? (await listFavoriteProductIds(studio.id, buyerKey)).has(product.id) : false;
   const related = await Promise.all(
@@ -86,6 +87,21 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
             ) : null}
           </div>
         </div>
+
+        {collectionImages.length > 0 ? (
+          <section className="mt-12 sm:mt-16">
+            <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>What&apos;s included</h2>
+            <p className="mt-1 text-sm text-[var(--site-ink-2)]">{collectionImages.length} image{collectionImages.length === 1 ? "" : "s"} — you get every one.</p>
+            <div className="mt-5 grid grid-cols-3 sm:grid-cols-5 gap-3">
+              {collectionImages.map((im) => (
+                <div key={im.item_id} className="aspect-square overflow-hidden rounded-lg bg-[var(--site-bg-2)]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={im.thumb_url ?? im.web_url ?? im.url} alt={im.filename} loading="lazy" className="h-full w-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {related.length > 0 ? (
           <section className="mt-14 sm:mt-20">

@@ -81,6 +81,11 @@ export async function POST(request: NextRequest) {
     const photos = rows<{ id: string }>(await db()`select id from photos where gallery_id = ${product.gallery_id} and studio_id = ${studio.id} and deleted_at is null and preview_url <> '' order by sort_order, created_at`);
     if (photos.length === 0) return new NextResponse("This gallery has no photos to sell yet.", { status: 409 });
     items = photos.map((ph, i) => ({ productId: product.id, photoId: ph.id, assetId: null, kind: "gallery_unlock", resolution, license, usageScope: usage, qty: 1, unitAmountCents: i === 0 ? amount : 0, amountCents: i === 0 ? amount : 0 }));
+  } else if (product.kind === "collection_unlock" && product.collection_id) {
+    // Every ready asset in the collection; the first line carries the price, the rest are 0.
+    const assets = rows<{ id: string }>(await db()`select ci.asset_id as id from store_collection_items ci join assets a on a.id = ci.asset_id where ci.studio_id = ${studio.id} and ci.collection_id = ${product.collection_id} and ci.asset_id is not null and a.url not like 'pending:%' order by ci.sort_order, ci.created_at`);
+    if (assets.length === 0) return new NextResponse("This collection has no images to sell yet.", { status: 409 });
+    items = assets.map((as, i) => ({ productId: product.id, photoId: null, assetId: as.id, kind: "collection_unlock", resolution, license, usageScope: usage, qty: 1, unitAmountCents: i === 0 ? amount : 0, amountCents: i === 0 ? amount : 0 }));
   } else {
     items = [{ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution, license, usageScope: usage, qty: 1, unitAmountCents: amount, amountCents: amount }];
   }

@@ -70,6 +70,8 @@ export async function saveProductAction(_prev: ActionState, formData: FormData):
   const kind: StoreProductKind = (KINDS as string[]).includes(kindRaw) ? (kindRaw as StoreProductKind) : "image";
   const galleryId = str(formData, "galleryId", 64) || null;
   if ((kind === "gallery_unlock" || kind === "bundle") && !galleryId) return { error: "Choose a gallery.", fields: { galleryId: "Pick a gallery." } };
+  const collectionId = str(formData, "collectionId", 64) || null;
+  if (kind === "collection_unlock" && !collectionId) return { error: "Choose a collection.", fields: { collectionId: "Pick a collection." } };
   const id = str(formData, "id", 64);
   const input = {
     kind,
@@ -81,6 +83,7 @@ export async function saveProductAction(_prev: ActionState, formData: FormData):
     photoId: str(formData, "photoId", 64) || null,
     assetId: str(formData, "assetId", 64) || null,
     galleryId,
+    collectionId,
   };
   const product = id ? await updateProduct(studio.id, id, input) : await createProduct(studio.id, input);
   if (product) await replaceProductPrices(studio.id, product.id, prices);

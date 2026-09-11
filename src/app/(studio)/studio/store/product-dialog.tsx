@@ -36,12 +36,15 @@ function toLocalInput(iso: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function ProductDialog({ product, prices, trigger, assets, galleries }: { product?: StoreProduct; prices?: ProductPrice[]; trigger: "add" | "edit"; assets: PickerAsset[]; galleries: { id: string; title: string }[] }) {
+export function ProductDialog({ product, prices, trigger, assets, galleries, collections = [] }: { product?: StoreProduct; prices?: ProductPrice[]; trigger: "add" | "edit"; assets: PickerAsset[]; galleries: { id: string; title: string }[]; collections?: { id: string; title: string }[] }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(saveProductAction, initialActionState);
   const [assetId, setAssetId] = useState<string | null>(product?.asset_id ?? null);
-  const [kind, setKind] = useState<string>(product?.kind === "gallery_unlock" ? "gallery_unlock" : product?.kind === "bundle" ? "bundle" : product?.kind === "digital" ? "digital" : "image");
+  const [kind, setKind] = useState<string>(
+    product?.kind === "gallery_unlock" ? "gallery_unlock" : product?.kind === "collection_unlock" ? "collection_unlock" : product?.kind === "bundle" ? "bundle" : product?.kind === "digital" ? "digital" : "image"
+  );
   const [galleryId, setGalleryId] = useState<string>(product?.gallery_id ?? "");
+  const [collectionId, setCollectionId] = useState<string>(product?.collection_id ?? "");
   const [rows, setRows] = useState<Row[]>(
     prices && prices.length
       ? prices.map((p) => ({
@@ -99,6 +102,7 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
           {product ? <input type="hidden" name="id" value={product.id} /> : null}
           <input type="hidden" name="kind" value={kind} />
           <input type="hidden" name="galleryId" value={kind === "gallery_unlock" || kind === "bundle" ? galleryId : ""} />
+          <input type="hidden" name="collectionId" value={kind === "collection_unlock" ? collectionId : ""} />
           <input type="hidden" name="prices" value={pricesJson} />
           <input type="hidden" name="assetId" value={assetId ?? ""} />
           <FormMessage state={state} />
@@ -108,6 +112,7 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
               <Select id="s-kind" value={kind} onChange={(e) => setKind(e.target.value)}>
                 <option value="image">A single image</option>
                 <option value="gallery_unlock">A whole gallery (unlock)</option>
+                <option value="collection_unlock">A whole collection (unlock)</option>
                 <option value="bundle">A pick-any bundle (from a gallery)</option>
                 <option value="digital">A digital file (preset, LUT, e-book)</option>
               </Select>
@@ -120,9 +125,17 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
                 </Select>
               </Field>
             ) : null}
+            {kind === "collection_unlock" ? (
+              <Field label="Collection" htmlFor="s-collection" hint="The buyer gets every image in it.">
+                <Select id="s-collection" value={collectionId} onChange={(e) => setCollectionId(e.target.value)}>
+                  <option value="">Choose a collection…</option>
+                  {collections.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </Select>
+              </Field>
+            ) : null}
           </div>
           <Field label="Description" htmlFor="s-desc"><Textarea id="s-desc" name="description" rows={2} defaultValue={product?.description ?? ""} /></Field>
-          <ImagePicker label={kind === "gallery_unlock" || kind === "digital" ? "Cover image" : "Image"} value={assetId} assets={assets} onChange={setAssetId} />
+          <ImagePicker label={kind === "gallery_unlock" || kind === "collection_unlock" || kind === "digital" ? "Cover image" : "Image"} value={assetId} assets={assets} onChange={setAssetId} />
           {kind === "digital" ? <p className="text-xs text-muted">Save the product, then use “Files” on it to upload the downloads buyers receive.</p> : null}
 
           <div>

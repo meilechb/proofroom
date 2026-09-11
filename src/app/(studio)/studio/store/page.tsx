@@ -1,6 +1,6 @@
 import { requireStudioPage } from "@/lib/auth";
 import { db, rows as sqlRows } from "@/lib/db";
-import { listDigitalFiles, listPriceSheets, listProductPrices, listProducts } from "@/lib/store";
+import { listCollections, listDigitalFiles, listPriceSheets, listProductPrices, listProducts } from "@/lib/store";
 import { isReady, listAssets } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
 import { Badge, ButtonLink, EmptyState, PageHeader, Select } from "@/components/ui";
@@ -40,6 +40,7 @@ export default async function StorePage() {
   );
   const pickerAssets: PickerAsset[] = (await listAssets(ctx.studio.id)).filter(isReady).map((a) => ({ id: a.id, thumb: a.thumb_url ?? a.web_url ?? a.url, filename: a.filename, alt: a.alt }));
   const galleryList = sqlRows<{ id: string; title: string }>(await db()`select id, title from galleries where studio_id = ${ctx.studio.id} and parent_id is null order by created_at desc`);
+  const collectionList = (await listCollections(ctx.studio.id)).map((c) => ({ id: c.id, title: c.title }));
   const sheets = await listPriceSheets(ctx.studio.id);
   const cur = ctx.studio.currency;
 
@@ -56,7 +57,7 @@ export default async function StorePage() {
             <ButtonLink href="/studio/store/gift-cards" variant="secondary">Gift cards</ButtonLink>
             <ButtonLink href="/studio/store/price-sheets" variant="secondary">Price sheets</ButtonLink>
             <ButtonLink href="/studio/store/settings" variant="secondary">Settings</ButtonLink>
-            <ProductDialog trigger="add" assets={pickerAssets} galleries={galleryList} />
+            <ProductDialog trigger="add" assets={pickerAssets} galleries={galleryList} collections={collectionList} />
           </div>
         }
       />
@@ -64,7 +65,7 @@ export default async function StorePage() {
         <EmptyState
           title="Nothing for sale yet"
           description="Add a product — an image, a package, or a whole-gallery unlock — with a price and a licence."
-          action={<ProductDialog trigger="add" assets={pickerAssets} galleries={galleryList} />}
+          action={<ProductDialog trigger="add" assets={pickerAssets} galleries={galleryList} collections={collectionList} />}
         />
       ) : (
         <ul className="space-y-3">
@@ -97,7 +98,7 @@ export default async function StorePage() {
                   ) : null}
                   {p.kind === "digital" ? <DigitalFilesDialog productId={p.id} files={digitalFiles.get(p.id) ?? []} /> : null}
                   {p.is_active ? <ProductEmbed url={productUrl(ctx.studio, p.slug)} snippet={embedSnippet(productUrl(ctx.studio, p.slug), p.title)} /> : null}
-                  <ProductDialog product={p} prices={rows} trigger="edit" assets={pickerAssets} galleries={galleryList} />
+                  <ProductDialog product={p} prices={rows} trigger="edit" assets={pickerAssets} galleries={galleryList} collections={collectionList} />
                   <form action={archiveProductAction}>
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="active" value={p.is_active ? "false" : "true"} />
