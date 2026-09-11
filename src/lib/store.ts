@@ -6,7 +6,7 @@ import { normalizeSlug } from "@/lib/slug";
 import { hmac } from "@/lib/tokens";
 import { requireEnv } from "@/lib/env";
 import { formatMoney } from "@/lib/types";
-import { normalizeGiftCode, storeSettings } from "@/lib/store-shared";
+import { normalizeGiftCode, storeSettings, type RmMatrixRow } from "@/lib/store-shared";
 import { signLink } from "@/lib/tenant-tokens";
 import { storeLibraryUrl } from "@/lib/tenant";
 import { sendGiftCardEmail, sendStoreDeliveryEmail } from "@/lib/emails/studio";
@@ -56,6 +56,7 @@ export type ProductPriceInput = {
   compareAtCents?: number | null;
   minPick?: number | null;
   maxPick?: number | null;
+  rmMatrix?: RmMatrixRow[] | null;
 };
 
 async function uniqueProductSlug(studioId: string, base: string) {
@@ -144,8 +145,8 @@ export async function replaceProductPrices(studioId: string, productId: string, 
   let i = 0;
   for (const r of priceRows) {
     await db()`
-      insert into product_prices (studio_id, product_id, resolution, license, amount_cents, compare_at_cents, min_pick, max_pick, sort_order)
-      values (${studioId}, ${productId}, ${r.resolution}, ${r.license}, ${r.amountCents}, ${r.compareAtCents ?? null}, ${r.minPick ?? null}, ${r.maxPick ?? null}, ${i++})`;
+      insert into product_prices (studio_id, product_id, resolution, license, amount_cents, compare_at_cents, min_pick, max_pick, rm_matrix, sort_order)
+      values (${studioId}, ${productId}, ${r.resolution}, ${r.license}, ${r.amountCents}, ${r.compareAtCents ?? null}, ${r.minPick ?? null}, ${r.maxPick ?? null}, ${r.rmMatrix && r.rmMatrix.length ? JSON.stringify(r.rmMatrix) : null}, ${i++})`;
   }
   return listProductPrices(studioId, productId);
 }
@@ -582,12 +583,12 @@ export async function listSaleItems(saleId: string) {
 
 /** Grouped licence lines for a sale, for the buyer's printable licence document. */
 export async function saleLicenseLines(studioId: string, saleId: string) {
-  return rows<{ license: StoreLicense; resolution: StoreResolution; title: string; license_text: string | null; count: number }>(
+  return rows<{ license: StoreLicense; resolution: StoreResolution; title: string; license_text: string | null; usage_scope: Record<string, unknown>; count: number }>(
     await db()`
-      select si.license, si.resolution, coalesce(p.title, 'Image') as title, p.license_text, count(*)::int as count
+      select si.license, si.resolution, coalesce(p.title, 'Image') as title, p.license_text, si.usage_scope, count(*)::int as count
       from sale_items si left join store_products p on p.id = si.product_id
       where si.sale_id = ${saleId} and si.studio_id = ${studioId}
-      group by si.license, si.resolution, p.title, p.license_text
+      group by si.license, si.resolution, p.title, p.license_text, si.usage_scope
       order by title`
   );
 }

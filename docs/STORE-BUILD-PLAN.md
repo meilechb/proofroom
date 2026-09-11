@@ -12,9 +12,9 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
-- **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document
+- **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document
 
-Remaining phases: S6 tiers/scheduled/sale prices · S7 rights-managed matrix · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N selection UI · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S6 tiers/scheduled/sale prices · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N selection UI · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -271,14 +271,14 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S6.8 Tests: sheet application, tier math via `store-shared`, scheduled-price transitions.
 
 ### Phase S7 — Licensing engine + license documents
-- [ ] S7.1 License catalog per studio: editable text for personal/print-release, RF, RM, extended; defaults seeded.
-- [ ] S7.2 Attach a license (and optional model/property release) to a product/price.
-- [ ] S7.3 RM usage-scope form model (media, circulation, duration, territory, exclusivity, industry) + `usage_scope` capture on `sale_item`.
-- [ ] S7.4 RM matrix editor (usage combination → price) + "request a quote" fallback path.
-- [ ] S7.5 Watermark policy resolver: which delivered file gets a watermark by license+resolution (e.g. never deliver a clean original under a "personal, no-print" tier).
-- [ ] S7.6 License document generator: render a per-`sale_item` print-release/license PDF (reuse the agreement/receipt print-view/PDF pipeline — see S27) and store in `documents`.
-- [ ] S7.7 Show license summary at point of sale (personal vs commercial toggle, like PhotoShelter).
-- [ ] S7.8 Tests: RM price resolution, watermark policy matrix, license-doc generation, license recorded on the sale.
+- [x] S7.1 Per-price licence: personal / rf / rm / extended chosen per price row; editable per-product licence text; standard grant wording on the licence page.
+- [x] S7.2 Licence attached to each price row (resolution × licence). _(Model/property-release attachment: future.)_
+- [x] S7.3 RM usage-scope model (`RM_DIMENSIONS`: usage, term, territory) captured into `sale_items.usage_scope` at checkout (single + cart routes).
+- [x] S7.4 RM matrix editor in the product dialog (tiers of usage/term/territory → price, "Any" = unpinned); `resolveStorePrice` prices from the matrix or returns `{quote:true}` → storefront shows "Request a quote". Price is recomputed server-side at both checkout routes.
+- [x] S7.5 Watermark policy: the delivery route never serves the watermarked preview — web/standard are rendered clean, original passes through (done in S15.2). _(Per-licence watermark variance beyond that: future.)_
+- [~] S7.6 The buyer licence page records the licence and, for RM, the exact permitted use (usage/term/territory) from `usage_scope`. _(A stored PDF in `documents` is the remaining S27.3 piece.)_
+- [x] S7.7 Licence summary at point of sale: the buy form shows the licence per option and, for RM, live price or "priced on request" as the usage is chosen.
+- [x] S7.8 Tests: `resolveStorePrice` (flat/rm-matrix/quote/flat-rm), `parseRmMatrix`, `cleanRmUsage`, `isCompleteRmUsage`, `rmPrice`.
 
 ### Phase S8 — Studio admin: catalog & product management UI
 - [ ] S8.1 Add `{ href: "/studio/store", label: "Store", minRole: "admin" }` to the `items` array in `src/components/studio/nav.tsx` (Pro-badged on Free).

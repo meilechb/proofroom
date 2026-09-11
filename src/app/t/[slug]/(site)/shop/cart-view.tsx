@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
+import { RM_DIMENSIONS } from "@/lib/store-shared";
 import { onCartChange, readCart, removeFromCart, type CartItem } from "./cart-store";
+
+function usageSummary(usage: Record<string, string> | undefined): string {
+  if (!usage) return "";
+  return RM_DIMENSIONS.map((d) => d.options.find((o) => o.value === usage[d.key])?.label).filter(Boolean).join(" · ");
+}
 
 export function CartView({ slug, currency, manual, cancelled }: { slug: string; currency: string; manual?: boolean; cancelled?: boolean }) {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -14,7 +20,7 @@ export function CartView({ slug, currency, manual, cancelled }: { slug: string; 
   }, [slug]);
 
   const subtotal = items.reduce((s, i) => s + (Number.isFinite(i.priceCents) ? i.priceCents : 0), 0);
-  const cartJson = JSON.stringify(items.map((i) => ({ productId: i.productId, resolution: i.resolution, license: i.license })));
+  const cartJson = JSON.stringify(items.map((i) => ({ productId: i.productId, resolution: i.resolution, license: i.license, ...(i.usage ? { usage: i.usage } : {}) })));
 
   return (
     <div className="mx-auto w-full max-w-2xl">
@@ -33,7 +39,10 @@ export function CartView({ slug, currency, manual, cancelled }: { slug: string; 
               <li key={i.key} className="flex items-center justify-between gap-4 py-3">
                 <div className="min-w-0">
                   <Link href={`/shop/${i.productSlug}`} className="text-sm font-medium hover:underline">{i.title}</Link>
-                  <p className="text-xs text-[var(--site-ink-2)]">{storeResolutionLabels[i.resolution]} · {storeLicenseLabels[i.license]}</p>
+                  <p className="text-xs text-[var(--site-ink-2)]">
+                    {storeResolutionLabels[i.resolution]} · {storeLicenseLabels[i.license]}
+                    {i.license === "rm" && usageSummary(i.usage) ? ` · ${usageSummary(i.usage)}` : ""}
+                  </p>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">
                   <span className="text-sm">{formatMoney(i.priceCents, currency)}</span>

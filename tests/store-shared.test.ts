@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 import {
   bundleTotal,
   cartTotals,
+  cleanRmUsage,
   DEFAULT_STORE,
   discountAmount,
   giftCardSpend,
+  isCompleteRmUsage,
   lineTotal,
   normalizeGiftCode,
+  parseRmMatrix,
+  resolveStorePrice,
   rmPrice,
   selectPrice,
   storeSettings,
@@ -104,6 +108,68 @@ describe("rmPrice", () => {
     expect(rmPrice({ media: "web", territory: "eu" }, matrix)).toBeNull();
     expect(rmPrice({ media: "web" }, null)).toBeNull();
     expect(rmPrice({ media: "web" }, [])).toBeNull();
+  });
+});
+
+describe("parseRmMatrix", () => {
+  it("keeps valid rows and drops malformed ones and unknown dimensions", () => {
+    const rows = parseRmMatrix([
+      { when: { usage: "commercial", territory: "worldwide", junk: "x" }, amountCents: 50000 },
+      { when: { usage: "editorial" }, amountCents: 20000 }, // partial row is allowed
+      { when: { usage: "not-a-usage" }, amountCents: 1000 }, // invalid option → dropped from `when`
+      { when: {}, amountCents: -5 }, // negative amount → whole row dropped
+      { amountCents: "10" }, // no when, coercible amount
+    ]);
+    expect(rows).toEqual([
+      { when: { usage: "commercial", territory: "worldwide" }, amountCents: 50000 },
+      { when: { usage: "editorial" }, amountCents: 20000 },
+      { when: {}, amountCents: 1000 },
+      { when: {}, amountCents: 10 },
+    ]);
+    expect(parseRmMatrix(null)).toEqual([]);
+    expect(parseRmMatrix("nope")).toEqual([]);
+  });
+  it("a partial row prices any scope that satisfies its pinned keys", () => {
+    const matrix = parseRmMatrix([{ when: { usage: "commercial" }, amountCents: 50000 }]);
+    expect(rmPrice({ usage: "commercial", term: "1y", territory: "local" }, matrix)).toBe(50000);
+    expect(rmPrice({ usage: "editorial", term: "1y", territory: "local" }, matrix)).toBeNull();
+  });
+});
+
+describe("resolveStorePrice", () => {
+  const base = { is_active: true, rm_matrix: null };
+  const prices = [
+    { resolution: "original" as const, license: "personal" as const, amount_cents: 7500, ...base },
+    { resolution: "original" as const, license: "rf" as const, amount_cents: 0, ...base }, // zero → not for sale
+    { resolution: "original" as const, license: "rm" as const, amount_cents: 30000, rm_matrix: [{ when: { usage: "commercial" }, amountCents: 50000 }], is_active: true },
+    { resolution: "web" as const, license: "rm" as const, amount_cents: 12000, is_active: true, rm_matrix: null }, // flat rm, no matrix
+  ];
+  it("flat licences use amount_cents (or null when zero)", () => {
+    expect(resolveStorePrice(prices, "original", "personal")).toEqual({ amountCents: 7500 });
+    expect(resolveStorePrice(prices, "original", "rf")).toBeNull();
+    expect(resolveStorePrice(prices, "standard", "personal")).toBeNull();
+  });
+  it("rm with a matrix prices from the matrix, else quotes", () => {
+    expect(resolveStorePrice(prices, "original", "rm", { usage: "commercial", term: "1y", territory: "local" })).toEqual({ amountCents: 50000 });
+    expect(resolveStorePrice(prices, "original", "rm", { usage: "editorial", term: "1y", territory: "local" })).toEqual({ quote: true });
+    expect(resolveStorePrice(prices, "original", "rm", { usage: "commercial" })).toEqual({ quote: true }); // incomplete usage
+    expect(resolveStorePrice(prices, "original", "rm")).toEqual({ quote: true });
+  });
+  it("rm with no matrix is a flat price and records usage", () => {
+    expect(resolveStorePrice(prices, "web", "rm", { usage: "commercial", term: "1y", territory: "local" })).toEqual({ amountCents: 12000 });
+  });
+});
+
+describe("cleanRmUsage / isCompleteRmUsage", () => {
+  it("cleans unknown keys and invalid options", () => {
+    expect(cleanRmUsage({ usage: "commercial", term: "3y", territory: "national", junk: "x" })).toEqual({ usage: "commercial", term: "3y", territory: "national" });
+    expect(cleanRmUsage({ usage: "bogus" })).toEqual({});
+    expect(cleanRmUsage(null)).toEqual({});
+  });
+  it("is complete only when every dimension is a valid option", () => {
+    expect(isCompleteRmUsage({ usage: "commercial", term: "3y", territory: "national" })).toBe(true);
+    expect(isCompleteRmUsage({ usage: "commercial", term: "3y" })).toBe(false);
+    expect(isCompleteRmUsage({ usage: "commercial", term: "3y", territory: "mars" })).toBe(false);
   });
 });
 

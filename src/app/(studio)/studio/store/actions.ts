@@ -6,11 +6,12 @@ import { db } from "@/lib/db";
 import { adjustGiftCard, applyPriceSheetToProduct, archiveProduct, createDiscount, createProduct, createPriceSheet, deletePriceSheet, issueGiftCard, markManualSalePaid, replaceProductPrices, replacePriceSheetRows, setDiscountActive, setGiftCardActive, updateProduct, type ProductPriceInput } from "@/lib/store";
 import { fieldErrors, storeDiscountSchema, storeGiftCardSchema, storePriceRowSchema, storePriceSheetSchema, storeProductSchema, storeSettingsSchema } from "@/lib/validation";
 import { cents, int, str, type ActionState } from "@/lib/action-state";
+import { parseRmMatrix } from "@/lib/store-shared";
 import type { StoreProductKind } from "@/lib/types";
 
 const KINDS: StoreProductKind[] = ["image", "bundle", "gallery_unlock", "collection_unlock", "gift_card", "voucher", "digital", "print"];
 
-/** Parse the dialog's `prices` JSON (rows of {resolution, license, amount in dollars}). */
+/** Parse the dialog's `prices` JSON (rows of {resolution, license, amount in dollars, rmMatrix?}). */
 function parsePrices(raw: string): ProductPriceInput[] | null {
   let arr: unknown;
   try {
@@ -21,11 +22,12 @@ function parsePrices(raw: string): ProductPriceInput[] | null {
   if (!Array.isArray(arr)) return null;
   const out: ProductPriceInput[] = [];
   for (const row of arr) {
-    const r = row as { resolution?: unknown; license?: unknown; amount?: unknown };
+    const r = row as { resolution?: unknown; license?: unknown; amount?: unknown; rmMatrix?: unknown };
     const amountCents = Math.round(Number(r.amount) * 100);
     const parsed = storePriceRowSchema.safeParse({ resolution: r.resolution, license: r.license, amountCents });
     if (!parsed.success) return null;
-    out.push(parsed.data);
+    const rmMatrix = parsed.data.license === "rm" && r.rmMatrix != null ? parseRmMatrix(r.rmMatrix) : null;
+    out.push({ ...parsed.data, rmMatrix });
   }
   return out;
 }

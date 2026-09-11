@@ -4,7 +4,7 @@ import { createStoreCheckout } from "@/lib/payments";
 import { canTakeCardPayments } from "@/lib/connect";
 import { clientIp, limited } from "@/lib/rate-limit";
 import { billingState, entitlements } from "@/lib/plans";
-import { discountAmount, giftCardSpend, selectPrice, storeSettings } from "@/lib/store-shared";
+import { cleanRmUsage, discountAmount, giftCardSpend, resolveStorePrice, RM_DIMENSIONS, storeSettings } from "@/lib/store-shared";
 import { attachSaleSession, createSale, findUsableGiftCard, findValidDiscount, fulfillPaidStoreSale, getProduct, listProductPrices, markSalePaid } from "@/lib/store";
 import { createClient } from "@/lib/clients";
 import { storeLicenseLabels, storeResolutionLabels, type StoreLicense, type StoreResolution, type Studio } from "@/lib/types";
@@ -46,8 +46,12 @@ export async function POST(request: NextRequest) {
 
   const product = await getProduct(studio.id, productId);
   if (!product || !product.is_active) return new NextResponse("Not found", { status: 404 });
-  const amount = selectPrice(await listProductPrices(studio.id, productId), resolution, license);
-  if (amount == null || amount <= 0) return new NextResponse("That option is not for sale.", { status: 409 });
+  // Rights-managed licences carry a usage scope; the price is recomputed from it server-side.
+  const usage = license === "rm" ? cleanRmUsage(Object.fromEntries(RM_DIMENSIONS.map((d) => [d.key, form.get(`u_${d.key}`)]))) : {};
+  const priced = resolveStorePrice(await listProductPrices(studio.id, productId), resolution, license, usage);
+  if (priced == null) return new NextResponse("That option is not for sale.", { status: 409 });
+  if ("quote" in priced) return new NextResponse("This licence is priced on request — please contact the studio for a quote.", { status: 409 });
+  const amount = priced.amountCents;
 
   // Optional discount code.
   const codeStr = String(form.get("code") ?? "").trim();
@@ -81,9 +85,9 @@ export async function POST(request: NextRequest) {
   if (product.kind === "gallery_unlock" && product.gallery_id) {
     const photos = rows<{ id: string }>(await db()`select id from photos where gallery_id = ${product.gallery_id} and studio_id = ${studio.id} and deleted_at is null and preview_url <> '' order by sort_order, created_at`);
     if (photos.length === 0) return new NextResponse("This gallery has no photos to sell yet.", { status: 409 });
-    items = photos.map((ph, i) => ({ productId: product.id, photoId: ph.id, assetId: null, kind: "gallery_unlock", resolution, license, qty: 1, unitAmountCents: i === 0 ? amount : 0, amountCents: i === 0 ? amount : 0 }));
+    items = photos.map((ph, i) => ({ productId: product.id, photoId: ph.id, assetId: null, kind: "gallery_unlock", resolution, license, usageScope: usage, qty: 1, unitAmountCents: i === 0 ? amount : 0, amountCents: i === 0 ? amount : 0 }));
   } else {
-    items = [{ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution, license, qty: 1, unitAmountCents: amount, amountCents: amount }];
+    items = [{ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution, license, usageScope: usage, qty: 1, unitAmountCents: amount, amountCents: amount }];
   }
 
   const { client } = await createClient(studio.id, { name: name || email.split("@")[0], email, source: "store" });

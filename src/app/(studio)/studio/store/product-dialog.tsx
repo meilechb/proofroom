@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import type { ProductPrice, StoreLicense, StoreProduct, StoreResolution } from "@/lib/types";
 import { storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
+import { parseRmMatrix, RM_DIMENSIONS } from "@/lib/store-shared";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { Dialog } from "@/components/ui/dialog";
 import { FormMessage } from "@/components/forms/form-message";
@@ -11,10 +12,18 @@ import { initialActionState } from "@/lib/action-state";
 import { ImagePicker, type PickerAsset } from "../website/image-picker";
 import { saveProductAction } from "./actions";
 
-type Row = { resolution: StoreResolution; license: StoreLicense; amount: string };
+type Tier = { dims: Record<string, string>; amount: string };
+type Row = { resolution: StoreResolution; license: StoreLicense; amount: string; tiers: Tier[] };
 
 const RES: StoreResolution[] = ["web", "standard", "original"];
 const LIC: StoreLicense[] = ["personal", "rf", "rm", "extended"];
+
+function tiersFromMatrix(raw: unknown): Tier[] {
+  return parseRmMatrix(raw).map((row) => ({
+    dims: Object.fromEntries(RM_DIMENSIONS.map((d) => [d.key, typeof row.when[d.key] === "string" ? (row.when[d.key] as string) : ""])),
+    amount: (row.amountCents / 100).toString(),
+  }));
+}
 
 export function ProductDialog({ product, prices, trigger, assets, galleries }: { product?: StoreProduct; prices?: ProductPrice[]; trigger: "add" | "edit"; assets: PickerAsset[]; galleries: { id: string; title: string }[] }) {
   const [open, setOpen] = useState(false);
@@ -24,11 +33,28 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
   const [galleryId, setGalleryId] = useState<string>(product?.gallery_id ?? "");
   const [rows, setRows] = useState<Row[]>(
     prices && prices.length
-      ? prices.map((p) => ({ resolution: p.resolution, license: p.license, amount: (p.amount_cents / 100).toString() }))
-      : [{ resolution: "original", license: "personal", amount: "" }]
+      ? prices.map((p) => ({ resolution: p.resolution, license: p.license, amount: (p.amount_cents / 100).toString(), tiers: p.license === "rm" ? tiersFromMatrix(p.rm_matrix) : [] }))
+      : [{ resolution: "original", license: "personal", amount: "", tiers: [] }]
   );
   const setRow = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-  const pricesJson = JSON.stringify(rows.filter((r) => r.amount.trim() !== "").map((r) => ({ resolution: r.resolution, license: r.license, amount: r.amount })));
+  const setTier = (i: number, ti: number, patch: Partial<Tier>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, tiers: r.tiers.map((t, k) => (k === ti ? { ...t, ...patch } : t)) } : r)));
+
+  const pricesJson = JSON.stringify(
+    rows
+      .filter((r) => r.amount.trim() !== "")
+      .map((r) => ({
+        resolution: r.resolution,
+        license: r.license,
+        amount: r.amount,
+        ...(r.license === "rm"
+          ? {
+              rmMatrix: r.tiers
+                .filter((t) => t.amount.trim() !== "")
+                .map((t) => ({ when: Object.fromEntries(RM_DIMENSIONS.filter((d) => t.dims[d.key]).map((d) => [d.key, t.dims[d.key]])), amountCents: Math.round(Number(t.amount) * 100) })),
+            }
+          : {}),
+      }))
+  );
 
   return (
     <>
@@ -68,20 +94,44 @@ export function ProductDialog({ product, prices, trigger, assets, galleries }: {
           <div>
             <div className="flex items-center justify-between">
               <span className="label">Price options</span>
-              <button type="button" className="text-xs text-muted hover:text-ink" onClick={() => setRows((rs) => [...rs, { resolution: "original", license: "personal", amount: "" }])}>Add option</button>
+              <button type="button" className="text-xs text-muted hover:text-ink" onClick={() => setRows((rs) => [...rs, { resolution: "original", license: "personal", amount: "", tiers: [] }])}>Add option</button>
             </div>
             {state.fields?.prices ? <p className="field-error" role="alert">{state.fields.prices}</p> : null}
-            <div className="mt-2 space-y-2">
+            <div className="mt-2 space-y-3">
               {rows.map((r, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Select aria-label="Resolution" value={r.resolution} onChange={(e) => setRow(i, { resolution: e.target.value as StoreResolution })}>
-                    {RES.map((v) => <option key={v} value={v}>{storeResolutionLabels[v]}</option>)}
-                  </Select>
-                  <Select aria-label="Licence" value={r.license} onChange={(e) => setRow(i, { license: e.target.value as StoreLicense })}>
-                    {LIC.map((v) => <option key={v} value={v}>{storeLicenseLabels[v]}</option>)}
-                  </Select>
-                  <Input aria-label="Price" inputMode="decimal" placeholder="0.00" value={r.amount} onChange={(e) => setRow(i, { amount: e.target.value })} className="w-24" />
-                  {rows.length > 1 ? <button type="button" aria-label="Remove price option" className="text-muted hover:text-ink px-1" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>×</button> : null}
+                <div key={i} className="rounded-lg border border-line-2 p-2">
+                  <div className="flex items-center gap-2">
+                    <Select aria-label="Resolution" value={r.resolution} onChange={(e) => setRow(i, { resolution: e.target.value as StoreResolution })}>
+                      {RES.map((v) => <option key={v} value={v}>{storeResolutionLabels[v]}</option>)}
+                    </Select>
+                    <Select aria-label="Licence" value={r.license} onChange={(e) => setRow(i, { license: e.target.value as StoreLicense })}>
+                      {LIC.map((v) => <option key={v} value={v}>{storeLicenseLabels[v]}</option>)}
+                    </Select>
+                    <Input aria-label="Price" inputMode="decimal" placeholder="0.00" value={r.amount} onChange={(e) => setRow(i, { amount: e.target.value })} className="w-24" />
+                    {rows.length > 1 ? <button type="button" aria-label="Remove price option" className="text-muted hover:text-ink px-1" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>×</button> : null}
+                  </div>
+                  {r.license === "rm" ? (
+                    <div className="mt-2 pl-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted">Rights-managed tiers — the price above is the “from” price; a matching tier overrides it. “Any” leaves that field open.</span>
+                        <button type="button" className="text-xs text-muted hover:text-ink" onClick={() => setRow(i, { tiers: [...r.tiers, { dims: {}, amount: "" }] })}>Add tier</button>
+                      </div>
+                      <div className="mt-1 space-y-1.5">
+                        {r.tiers.map((t, ti) => (
+                          <div key={ti} className="flex flex-wrap items-center gap-1.5">
+                            {RM_DIMENSIONS.map((d) => (
+                              <Select key={d.key} aria-label={d.label} value={t.dims[d.key] ?? ""} onChange={(e) => setTier(i, ti, { dims: { ...t.dims, [d.key]: e.target.value } })} className="h-8 text-xs">
+                                <option value="">Any {d.label.toLowerCase()}</option>
+                                {d.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                              </Select>
+                            ))}
+                            <Input aria-label="Tier price" inputMode="decimal" placeholder="0.00" value={t.amount} onChange={(e) => setTier(i, ti, { amount: e.target.value })} className="w-20 h-8 text-xs" />
+                            <button type="button" aria-label="Remove tier" className="text-muted hover:text-ink px-1" onClick={() => setRow(i, { tiers: r.tiers.filter((_, k) => k !== ti) })}>×</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>

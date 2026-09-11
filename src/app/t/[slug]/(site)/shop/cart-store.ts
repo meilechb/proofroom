@@ -14,6 +14,8 @@ export type CartItem = {
   resolution: StoreResolution;
   license: StoreLicense;
   priceCents: number;
+  /** Rights-managed usage scope (usage/term/territory), when the licence is `rm`. */
+  usage?: Record<string, string>;
 };
 
 const keyFor = (slug: string) => `pr.cart.${slug}`;

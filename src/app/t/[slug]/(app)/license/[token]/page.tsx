@@ -2,8 +2,16 @@ import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { verifyLink } from "@/lib/tenant-tokens";
 import { getSaleById, saleLicenseLines } from "@/lib/store";
+import { RM_DIMENSIONS } from "@/lib/store-shared";
 import { formatDate, formatMoney, storeLicenseLabels, storeResolutionLabels, type StoreLicense } from "@/lib/types";
 import { PrintButton } from "./print-button";
+
+function usageText(scope: Record<string, unknown>): string {
+  return RM_DIMENSIONS.map((d) => {
+    const opt = d.options.find((o) => o.value === scope[d.key]);
+    return opt ? `${d.label}: ${opt.label}` : null;
+  }).filter(Boolean).join(" · ");
+}
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -44,6 +52,9 @@ export default async function LicensePage({ params }: PageProps<"/t/[slug]/licen
             <p className="mt-1 text-sm text-[var(--site-ink-2)]">
               {storeLicenseLabels[l.license]}: {studio.name} grants the buyer {licenseGrant[l.license]}
             </p>
+            {l.license === "rm" && usageText(l.usage_scope) ? (
+              <p className="mt-1 text-sm"><strong>Permitted use:</strong> {usageText(l.usage_scope)}.</p>
+            ) : null}
             {l.license_text ? <p className="mt-2 text-sm whitespace-pre-wrap">{l.license_text}</p> : null}
           </div>
         ))}

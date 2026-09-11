@@ -4,7 +4,7 @@ import { createStoreCheckout } from "@/lib/payments";
 import { canTakeCardPayments } from "@/lib/connect";
 import { clientIp, limited } from "@/lib/rate-limit";
 import { billingState, entitlements } from "@/lib/plans";
-import { discountAmount, giftCardSpend, selectPrice, storeSettings } from "@/lib/store-shared";
+import { cleanRmUsage, discountAmount, giftCardSpend, resolveStorePrice, storeSettings } from "@/lib/store-shared";
 import { attachSaleSession, createSale, findUsableGiftCard, findValidDiscount, fulfillPaidStoreSale, getProduct, listProductPrices, markSalePaid } from "@/lib/store";
 import { createClient } from "@/lib/clients";
 import { storeLicenseLabels, storeResolutionLabels, type StoreLicense, type StoreResolution, type Studio } from "@/lib/types";
@@ -14,7 +14,7 @@ import { log } from "@/lib/logger";
 
 const RES = ["web", "standard", "original"];
 const LIC = ["personal", "rf", "rm", "extended"];
-type CartLine = { productId: string; resolution: StoreResolution; license: StoreLicense };
+type CartLine = { productId: string; resolution: StoreResolution; license: StoreLicense; usage?: Record<string, unknown> };
 
 /**
  * Multi-item cart checkout. Mirrors the single-item route but over a list of
@@ -36,8 +36,9 @@ export async function POST(request: NextRequest) {
     const parsed = JSON.parse(String(form.get("cart") ?? "[]")) as unknown;
     if (!Array.isArray(parsed) || parsed.length === 0) return new NextResponse("Your cart is empty.", { status: 400 });
     cart = parsed.slice(0, 50).map((r) => {
-      const row = r as { productId?: unknown; resolution?: unknown; license?: unknown };
-      return { productId: String(row.productId ?? ""), resolution: String(row.resolution ?? "") as StoreResolution, license: String(row.license ?? "") as StoreLicense };
+      const row = r as { productId?: unknown; resolution?: unknown; license?: unknown; usage?: unknown };
+      const usage = row.usage && typeof row.usage === "object" ? (row.usage as Record<string, unknown>) : undefined;
+      return { productId: String(row.productId ?? ""), resolution: String(row.resolution ?? "") as StoreResolution, license: String(row.license ?? "") as StoreLicense, usage };
     });
   } catch {
     return new NextResponse("Could not read your cart.", { status: 400 });
@@ -64,14 +65,17 @@ export async function POST(request: NextRequest) {
   for (const line of cart) {
     const product = await getProduct(studio.id, line.productId);
     if (!product || !product.is_active) return new NextResponse("An item in your cart is no longer available.", { status: 409 });
-    const amount = selectPrice(await listProductPrices(studio.id, line.productId), line.resolution, line.license);
-    if (amount == null || amount <= 0) return new NextResponse(`"${product.title}" is not available in that option.`, { status: 409 });
+    const usage = line.license === "rm" ? cleanRmUsage(line.usage) : {};
+    const priced = resolveStorePrice(await listProductPrices(studio.id, line.productId), line.resolution, line.license, usage);
+    if (priced == null) return new NextResponse(`"${product.title}" is not available in that option.`, { status: 409 });
+    if ("quote" in priced) return new NextResponse(`"${product.title}" is priced on request — remove it and contact the studio for a quote.`, { status: 409 });
+    const amount = priced.amountCents;
     if (product.kind === "gallery_unlock" && product.gallery_id) {
       const photos = rows<{ id: string }>(await db()`select id from photos where gallery_id = ${product.gallery_id} and studio_id = ${studio.id} and deleted_at is null and preview_url <> '' order by sort_order, created_at`);
       if (photos.length === 0) return new NextResponse(`"${product.title}" has no photos to sell yet.`, { status: 409 });
-      photos.forEach((ph, i) => items.push({ productId: product.id, photoId: ph.id, assetId: null, kind: "gallery_unlock", resolution: line.resolution, license: line.license, qty: 1, unitAmountCents: i === 0 ? amount : 0, amountCents: i === 0 ? amount : 0 }));
+      photos.forEach((ph, i) => items.push({ productId: product.id, photoId: ph.id, assetId: null, kind: "gallery_unlock", resolution: line.resolution, license: line.license, usageScope: usage, qty: 1, unitAmountCents: i === 0 ? amount : 0, amountCents: i === 0 ? amount : 0 }));
     } else {
-      items.push({ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution: line.resolution, license: line.license, qty: 1, unitAmountCents: amount, amountCents: amount });
+      items.push({ productId: product.id, photoId: product.photo_id, assetId: product.asset_id, kind: product.kind, resolution: line.resolution, license: line.license, usageScope: usage, qty: 1, unitAmountCents: amount, amountCents: amount });
     }
     lineItems.push({ name: `${storeResolutionLabels[line.resolution]} — ${product.title}`, description: storeLicenseLabels[line.license], amountCents: amount, quantity: 1 });
     subtotal += amount;

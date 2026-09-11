@@ -126,6 +126,100 @@ export function rmPrice(usage: RmUsage, matrix: RmMatrixRow[] | null | undefined
   return null;
 }
 
+/**
+ * The usage dimensions a rights-managed licence is priced on. A matrix row may
+ * pin any subset of these (an unpinned dimension matches anything), so a studio
+ * can price broadly ("any commercial use = $500") or finely. Buyer and admin
+ * share this list so their selections line up.
+ */
+export const RM_DIMENSIONS = [
+  { key: "usage", label: "Usage", options: [
+    { value: "personal", label: "Personal" },
+    { value: "editorial", label: "Editorial" },
+    { value: "commercial", label: "Commercial" },
+    { value: "advertising", label: "Advertising" },
+  ] },
+  { key: "term", label: "Term", options: [
+    { value: "1y", label: "1 year" },
+    { value: "3y", label: "3 years" },
+    { value: "perpetual", label: "Perpetual" },
+  ] },
+  { key: "territory", label: "Territory", options: [
+    { value: "local", label: "Local" },
+    { value: "national", label: "National" },
+    { value: "worldwide", label: "Worldwide" },
+  ] },
+] as const;
+
+export type RmDimensionKey = (typeof RM_DIMENSIONS)[number]["key"];
+
+function isRmOption(key: string, value: unknown): value is string {
+  const dim = RM_DIMENSIONS.find((d) => d.key === key);
+  return !!dim && typeof value === "string" && dim.options.some((o) => o.value === value);
+}
+
+/** Coerce stored jsonb into typed matrix rows, dropping malformed rows and unknown dimensions. */
+export function parseRmMatrix(raw: unknown): RmMatrixRow[] {
+  if (!Array.isArray(raw)) return [];
+  const out: RmMatrixRow[] = [];
+  for (const r of raw) {
+    const row = r as { when?: unknown; amountCents?: unknown };
+    const amount = Number(row.amountCents);
+    if (!Number.isFinite(amount) || amount < 0) continue;
+    const when: RmUsage = {};
+    if (row.when && typeof row.when === "object") {
+      for (const d of RM_DIMENSIONS) {
+        const v = (row.when as Record<string, unknown>)[d.key];
+        if (isRmOption(d.key, v)) when[d.key] = v;
+      }
+    }
+    out.push({ when, amountCents: Math.round(amount) });
+  }
+  return out;
+}
+
+/** Keep only recognised dimensions with valid options from a buyer's submitted scope. */
+export function cleanRmUsage(raw: Record<string, unknown> | null | undefined): RmUsage {
+  const usage: RmUsage = {};
+  if (raw) for (const d of RM_DIMENSIONS) if (isRmOption(d.key, raw[d.key])) usage[d.key] = raw[d.key] as string;
+  return usage;
+}
+
+/** True when every dimension has been chosen with a valid option. */
+export function isCompleteRmUsage(usage: RmUsage): boolean {
+  return RM_DIMENSIONS.every((d) => isRmOption(d.key, usage[d.key]));
+}
+
+export type PriceResolution = { amountCents: number } | { quote: true } | null;
+
+/**
+ * The authoritative price for a (resolution, licence) option — used by both the
+ * storefront preview and the server-side checkout so they always agree.
+ * `null` = not for sale. `{quote:true}` = priced on request (a rights-managed
+ * row whose matrix has no line for the chosen usage, or an incomplete usage).
+ * For a rights-managed row WITH a matrix, the price comes from the matrix; with
+ * no matrix it is a flat `amount_cents` and the usage is just recorded.
+ */
+export function resolveStorePrice(
+  prices: Pick<ProductPrice, "resolution" | "license" | "amount_cents" | "is_active" | "rm_matrix">[],
+  resolution: StoreResolution,
+  license: StoreLicense,
+  usage?: RmUsage
+): PriceResolution {
+  const row = prices.find((p) => p.is_active && p.resolution === resolution && p.license === license);
+  if (!row) return null;
+  if (license === "rm") {
+    const matrix = parseRmMatrix(row.rm_matrix);
+    if (matrix.length > 0) {
+      const u = cleanRmUsage(usage ?? {});
+      const priced = rmPrice(u, matrix);
+      return isCompleteRmUsage(u) && priced != null ? { amountCents: priced } : { quote: true };
+    }
+    return row.amount_cents > 0 ? { amountCents: row.amount_cents } : { quote: true };
+  }
+  return row.amount_cents > 0 ? { amountCents: row.amount_cents } : null;
+}
+
 export type CartLine = { unitAmountCents: number; qty: number };
 export type CartTotals = {
   subtotalCents: number;
