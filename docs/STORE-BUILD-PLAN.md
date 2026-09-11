@@ -14,7 +14,7 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
 - **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25** sales analytics + storefront funnel (revenue, AOV, top products/buyers, plus shop/product views, cart adds, checkouts, purchases and conversion) · **S27 (partial)** buyer licence / print-release document · **S21** digital products (sell presets/LUTs/e-books: private-store upload, `digital` product kind, per-file download grants, admin file manager) · **S5/S20.3** collections (curate library/portfolio assets into a set, sell as a `collection_unlock` SKU that grants every image)
 
-Remaining phases: S13 marketplace-collect + Stripe Tax · S22 favorite-frame/holiday automations (broadcasts shipped) · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S13 marketplace-collect + Stripe Tax (needs a commission/tax decision) · S22 favorite-frame/holiday automations (broadcasts shipped; favorite-frame needs buyer-email capture) · S30 platform metering refinements · S33 formal test suite · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -309,7 +309,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S9.9 Watermarked previews served via the public `assets` store (for portfolio images) or a `preview`-signed `/api/photo/[id]` (for private gallery photos); never expose originals.
 - [ ] S9.10 "Buy" affordances embedded inside the client gallery view (`t/[slug]/(app)/g/[gslug]`) for sellable gallery photos.
 - [ ] S9.11 Search / filter / sort / "featured"/"new" on the shop grid; related products on product pages.
-- [ ] S9.12 Product JSON-LD + Open Graph share images; social-share buttons.
+- [x] S9.12 Product pages emit description + Open Graph + Twitter-card metadata (with the product image) and Product JSON-LD (Offer: price, currency, in-stock, URL); a share row (X/Facebook/Pinterest intent links + copy link) sits under the buy area.
 - [x] S9.13 Store view/beacon: `store_view` (shop) and `product_view` (product page) fire a one-shot `StoreBeacon` to `/api/track/store`; `cart_add` fires from `addToCart`. DNT/GPC respected; studio resolved from the tenant host (see S25).
 - [ ] S9.14 Website editor: add a "Shop" toggle + panel to `website-editor.tsx` `PagesPanel` (enable page, heading/body, choose featured products/collections).
 - [ ] S9.15 Tests: shop page renders only when enabled; disabled/Free studio 404s; nav includes Shop when on.
@@ -438,7 +438,7 @@ _(The atomic numbered items for each phase are appended below.)_
 
 ### Phase S26 — Marketing & distribution
 - [x] S26.1 Embeddable "buy" button / shop link: a "Share & embed" panel on store settings gives the shop URL and a copyable, self-contained HTML button snippet (no script, works on any site builder) that deep-links into the tenant shop; each active product also has an **Embed** dialog with its own link + deep-linked buy button (title HTML-escaped).
-- [ ] S26.2 Social sharing + SEO landing for products/collections (works on custom domains via existing tenant routing).
+- [x] S26.2 Social sharing + SEO for products (metadata, Open Graph/Twitter, Product JSON-LD, share buttons — see S9.12), working on custom domains via existing tenant routing. _(Collection-page OG/JSON-LD is a later refinement.)_
 - [ ] S26.3 Buyer export + Klaviyo/Mailchimp segment hooks (optional).
 - [ ] S26.4 Optional affiliate/referral for store sales (reuse referral primitives).
 - [ ] S26.5 Tests: widget deep-link, export shape.
