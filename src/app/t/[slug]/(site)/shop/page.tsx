@@ -9,6 +9,7 @@ import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
 import { Container } from "@/components/site/sections";
 import { FavoriteButton } from "./favorite-button";
+import { CartLink } from "./cart-link";
 
 const SELLABLE = ["image", "bundle", "gallery_unlock", "collection_unlock", "digital"];
 
@@ -43,7 +44,10 @@ export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) 
       <Container>
         <div className="flex items-baseline justify-between gap-4">
           <h1 className="text-3xl sm:text-4xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>Shop</h1>
-          {favorites.size > 0 ? <Link href="/shop/favorites" className="text-sm underline text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">Favourites ({favorites.size})</Link> : null}
+          <div className="flex items-baseline gap-4">
+            {favorites.size > 0 ? <Link href="/shop/favorites" className="text-sm underline text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">Favourites ({favorites.size})</Link> : null}
+            <CartLink slug={slug} />
+          </div>
         </div>
         <p className="mt-2 text-[var(--site-ink-2)]">Prints and downloads from {studio.name}.</p>
         {cards.length === 0 ? (

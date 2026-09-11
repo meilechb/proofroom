@@ -10,6 +10,7 @@ import { formatMoney } from "@/lib/types";
 import { Container } from "@/components/site/sections";
 import { BuyForm } from "./buy-form";
 import { FavoriteButton } from "../favorite-button";
+import { CartLink } from "../cart-link";
 
 export async function generateMetadata({ params }: PageProps<"/t/[slug]/shop/[productSlug]">) {
   const { slug, productSlug } = await params;
@@ -46,7 +47,10 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   return (
     <div className="py-12 sm:py-16">
       <Container>
-        <Link href="/shop" className="text-sm text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">← Shop</Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/shop" className="text-sm text-[var(--site-ink-2)] hover:text-[var(--site-ink)]">← Shop</Link>
+          <CartLink slug={slug} />
+        </div>
         <div className="mt-4 grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
           <div className="overflow-hidden rounded-2xl bg-[var(--site-bg-2)]">
             {img ? (
@@ -63,7 +67,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
             </div>
             {product.description ? <p className="mt-3 text-[var(--site-ink-2)]">{product.description}</p> : null}
             <div className="mt-6">
-              <BuyForm slug={slug} productId={product.id} prices={prices} currency={studio.currency} cancelled={sp?.cancelled === "1"} />
+              <BuyForm slug={slug} productId={product.id} productSlug={product.slug} productTitle={product.title} prices={prices} currency={studio.currency} cancelled={sp?.cancelled === "1"} />
             </div>
             {product.license_text ? (
               <details className="mt-6 text-sm">

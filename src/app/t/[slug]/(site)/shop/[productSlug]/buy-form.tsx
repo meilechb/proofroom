@@ -1,15 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { ProductPrice } from "@/lib/types";
 import { formatMoney, storeLicenseLabels, storeResolutionLabels } from "@/lib/types";
+import { addToCart, itemKey } from "../cart-store";
 
-export function BuyForm({ slug, productId, prices, currency, cancelled }: { slug: string; productId: string; prices: ProductPrice[]; currency: string; cancelled?: boolean }) {
+export function BuyForm({ slug, productId, productSlug, productTitle, prices, currency, cancelled }: { slug: string; productId: string; productSlug: string; productTitle: string; prices: ProductPrice[]; currency: string; cancelled?: boolean }) {
   const options = prices.filter((p) => p.is_active && p.amount_cents > 0);
   const [sel, setSel] = useState(0);
+  const [added, setAdded] = useState(false);
   const chosen = options[Math.min(sel, options.length - 1)];
 
   if (options.length === 0) return <p className="text-[var(--site-ink-2)]">Not for sale right now.</p>;
+
+  const add = () => {
+    if (!chosen) return;
+    addToCart(slug, { key: itemKey(productId, chosen.resolution, chosen.license), productId, productSlug, title: productTitle, resolution: chosen.resolution, license: chosen.license, priceCents: chosen.amount_cents });
+    setAdded(true);
+  };
 
   return (
     <form method="post" action="/api/store/checkout" className="space-y-3">
@@ -55,9 +64,16 @@ export function BuyForm({ slug, productId, prices, currency, cancelled }: { slug
       </label>
 
       <button type="submit" className="inline-flex items-center justify-center rounded-lg bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-4 h-11 text-sm font-medium w-full">
-        Buy{chosen ? ` — ${formatMoney(chosen.amount_cents, currency)}` : ""}
+        Buy now{chosen ? ` — ${formatMoney(chosen.amount_cents, currency)}` : ""}
       </button>
-      <p className="text-xs text-[var(--site-ink-2)]">Secure checkout. Your download link is emailed after payment.</p>
+      <button type="button" onClick={add} className="inline-flex items-center justify-center rounded-lg border border-[var(--site-line)] px-4 h-11 text-sm font-medium w-full hover:bg-[var(--site-bg-2)]">
+        Add to cart
+      </button>
+      {added ? (
+        <p className="text-xs text-[var(--site-ink-2)]" role="status">Added. <Link href="/shop/cart" className="underline">View cart →</Link></p>
+      ) : (
+        <p className="text-xs text-[var(--site-ink-2)]">Secure checkout. Your download link is emailed after payment.</p>
+      )}
     </form>
   );
 }

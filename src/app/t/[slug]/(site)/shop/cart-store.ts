@@ -1,0 +1,67 @@
+import type { StoreLicense, StoreResolution } from "@/lib/types";
+
+/**
+ * A tiny client-side cart kept in localStorage, scoped per studio slug (tenants
+ * share one origin on the platform domain, so the key must include the slug).
+ * Only selections and a display price are stored; the server recomputes every
+ * charge amount at checkout, so nothing here is trusted for money.
+ */
+export type CartItem = {
+  key: string;
+  productId: string;
+  productSlug: string;
+  title: string;
+  resolution: StoreResolution;
+  license: StoreLicense;
+  priceCents: number;
+};
+
+const keyFor = (slug: string) => `pr.cart.${slug}`;
+const EVT = "pr-cart-change";
+
+export function itemKey(productId: string, resolution: string, license: string) {
+  return `${productId}:${resolution}:${license}`;
+}
+
+export function readCart(slug: string): CartItem[] {
+  try {
+    const raw = localStorage.getItem(keyFor(slug));
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(parsed) ? (parsed as CartItem[]).filter((i) => i && typeof i.productId === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCart(slug: string, items: CartItem[]) {
+  try {
+    localStorage.setItem(keyFor(slug), JSON.stringify(items));
+    window.dispatchEvent(new Event(EVT));
+  } catch {
+    /* storage unavailable (private mode, quota) — the cart is best-effort */
+  }
+}
+
+export function addToCart(slug: string, item: CartItem) {
+  const items = readCart(slug);
+  if (!items.some((i) => i.key === item.key)) items.push(item);
+  writeCart(slug, items);
+}
+
+export function removeFromCart(slug: string, key: string) {
+  writeCart(slug, readCart(slug).filter((i) => i.key !== key));
+}
+
+export function clearCart(slug: string) {
+  writeCart(slug, []);
+}
+
+/** Subscribe to cart changes (this tab and others). Returns an unsubscribe fn. */
+export function onCartChange(fn: () => void) {
+  window.addEventListener(EVT, fn);
+  window.addEventListener("storage", fn);
+  return () => {
+    window.removeEventListener(EVT, fn);
+    window.removeEventListener("storage", fn);
+  };
+}

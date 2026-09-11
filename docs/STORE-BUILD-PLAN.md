@@ -12,9 +12,9 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
 - **S14** manual payment mode · **S15/S16** download grants + signed delivery route + buyer library and email link
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
-- **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document
+- **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25 (partial)** sales analytics dashboard (revenue, AOV, top products/buyers) + orders view · **S27 (partial)** buyer licence / print-release document
 
-Remaining phases: S6 tiers/scheduled/sale prices · S7 rights-managed matrix · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N (multi-item cart) · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S6 tiers/scheduled/sale prices · S7 rights-managed matrix · S13 marketplace-collect + Stripe Tax · S20 bundles / pick-N selection UI · S21 digital products · S22 automations + broadcasts · S23 upsell · S25 full analytics · S26 embeds/distribution · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
 
 ## 1. Context — why we're building this
 
@@ -322,15 +322,15 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S10.5 Tests — deferred to the S33 store test suite; toggle idempotency is guarded by the `unique (studio_id, buyer_key, product_id)` index + `on conflict do nothing`.
 
 ### Phase S11 — Cart & checkout (guest, wallet, discounts, gift cards)
-- [ ] S11.1 Client-side stateless cart (React state + `localStorage`, hydrated safely) — no server cart table required for the happy path.
-- [ ] S11.2 Cart drawer/page: line items (photo, resolution, license, qty), totals via `store-shared.cartTotals`.
-- [ ] S11.3 Apply discount code / gift card / store credit inputs (validated server-side).
-- [ ] S11.4 Buyer email (guest) + optional name; license/terms acceptance checkbox.
-- [ ] S11.5 `buyAction(slug, cart, buyer)` server action mirroring `book/actions.ts` `bookAction`: validate, rate-limit (`limited("store_checkout", …)`), upsert buyer via `findClientByEmail`/`createClient`, create `sale`+`sale_items`, call store checkout (S12), return Checkout URL for client redirect.
-- [ ] S11.6 Wallets (Apple/Google Pay) — automatic on Stripe-hosted Checkout; no extra work beyond enabling on the connected account.
-- [ ] S11.7 Success route `t/[slug]/(app)/store/success/page.tsx` (reads `session_id`, shows "purchase received", links to library once webhook lands).
-- [ ] S11.8 Cancel route/state; abandoned-cart capture (persist a `carts` row or a signed cart token for recovery — S22).
-- [ ] S11.9 Tests: cart totals, discount+gift-card stacking rules, buyAction cross-studio guard, empty/զero-total guards.
+- [x] S11.1 Client-side cart in `localStorage`, scoped per studio slug (`cart-store.ts`), SSR-safe (loads after mount, cross-tab via a change event).
+- [x] S11.2 Cart page `/shop/cart` (`CartView`): line items with remove, subtotal; "Add to cart" on the product page; a cart-count link in the shop header and product page.
+- [x] S11.3 Discount code / gift card inputs on the cart, validated + recomputed server-side.
+- [x] S11.4 Buyer email (guest) + optional name.
+- [x] S11.5 Multi-item checkout `POST /api/store/cart-checkout`: rate-limited, gated, **every price recomputed from the catalogue** (client sends only selections), builds `sale`+`sale_items` and a multi-line Stripe session; gallery-unlock lines expand per photo; discount/gift collapse to a single summary line so the Stripe total equals the net charge; free (gift-covered) and manual paths handled.
+- [x] S11.6 Wallets — automatic on Stripe-hosted Checkout.
+- [x] S11.7 Success route clears the cart (`ClearCart`) on payment.
+- [x] S11.8 Cancel returns to `/shop/cart?cancelled=1` with the cart intact. _(Server-side abandoned-cart persistence for recovery: with S22.)_
+- [ ] S11.9 Tests: cart totals, discount+gift stacking, cross-studio guard, zero-total guards — with the S33 store test suite.
 
 ### Phase S12 — Payments: connected direct-charge (default mode)
 - [ ] S12.1 `createStoreCheckout(studio, sale, buyer, urls)` in `payments.ts` mirroring `createOrderCheckout`: `mode:"payment"`, `line_items` from `sale_items` (`price_data.unit_amount` cents, `product_data.name`), `metadata:{ sale_id, studio_id, kind:"store" }`, `onAccount(studio.stripe_account_id)`, **no application fee**.
