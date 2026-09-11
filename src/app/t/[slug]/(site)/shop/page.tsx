@@ -20,15 +20,21 @@ export async function generateMetadata({ params }: PageProps<"/t/[slug]/shop">) 
   return { title: studio ? `Shop — ${studio.name}` : "Shop" };
 }
 
-export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) {
+const SORTS = ["featured", "new", "price-asc", "price-desc"] as const;
+type Sort = (typeof SORTS)[number];
+
+export default async function ShopPage({ params, searchParams }: PageProps<"/t/[slug]/shop">) {
   const { slug } = await params;
+  const sp = await searchParams;
   const studio = await studioBySlug(slug);
   if (!studio) notFound();
   const settings = storeSettings((studio.settings ?? {}) as Record<string, unknown>);
   if (!settings.enabled || !entitlements(billingState(studio).effectivePlan).store) notFound();
 
+  const q = (typeof sp?.q === "string" ? sp.q : "").trim().slice(0, 80);
+  const sort: Sort = SORTS.includes(sp?.sort as Sort) ? (sp!.sort as Sort) : "featured";
   const products = (await listProducts(studio.id, { activeOnly: true })).filter((p) => SELLABLE.includes(p.kind));
-  const cards = await Promise.all(
+  const allCards = await Promise.all(
     products.map(async (p) => {
       const active = (await listProductPrices(studio.id, p.id)).filter((r) => r.is_active && r.amount_cents > 0);
       const from = active.length ? Math.min(...active.map((r) => effectivePrice(r).priceCents)) : null;
@@ -36,6 +42,14 @@ export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) 
       return { p, from, img: asset ? asset.thumb_url ?? asset.web_url ?? asset.url : null };
     })
   );
+  const ql = q.toLowerCase();
+  const filtered = ql ? allCards.filter((c) => `${c.p.title} ${c.p.description ?? ""}`.toLowerCase().includes(ql)) : allCards;
+  const cards = [...filtered].sort((a, b) => {
+    if (sort === "new") return b.p.created_at.localeCompare(a.p.created_at);
+    if (sort === "price-asc") return (a.from ?? Infinity) - (b.from ?? Infinity);
+    if (sort === "price-desc") return (b.from ?? -Infinity) - (a.from ?? -Infinity);
+    return Number(b.p.is_featured) - Number(a.p.is_featured) || a.p.sort_order - b.p.sort_order;
+  });
   const cur = studio.currency;
   const buyerKey = await readBuyerKey();
   const favorites = buyerKey ? await listFavoriteProductIds(studio.id, buyerKey) : new Set<string>();
@@ -53,8 +67,24 @@ export default async function ShopPage({ params }: PageProps<"/t/[slug]/shop">) 
           </div>
         </div>
         <p className="mt-2 text-[var(--site-ink-2)]">Prints and downloads from {studio.name}.</p>
-        {cards.length === 0 ? (
+
+        {allCards.length > 0 ? (
+          <form method="get" className="mt-6 flex flex-wrap items-center gap-2">
+            <input type="search" name="q" defaultValue={q} placeholder="Search products" aria-label="Search products" className="h-10 min-w-0 flex-1 rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 text-sm" />
+            <select name="sort" defaultValue={sort} aria-label="Sort" className="h-10 rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 text-sm">
+              <option value="featured">Featured</option>
+              <option value="new">Newest</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
+            </select>
+            <button type="submit" className="h-10 rounded-lg border border-[var(--site-line)] px-4 text-sm hover:bg-[var(--site-bg-2)]">Apply</button>
+          </form>
+        ) : null}
+
+        {allCards.length === 0 ? (
           <p className="mt-10 text-[var(--site-ink-2)]">Nothing here yet — check back soon.</p>
+        ) : cards.length === 0 ? (
+          <p className="mt-10 text-[var(--site-ink-2)]">No products match “{q}”. <Link href="/shop" className="underline">Clear search →</Link></p>
         ) : (
           <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {cards.map(({ p, from, img }) => (
