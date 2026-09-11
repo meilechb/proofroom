@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const grant = await getUsableGrantByToken(token);
   if (!grant) return new NextResponse("This download link has expired or reached its limit.", { status: 410 });
-  const item = one<SaleItem>(await db()`select * from sale_items where id = ${grant.sale_item_id}`);
+  const item = one<SaleItem>(await db()`select * from sale_items where id = ${grant.sale_item_id} and studio_id = ${grant.studio_id}`);
   if (!item) return new NextResponse(null, { status: 404 });
 
   let url: string | null = null;
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       filename = safeFilename(asset.filename, "photo.jpg");
     }
   } else if (item.photo_id) {
-    const photo = one<{ original_url: string; preview_url: string; filename: string }>(await db()`select original_url, preview_url, filename from photos where id = ${item.photo_id}`);
+    const photo = one<{ original_url: string; preview_url: string; filename: string }>(await db()`select original_url, preview_url, filename from photos where id = ${item.photo_id} and studio_id = ${grant.studio_id} and deleted_at is null`);
     if (photo) {
       url = grant.resolution === "original" ? photo.original_url : photo.preview_url || photo.original_url;
       filename = safeFilename(photo.filename, "photo.jpg");
