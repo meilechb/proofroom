@@ -5,7 +5,7 @@ import { env } from "@/lib/env";
 import { db, one } from "@/lib/db";
 import { applyAccountSnapshot, clearConnection, studioIdForAccount } from "@/lib/connect";
 import { recordCheckoutFailed, recordCheckoutPaid, recordDispute, recordRefund } from "@/lib/payments";
-import { markSalePaid, mintGrants } from "@/lib/store";
+import { markSalePaid, mintGrants, recordStoreDisputeByCharge, recordStoreRefundByCharge } from "@/lib/store";
 import { storeSettings } from "@/lib/store-shared";
 import { signLink } from "@/lib/tenant-tokens";
 import { storeLibraryUrl } from "@/lib/tenant";
@@ -109,7 +109,14 @@ async function handle(event: Stripe.Event, accountId: string | null) {
       return;
     }
     case "charge.refunded": {
-      const payment = await recordRefund(event.data.object);
+      const charge = event.data.object;
+      const pi = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id ?? null;
+      const storeSale = await recordStoreRefundByCharge({ id: charge.id, paymentIntentId: pi, totalRefunded: charge.amount_refunded, receiptUrl: charge.receipt_url });
+      if (storeSale) {
+        await notifyStudio(storeSale.studio_id, `Refund on store order #${storeSale.order_number}`, `You refunded ${formatMoney(storeSale.refunded_cents, storeSale.currency)} on store order #${storeSale.order_number}. The buyer's downloads are ${storeSale.status === "refunded" ? "revoked" : "still available"}.`);
+        return;
+      }
+      const payment = await recordRefund(charge);
       if (!payment) return;
       const info = await orderInfo(payment.order_id);
       if (info) await recordClientEvent(info.studio_id, info.client_id, "payment.refunded", "payment", payment.id, `Refunded ${formatMoney(payment.refunded_cents, payment.currency)} on session #${info.order_number}`);
@@ -118,6 +125,13 @@ async function handle(event: Stripe.Event, accountId: string | null) {
     case "charge.dispute.created":
     case "charge.dispute.closed": {
       const dispute = event.data.object;
+      const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id ?? null;
+      const dpi = typeof dispute.payment_intent === "string" ? dispute.payment_intent : dispute.payment_intent?.id ?? null;
+      const storeSale = await recordStoreDisputeByCharge(chargeId, dpi, dispute.status);
+      if (storeSale) {
+        if (event.type === "charge.dispute.created") await notifyStudio(storeSale.studio_id, "A store payment was disputed", `A card dispute (${dispute.reason}) was opened on store order #${storeSale.order_number}. Respond in your Stripe Dashboard: https://dashboard.stripe.com/disputes`);
+        return;
+      }
       const payment = await recordDispute(dispute);
       if (!payment) return;
       const info = await orderInfo(payment.order_id);

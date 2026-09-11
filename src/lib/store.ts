@@ -10,6 +10,7 @@ import type {
   ProductPrice,
   Sale,
   SaleItem,
+  SaleStatus,
   StoreCollection,
   StoreCollectionItem,
   StoreLicense,
@@ -318,4 +319,33 @@ export async function recordGrantDownload(grant: Pick<DownloadGrant, "id" | "stu
 
 export async function revokeGrantsForSale(saleId: string) {
   await db()`update download_grants set revoked = true where sale_id = ${saleId}`;
+}
+
+/** charge.refunded on a store sale: record the refund and revoke downloads once fully refunded. */
+export async function recordStoreRefundByCharge(input: { id: string; paymentIntentId: string | null; totalRefunded: number; receiptUrl: string | null }) {
+  const sale = one<Sale>(
+    await db()`select * from sales where stripe_charge_id = ${input.id} or (stripe_payment_intent_id = ${input.paymentIntentId} and ${input.paymentIntentId} is not null) limit 1`
+  );
+  if (!sale) return null;
+  const status: SaleStatus = input.totalRefunded >= sale.total_cents ? "refunded" : input.totalRefunded > 0 ? "partially_refunded" : "paid";
+  const updated = one<Sale>(
+    await db()`
+      update sales set refunded_cents = ${input.totalRefunded}, status = ${status},
+        stripe_charge_id = coalesce(stripe_charge_id, ${input.id}), receipt_url = coalesce(receipt_url, ${input.receiptUrl})
+      where id = ${sale.id} returning *`
+  );
+  if (updated && status === "refunded") await revokeGrantsForSale(sale.id);
+  return updated;
+}
+
+/** charge.dispute.* on a store sale: mirror the dispute status. */
+export async function recordStoreDisputeByCharge(chargeId: string | null, paymentIntentId: string | null, disputeStatus: string) {
+  const updated = one<Sale>(
+    await db()`
+      update sales set dispute_status = ${disputeStatus},
+        status = case when ${disputeStatus} = 'lost' then 'disputed' when status = 'disputed' and ${disputeStatus} in ('won', 'warning_closed') then 'paid' else status end
+      where stripe_charge_id = ${chargeId} or (stripe_payment_intent_id = ${paymentIntentId} and ${paymentIntentId} is not null)
+      returning *`
+  );
+  return updated;
 }
