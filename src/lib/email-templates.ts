@@ -20,6 +20,7 @@ export const templateKeys = [
   "booking_reminder",
   "import_finished",
   "session_plan_shared",
+  "favorite_frame",
 ] as const;
 
 export type TemplateKey = (typeof templateKeys)[number];
@@ -176,6 +177,16 @@ export const emailTemplates: EmailTemplateDef[] = [
     defaults: { subject: "Plan for {{session_title}}", body: `Hi {{client_name}},\n\nHere is the plan for your session on {{session_date}}: what we will shoot, the looks, and a few reference images. Reply with anything you would like to add.\n\n${sig}`, cta_label: "View the plan" },
     variables: [{ name: "session_title", description: "Session name" }, { name: "session_date", description: "Date" }, { name: "plan_url", description: "Link to the plan" }],
     sample: { client_name: "Sarah Cohen", session_title: "Individual headshot", session_date: "October 14, 2026", plan_url: "https://studio.example.com/my/abc/plan" },
+  },
+  {
+    key: "favorite_frame",
+    name: "Favourite reminder",
+    when: "A while after a shopper saved a product to their favourites but hasn't bought it.",
+    automation: { label: "Nudge shoppers about a favourite", defaultDays: 7 },
+    hasCta: true,
+    defaults: { subject: "Still thinking about {{product_title}}?", body: `Hi there,\n\nYou saved {{product_title}} from {{studio_name}} to your favourites. It's still available whenever you're ready.\n\n${sig}`, cta_label: "View it" },
+    variables: [{ name: "product_title", description: "The favourited product" }, { name: "product_url", description: "Link to the product" }],
+    sample: { product_title: "Autumn portrait", product_url: "https://studio.example.com/shop/autumn-portrait" },
   },
 ];
 

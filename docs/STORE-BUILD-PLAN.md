@@ -14,7 +14,7 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
 - **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25** sales analytics + storefront funnel (revenue, AOV, top products/buyers, plus shop/product views, cart adds, checkouts, purchases and conversion) · **S27 (partial)** buyer licence / print-release document · **S21** digital products (sell presets/LUTs/e-books: private-store upload, `digital` product kind, per-file download grants, admin file manager) · **S5/S20.3** collections (curate library/portfolio assets into a set, sell as a `collection_unlock` SKU that grants every image)
 
-Remaining phases: S13 marketplace-collect + Stripe Tax (needs a commission/tax decision) · S22 favorite-frame/holiday automations (broadcasts shipped; favorite-frame needs buyer-email capture) · S30 platform metering refinements · S33 formal test suite · S27 licence PDFs + email templates · S28 security review · S29 store cron (grant cleanup, abandoned cart) · S30 platform admin/metering · S31 physical prints / print lab · S32 marketing-site pages · S33 formal store test suite.
+Remaining phases: S13 marketplace-collect — **dropped** (own-Stripe 0% model; no platform-of-record) · S31 physical prints / print lab — **deferred** (owner said skip) · smaller refinements: S30 platform metering, S33 more store tests, category facets, per-photo in-gallery buy buttons.
 
 ## 1. Context — why we're building this
 
@@ -342,14 +342,16 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S12.7 `recordStoreRefund`/`recordStoreDispute` hooks (or reuse `recordRefund`/`recordDispute` keyed to the sale) — revoke grants on full refund (S24).
 - [ ] S12.8 Tests: checkout session built on the connected account, no `application_fee`; webhook marks sale paid once (idempotency); metadata routing.
 
-### Phase S13 — Payments: marketplace-collect mode + Stripe Tax
-- [ ] S13.1 `store_settings.payment_mode = "marketplace"` path: charge on the **platform** account with `application_fee_amount` (commission) + `transfer_data.destination = studio account` (or destination charge), configurable commission %.
-- [ ] S13.2 Enable `automatic_tax` + `tax_behavior` on the Checkout Session (Stripe Tax) when marketplace mode (platform is seller/facilitator of record).
-- [ ] S13.3 Platform tax registration config + `store_settings.tax_mode`; buyer-facing tax line at checkout.
-- [ ] S13.4 Payout visibility for the studio; fee breakdown (commission + processing) surfaced.
-- [ ] S13.5 Webhook handling for platform-collected store sales (the platform `stripe/webhook` route, not connect) + payout reconciliation.
-- [ ] S13.6 Seller-of-record & tax messaging in settings and receipts.
-- [ ] S13.7 Tests: fee math, tax applied, destination transfer, mode toggle isolation.
+### Phase S13 — Payments: marketplace-collect mode + Stripe Tax — **DROPPED**
+Not being built. The product's model is each photographer selling through **their
+own connected Stripe at 0% commission** (S12, shipped) — the platform never
+collects the money or becomes merchant/tax-of-record. Marketplace-collect (the
+platform collecting, taking a commission, and running Stripe Tax as
+seller-of-record) is a different business and was dropped per the owner's
+decision. The `payment_mode` setting keeps `connected` (default) and `manual`;
+the `marketplace` option and `commissionBps`/`taxMode` settings stay in the
+schema but are inert.
+- [-] S13.1–S13.7 Dropped (see above).
 
 ### Phase S14 — Payments: manual / offline mode
 - [ ] S14.1 `store_settings.payment_mode = "manual"`: show instructions + optional payment link instead of Checkout (mirror the order manual mode).
@@ -409,10 +411,10 @@ _(The atomic numbered items for each phase are appended below.)_
 - [x] S21.4 Tests: `digitalExtOk` allowlist (accepts preset/LUT/e-book extensions case-insensitively, rejects images/executables/extensionless). _(End-to-end grant delivery: with the S33 store test suite.)_
 
 ### Phase S22 — Conversion engine: sales automations & broadcasts (Pro)
-- [ ] S22.1 Add store rules to `AUTOMATION_RULES` in `automations-shared.ts`: `favorite_frame`, `abandoned_cart`, `holiday_promo` (`gallery_expiring` already exists) with default timing/enabled.
+- [x] S22.1 `favorite_frame` added to `AUTOMATION_RULES` (default off, 7 days). _(abandoned_cart runs as its own daily job — S22.2; holiday_promo is covered by manual broadcasts.)_
 - [x] S22.2 (abandoned checkout) `recoverAbandonedCheckouts` in the daily cron: a connected sale still `pending` a day after it started never completed at Stripe, so the buyer is nudged back to the shop once (idempotent via an `automation_sends` `store_abandoned` row; manual-mode pending sales excluded). Uses the pending sale as the data source, so no separate carts table is needed. _(favorite-frame/holiday rules still pending — they need buyer-email capture on favourites.)_
 - [ ] S22.3 Template keys + defaults in `email-templates.ts`: `favorite_frame`, `abandoned_cart`, `order_confirmation`, `download_ready`, `license`, `store_receipt`; per-studio overrides via the `email_templates` table + editor.
-- [ ] S22.4 Wire `sendAutomation` branches for the new rules (load entity, build vars, `sendStudioEmail`, `recordClientEvent`).
+- [x] S22.4 `favorite_frame` wired: `dueTargets` finds favourites with an opted-in email, older than N days, whose buyer hasn't bought that product (idempotent via `automation_sends`); `sendAutomation` sends the `favorite_frame` template with the product link. Studios toggle it in Emails → Automations.
 - [x] S22.5 **Broadcasts:** `broadcasts.ts` + `/studio/emails/broadcasts` UI + a `broadcast_recipients` idempotency ledger + the frequent-cron `processBroadcasts` sender. Compose a draft to **store buyers** or **all clients** (live recipient count; unsubscribed/empty emails excluded), send now or schedule; the cron claims each recipient atomically before sending via the suppression-aware `sendStudioEmail` with a one-click `signLink("unsub")` link, then marks the broadcast sent. _(Finer segments and A/B are later refinements.)_
 - [ ] S22.6 Coupon campaigns / early-bird tie-in to broadcasts.
 - [~] S22.7 Broadcasts are gated behind the Pro `automations` entitlement (`requireEntitledStudio("automations","admin")` on every action + an upgrade lock on the page). Favorite-frame/holiday automations still to come.
