@@ -1,5 +1,5 @@
 import { requireStudioPage } from "@/lib/auth";
-import { storeAnalytics } from "@/lib/store";
+import { storeAnalytics, topViewedProducts } from "@/lib/store";
 import { formatMoney } from "@/lib/types";
 import { ButtonLink, EmptyState, PageHeader, Stat } from "@/components/ui";
 import { UpgradeLock } from "@/components/studio/upgrade-lock";
@@ -17,6 +17,7 @@ export default async function StoreAnalyticsPage() {
     );
   }
   const a = await storeAnalytics(ctx.studio.id);
+  const viewed = await topViewedProducts(ctx.studio.id);
   const cur = ctx.studio.currency;
 
   return (
@@ -58,6 +59,20 @@ export default async function StoreAnalyticsPage() {
             </div>
             <p className="mt-2 text-xs text-muted">Conversion is purchases per product view, last 30 days.</p>
           </section>
+
+          {viewed.length > 0 ? (
+            <section className="mt-8">
+              <h2 className="text-sm font-medium mb-2">Most viewed products</h2>
+              <ul className="card divide-y divide-line">
+                {viewed.map((v, i) => (
+                  <li key={i} className="flex items-center justify-between gap-4 px-4 py-2.5">
+                    <span className="min-w-0 truncate text-sm">{v.title}</span>
+                    <span className="shrink-0 text-sm text-muted">{v.views} view{v.views === 1 ? "" : "s"} · <span className="text-ink">{v.sold} sold</span></span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           {a.orders > 0 ? (
           <div className="mt-8 grid gap-8 lg:grid-cols-2">

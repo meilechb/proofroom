@@ -720,6 +720,27 @@ export async function storeAnalytics(studioId: string) {
   };
 }
 
+/**
+ * Most-viewed products in the last N days, from the product_view beacon, with
+ * their purchase count over the same window — so a studio sees what draws
+ * interest and what actually converts (S25).
+ */
+export async function topViewedProducts(studioId: string, days = 30, limit = 5) {
+  return rows<{ title: string; slug: string; views: number; sold: number }>(
+    await db()`
+      select p.title, p.slug, ad.views::int as views,
+        coalesce((select count(*) from sale_items si join sales s on s.id = si.sale_id
+          where si.studio_id = ${studioId} and si.product_id = p.id and s.status in ('paid', 'partially_refunded')
+            and s.created_at >= current_date - ${days}::int), 0)::int as sold
+      from (
+        select target, sum(count) as views from analytics_daily
+        where studio_id = ${studioId} and event = 'product_view' and day >= current_date - ${days}::int
+        group by target
+      ) ad join store_products p on p.id::text = ad.target and p.studio_id = ${studioId}
+      order by ad.views desc limit ${limit}`
+  );
+}
+
 export async function attachSaleSession(saleId: string, sessionId: string, accountId: string | null) {
   await db()`update sales set stripe_checkout_session_id = ${sessionId}, stripe_account_id = ${accountId} where id = ${saleId}`;
 }
