@@ -14,4 +14,9 @@ describe("automation settings", () => {
     expect(automationsPaused({})).toBe(false);
     expect(automationsPaused(null)).toBe(false);
   });
+  it("keeps the store favourite nudge opt-in by default", () => {
+    // Off by default so studios don't email shoppers without turning it on.
+    expect(automationSettings({}).favorite_frame).toEqual({ enabled: false, days: 7 });
+    expect(automationSettings({ automations: { favorite_frame: { enabled: true, days: 10 } } }).favorite_frame).toEqual({ enabled: true, days: 10 });
+  });
 });
