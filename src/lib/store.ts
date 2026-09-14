@@ -131,6 +131,22 @@ export async function getGalleryStoreProduct(studioId: string, galleryId: string
   );
 }
 
+/**
+ * Per-photo `image` products for a gallery, keyed by photo_id, for an in-gallery
+ * "buy this one" affordance (S9.10). Only products with an active, priced row.
+ */
+export async function listGalleryPhotoProducts(studioId: string, galleryId: string) {
+  return rows<{ photo_id: string; slug: string; from: number }>(
+    await db()`
+      select p.photo_id, p.slug,
+        (select min(amount_cents) from product_prices pr where pr.product_id = p.id and pr.is_active and pr.amount_cents > 0) as from
+      from store_products p
+      where p.studio_id = ${studioId} and p.gallery_id = ${galleryId} and p.kind = 'image' and p.is_active
+        and p.photo_id is not null
+        and exists (select 1 from product_prices pr where pr.product_id = p.id and pr.is_active and pr.amount_cents > 0)`
+  );
+}
+
 /** A few other active, sellable products for the "more from the shop" module. */
 export async function listRelatedProducts(studioId: string, excludeId: string, limit = 4) {
   return rows<StoreProduct>(

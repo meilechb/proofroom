@@ -6,10 +6,10 @@ import { db, one, rows } from "@/lib/db";
 import { listPhotos } from "@/lib/photos";
 import { getOrder } from "@/lib/orders";
 import { listPayments } from "@/lib/payments";
-import { getGalleryStoreProduct } from "@/lib/store";
+import { getGalleryStoreProduct, listGalleryPhotoProducts } from "@/lib/store";
 import { storeSettings } from "@/lib/store-shared";
 import { billingState, entitlements } from "@/lib/plans";
-import { orderMoney } from "@/lib/types";
+import { orderMoney, formatMoney } from "@/lib/types";
 import { payUrl, galleryUrl } from "@/lib/tenant";
 import { GalleryView, type ClientPhoto } from "./gallery-view";
 import { ClientUploader } from "./client-uploader";
@@ -61,6 +61,9 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
   const included = one<{ included: number }>(await db()`select included_finals as included from orders where id = ${gallery.order_id ?? null}`);
   const storeOn = storeSettings((studio.settings ?? {}) as Record<string, unknown>).enabled && entitlements(billingState(studio).effectivePlan).store;
   const shopProduct = storeOn ? await getGalleryStoreProduct(studio.id, gallery.id) : null;
+  const photoProducts = storeOn ? await listGalleryPhotoProducts(studio.id, gallery.id) : [];
+  const buyable: Record<string, { slug: string; label: string }> = {};
+  for (const pp of photoProducts) buyable[pp.photo_id] = { slug: pp.slug, label: formatMoney(pp.from, studio.currency) };
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 sm:px-8 py-8">
@@ -100,6 +103,7 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
           }}
           shareUrl={sharingAllowed(gallery) ? galleryUrl(studio, gallery.slug) : null}
           previewToken={previewing ? previewToken : null}
+          buyable={buyable}
         />
       )}
     </div>

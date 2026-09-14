@@ -17,6 +17,7 @@ export function GalleryView({
   download,
   shareUrl,
   previewToken,
+  buyable = {},
 }: {
   galleryId: string;
   photos: ClientPhoto[];
@@ -25,6 +26,7 @@ export function GalleryView({
   download: DownloadOptions;
   shareUrl: string | null;
   previewToken: string | null;
+  buyable?: Record<string, { slug: string; label: string }>;
 }) {
   const [photos, setPhotos] = useState(initial);
   const [index, setIndex] = useState<number | null>(null);
@@ -101,6 +103,11 @@ export function GalleryView({
                 <span className={p.favorite ? "text-red-500" : "text-white/90"}>{p.favorite ? "♥" : "♡"}</span>
               </button>
             ) : null}
+            {buyable[p.id] ? (
+              <a href={`/shop/${buyable[p.id].slug}`} className="absolute bottom-2 left-2 rounded-full bg-black/70 px-2.5 py-1 text-xs font-medium text-white backdrop-blur hover:bg-black/85">
+                Buy {buyable[p.id].label}
+              </a>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -116,6 +123,9 @@ export function GalleryView({
             {allowComments ? <NoteBox galleryId={galleryId} photoId={photo.id} favorite={photos.find((p) => p.id === photo.id)?.favorite ?? false} onToggle={() => toggle(photo.id)} /> : null}
             {download.full || download.web ? (
               <a href={`/api/photo/${photo.id}?size=${download.full ? "full" : "web"}${pinQuery}${pv}`} className="self-start rounded-full bg-white text-black px-3 py-1 text-sm font-medium">Download this photo</a>
+            ) : null}
+            {buyable[photo.id] ? (
+              <a href={`/shop/${buyable[photo.id].slug}`} className="self-start rounded-full bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-3 py-1 text-sm font-medium">Buy this photo — {buyable[photo.id].label}</a>
             ) : null}
           </div>
         )}
