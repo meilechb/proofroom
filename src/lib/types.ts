@@ -413,6 +413,7 @@ export type StoreProduct = {
   gallery_id: string | null;
   collection_id: string | null;
   license_text: string | null;
+  category: string | null;
   is_active: boolean;
   is_featured: boolean;
   sort_order: number;

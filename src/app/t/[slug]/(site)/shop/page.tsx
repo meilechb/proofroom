@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { billingState, entitlements } from "@/lib/plans";
 import { effectivePrice, storeSettings } from "@/lib/store-shared";
-import { listFavoriteProductIds, listProductPrices, listProducts, listPublicCollections } from "@/lib/store";
+import { listFavoriteProductIds, listProductCategories, listProductPrices, listProducts, listPublicCollections } from "@/lib/store";
 import { readBuyerKey } from "@/lib/store-buyer";
 import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
@@ -33,7 +33,11 @@ export default async function ShopPage({ params, searchParams }: PageProps<"/t/[
 
   const q = (typeof sp?.q === "string" ? sp.q : "").trim().slice(0, 80);
   const sort: Sort = SORTS.includes(sp?.sort as Sort) ? (sp!.sort as Sort) : "featured";
-  const products = (await listProducts(studio.id, { activeOnly: true })).filter((p) => SELLABLE.includes(p.kind));
+  const categories = await listProductCategories(studio.id);
+  const category = typeof sp?.category === "string" && categories.includes(sp.category) ? sp.category : "";
+  const products = (await listProducts(studio.id, { activeOnly: true }))
+    .filter((p) => SELLABLE.includes(p.kind))
+    .filter((p) => !category || p.category === category);
   const allCards = await Promise.all(
     products.map(async (p) => {
       const active = (await listProductPrices(studio.id, p.id)).filter((r) => r.is_active && r.amount_cents > 0);
@@ -71,6 +75,12 @@ export default async function ShopPage({ params, searchParams }: PageProps<"/t/[
         {allCards.length > 0 ? (
           <form method="get" className="mt-6 flex flex-wrap items-center gap-2">
             <input type="search" name="q" defaultValue={q} placeholder="Search products" aria-label="Search products" className="h-10 min-w-0 flex-1 rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 text-sm" />
+            {categories.length > 0 ? (
+              <select name="category" defaultValue={category} aria-label="Category" className="h-10 rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 text-sm">
+                <option value="">All categories</option>
+                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            ) : null}
             <select name="sort" defaultValue={sort} aria-label="Sort" className="h-10 rounded-lg border border-[var(--site-line)] bg-[var(--site-bg)] px-3 text-sm">
               <option value="featured">Featured</option>
               <option value="new">Newest</option>

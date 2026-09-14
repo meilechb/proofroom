@@ -50,6 +50,7 @@ export type ProductInput = {
   galleryId?: string | null;
   collectionId?: string | null;
   licenseText?: string | null;
+  category?: string | null;
   isActive?: boolean;
   isFeatured?: boolean;
 };
@@ -86,6 +87,13 @@ export async function listProducts(studioId: string, opts: { activeOnly?: boolea
 
 export async function getProduct(studioId: string, id: string) {
   return one<StoreProduct>(await db()`select * from store_products where id = ${id} and studio_id = ${studioId}`);
+}
+
+/** Distinct categories used by active products, for the shop facet (S9.11). */
+export async function listProductCategories(studioId: string) {
+  return rows<{ category: string }>(
+    await db()`select distinct category from store_products where studio_id = ${studioId} and is_active and category is not null and category <> '' order by category`
+  ).map((r) => r.category);
 }
 
 export async function getProductBySlug(studioId: string, slug: string) {
@@ -138,8 +146,8 @@ export async function createProduct(studioId: string, input: ProductInput) {
   const next = one<{ n: number }>(await db()`select coalesce(max(sort_order), 0) + 1 as n from store_products where studio_id = ${studioId}`);
   return one<StoreProduct>(
     await db()`
-      insert into store_products (studio_id, kind, slug, title, description, asset_id, photo_id, gallery_id, collection_id, license_text, is_active, is_featured, sort_order)
-      values (${studioId}, ${input.kind}, ${slug}, ${input.title.trim()}, ${input.description ?? null}, ${input.assetId ?? null}, ${input.photoId ?? null}, ${input.galleryId ?? null}, ${input.collectionId ?? null}, ${input.licenseText ?? null}, ${input.isActive ?? true}, ${input.isFeatured ?? false}, ${next?.n ?? 1})
+      insert into store_products (studio_id, kind, slug, title, description, asset_id, photo_id, gallery_id, collection_id, license_text, category, is_active, is_featured, sort_order)
+      values (${studioId}, ${input.kind}, ${slug}, ${input.title.trim()}, ${input.description ?? null}, ${input.assetId ?? null}, ${input.photoId ?? null}, ${input.galleryId ?? null}, ${input.collectionId ?? null}, ${input.licenseText ?? null}, ${input.category ?? null}, ${input.isActive ?? true}, ${input.isFeatured ?? false}, ${next?.n ?? 1})
       returning *`
   );
 }
@@ -153,6 +161,7 @@ export async function updateProduct(studioId: string, id: string, input: Partial
         title = ${input.title?.trim() ?? current.title},
         description = ${input.description === undefined ? current.description : input.description},
         license_text = ${input.licenseText === undefined ? current.license_text : input.licenseText},
+        category = ${input.category === undefined ? current.category : input.category},
         is_active = ${input.isActive ?? current.is_active},
         is_featured = ${input.isFeatured ?? current.is_featured}
       where id = ${id} and studio_id = ${studioId}

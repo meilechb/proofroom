@@ -1299,3 +1299,6 @@ create index if not exists broadcast_recipients_pending_idx on broadcast_recipie
 -- Optional buyer email opted in on the favourites page, so the favorite-frame
 -- automation (S22) can nudge someone who saved a product but didn't buy it.
 alter table store_favorites add column if not exists email text;
+
+-- Optional free-text category, so the shop can offer a category facet (S9.11).
+alter table store_products add column if not exists category text;

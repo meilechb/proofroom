@@ -84,6 +84,7 @@ export async function saveProductAction(_prev: ActionState, formData: FormData):
     assetId: str(formData, "assetId", 64) || null,
     galleryId,
     collectionId,
+    category: str(formData, "category", 60) || null,
   };
   const product = id ? await updateProduct(studio.id, id, input) : await createProduct(studio.id, input);
   if (product) await replaceProductPrices(studio.id, product.id, prices);

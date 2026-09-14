@@ -135,6 +135,9 @@ export function ProductDialog({ product, prices, trigger, assets, galleries, col
             ) : null}
           </div>
           <Field label="Description" htmlFor="s-desc"><Textarea id="s-desc" name="description" rows={2} defaultValue={product?.description ?? ""} /></Field>
+          <Field label="Category" htmlFor="s-cat" hint="Optional — lets shoppers filter the shop (e.g. Prints, Presets).">
+            <Input id="s-cat" name="category" defaultValue={product?.category ?? ""} placeholder="e.g. Prints" />
+          </Field>
           <ImagePicker label={kind === "gallery_unlock" || kind === "collection_unlock" || kind === "digital" ? "Cover image" : "Image"} value={assetId} assets={assets} onChange={setAssetId} />
           {kind === "digital" ? <p className="text-xs text-muted">Save the product, then use “Files” on it to upload the downloads buyers receive.</p> : null}
 
