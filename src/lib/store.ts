@@ -530,8 +530,22 @@ export async function toggleFavorite(studioId: string, buyerKey: string, product
     await db()`delete from store_favorites where studio_id = ${studioId} and buyer_key = ${buyerKey} and product_id = ${productId}`;
     return false;
   }
-  await db()`insert into store_favorites (studio_id, buyer_key, product_id) values (${studioId}, ${buyerKey}, ${productId}) on conflict (studio_id, buyer_key, product_id) do nothing`;
+  // Carry any email the buyer has already opted in with onto the new row.
+  await db()`insert into store_favorites (studio_id, buyer_key, product_id, email)
+    values (${studioId}, ${buyerKey}, ${productId}, (select email from store_favorites where studio_id = ${studioId} and buyer_key = ${buyerKey} and email is not null limit 1))
+    on conflict (studio_id, buyer_key, product_id) do nothing`;
   return true;
+}
+
+/** Opt-in: attach a buyer's email to their favourites so favorite-frame can nudge them (S22). */
+export async function setFavoriteEmail(studioId: string, buyerKey: string, email: string) {
+  await db()`update store_favorites set email = ${email.trim().toLowerCase()} where studio_id = ${studioId} and buyer_key = ${buyerKey}`;
+}
+
+/** Whether this buyer has opted into favourite reminders (for the page's UI state). */
+export async function favoriteEmail(studioId: string, buyerKey: string) {
+  const r = one<{ email: string | null }>(await db()`select email from store_favorites where studio_id = ${studioId} and buyer_key = ${buyerKey} and email is not null limit 1`);
+  return r?.email ?? null;
 }
 
 /** A buyer's favourited, still-active products (most recent first). */

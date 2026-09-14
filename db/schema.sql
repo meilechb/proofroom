@@ -1295,3 +1295,7 @@ create table if not exists broadcast_recipients (
 );
 
 create index if not exists broadcast_recipients_pending_idx on broadcast_recipients (broadcast_id, status);
+
+-- Optional buyer email opted in on the favourites page, so the favorite-frame
+-- automation (S22) can nudge someone who saved a product but didn't buy it.
+alter table store_favorites add column if not exists email text;

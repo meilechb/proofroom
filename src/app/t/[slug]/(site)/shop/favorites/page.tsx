@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
 import { billingState, entitlements } from "@/lib/plans";
 import { effectivePrice, storeSettings } from "@/lib/store-shared";
-import { listFavoriteProducts, listProductPrices } from "@/lib/store";
+import { favoriteEmail, listFavoriteProducts, listProductPrices } from "@/lib/store";
 import { readBuyerKey } from "@/lib/store-buyer";
 import { assetById } from "@/lib/assets";
 import { formatMoney } from "@/lib/types";
 import { Container } from "@/components/site/sections";
 import { FavoriteButton } from "../favorite-button";
+import { FavoriteReminder } from "./favorite-reminder";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -21,6 +22,7 @@ export default async function FavoritesPage({ params }: PageProps<"/t/[slug]/sho
 
   const buyerKey = await readBuyerKey();
   const products = buyerKey ? await listFavoriteProducts(studio.id, buyerKey) : [];
+  const optedInEmail = buyerKey ? await favoriteEmail(studio.id, buyerKey) : null;
   const cards = await Promise.all(
     products.map(async (p) => {
       const active = (await listProductPrices(studio.id, p.id)).filter((r) => r.is_active && r.amount_cents > 0);
@@ -39,6 +41,8 @@ export default async function FavoritesPage({ params }: PageProps<"/t/[slug]/sho
         {cards.length === 0 ? (
           <p className="mt-10 text-[var(--site-ink-2)]">No favourites yet. Tap the heart on anything in the shop to save it here.</p>
         ) : (
+          <>
+          <FavoriteReminder slug={slug} current={optedInEmail} />
           <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {cards.map(({ p, from, img }) => (
               <div key={p.id} className="group relative">
@@ -58,6 +62,7 @@ export default async function FavoritesPage({ params }: PageProps<"/t/[slug]/sho
               </div>
             ))}
           </div>
+          </>
         )}
       </Container>
     </div>
