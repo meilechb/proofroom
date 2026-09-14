@@ -6,7 +6,7 @@
 
 ## Status — built so far (branch `claude/photographer-asset-sales-hg938i`, PR #19)
 
-Shipped and green (typecheck + lint + 167 tests, each its own commit):
+Shipped and green (typecheck + lint + 187 tests, each its own commit):
 - **S1** schema/types/OwnedTable · **S2** Pro `store` entitlement · **S3** pricing/licence maths + catalog data layer
 - **S4** store settings · **S5/S8** catalog admin (products with image picker, resolution×licence price rows, orders view)
 - **S9** public `/shop` + product pages · **S11/S12** single-item buy → connected-account Stripe Checkout (0% commission)
@@ -14,7 +14,9 @@ Shipped and green (typecheck + lint + 167 tests, each its own commit):
 - **S10** storefront favourites (cookie buyer key, heart toggle, favourites view) · **S18** discount codes · **S19** gift cards (issue/adjust in admin, redeem at checkout, sell as a product) · **S20 (partial)** whole-gallery unlock
 - **S20** pick-N bundles (pick min–max photos from a gallery at a per-photo price, server-validated) · **S7** rights-managed licensing (usage matrix editor, live storefront price / "request a quote", server-recomputed RM price, usage recorded on the licence) · **S11** multi-item cart (localStorage cart, `/shop/cart`, add-to-cart, multi-line checkout with server-recomputed prices) · **S6 (partial)** price sheets (reusable presets, apply to a product) · **S17** buyer order history in the library (other orders, receipt + licence links) · **S24** refund/dispute handling (revokes downloads on full refund) · **S25** sales analytics + storefront funnel (revenue, AOV, top products/buyers, plus shop/product views, cart adds, checkouts, purchases and conversion) · **S27 (partial)** buyer licence / print-release document · **S21** digital products (sell presets/LUTs/e-books: private-store upload, `digital` product kind, per-file download grants, admin file manager) · **S5/S20.3** collections (curate library/portfolio assets into a set, sell as a `collection_unlock` SKU that grants every image)
 
-Remaining phases: S13 marketplace-collect — **dropped** (own-Stripe 0% model; no platform-of-record) · S31 physical prints / print lab — **deferred** (owner said skip) · smaller refinements: S30 platform metering, S33 more store tests, category facets, per-photo in-gallery buy buttons.
+Also shipped since: **S22** email broadcasts + favourite-frame automation (opt-in email capture) · shop search / sort / **category facet** · "most-viewed products" on analytics · **S9.10** per-photo "buy this one" in the client gallery (grid pill + lightbox button for individually-sellable photos).
+
+Remaining phases: S13 marketplace-collect — **dropped** (own-Stripe 0% model; no platform-of-record) · S31 physical prints / print lab — **deferred** (owner said skip) · smaller refinements: S30 platform metering.
 
 ## 1. Context — why we're building this
 
@@ -307,7 +309,7 @@ _(The atomic numbered items for each phase are appended below.)_
 - [ ] S9.7 Product detail route `t/[slug]/(site)/shop/[productSlug]/page.tsx` (gallery of watermarked previews, resolution/license selector, price, add-to-cart).
 - [x] S9.8 Collection detail route `t/[slug]/(site)/shop/collection/[collectionSlug]/page.tsx` — title, description, every image and a "Buy the collection" CTA to its unlock product; hidden 404s, unlisted is no-index and reachable by link only. Public collections also appear in a strip on `/shop`, and the collection-unlock product page shows a "What's included" grid.
 - [ ] S9.9 Watermarked previews served via the public `assets` store (for portfolio images) or a `preview`-signed `/api/photo/[id]` (for private gallery photos); never expose originals.
-- [x] S9.10 "Shop this gallery" CTA in the unlocked client gallery when an active gallery-unlock or bundle product backs it (store on) — `getGalleryStoreProduct` + a banner linking to the product. _(Per-photo in-gallery buy buttons are a later refinement.)_
+- [x] S9.10 "Shop this gallery" CTA in the unlocked client gallery when an active gallery-unlock or bundle product backs it (store on) — `getGalleryStoreProduct` + a banner linking to the product. Plus **per-photo "buy this one"** — `listGalleryPhotoProducts` maps a gallery's individually-sellable `image` products (photo_id → slug + from-price) onto a grid pill and a lightbox button.
 - [x] S9.11 Shop grid search (`?q=` over title/description), sort (`?sort=` featured/newest/price-asc/price-desc) and a **category facet** (`?category=`, from products' optional free-text category) via a no-JS GET form, with a distinct no-match state; related products already sit on product pages.
 - [x] S9.12 Product pages emit description + Open Graph + Twitter-card metadata (with the product image) and Product JSON-LD (Offer: price, currency, in-stock, URL); a share row (X/Facebook/Pinterest intent links + copy link) sits under the buy area.
 - [x] S9.13 Store view/beacon: `store_view` (shop) and `product_view` (product page) fire a one-shot `StoreBeacon` to `/api/track/store`; `cart_add` fires from `addToCart`. DNT/GPC respected; studio resolved from the tenant host (see S25).
