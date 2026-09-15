@@ -7,7 +7,6 @@ The product name is not decided. `NEXT_PUBLIC_APP_NAME` is a placeholder and one
 ## Run locally
 
 ```bash
-cd saas
 cp .env.example .env.local     # fill in what you have; the app degrades gracefully
 npm install
 npm run dev                    # prints which env vars are missing, then starts Next
