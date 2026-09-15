@@ -696,10 +696,10 @@ CRM quality
 - [x] 11.10 Manual payment dialog: amount, method (cash, transfer, other), note; undo within 24 hours.
 - [x] 11.11 Payments list on the session with statuses and Stripe links (see 7.21).
 - [~] 11.12 Agreement: view rendered text, signed copy with name, time, ip; resend link; regenerate if unsigned and template changed.
-- [ ] 11.13 `/studio/settings/agreement`: template editor (Markdown), variables list, preview, save as new version.
+- [x] 11.13 `/studio/settings/agreement`: template editor (Markdown), variables list, preview, save as new version (plus a versions list with signed counts, re-activate and restore default).
 - [ ] 11.14 Printable invoice `/t/[slug]/invoice/[token]` and receipt `/t/[slug]/receipt/[token]` (client-facing, token in email).
-- [ ] 11.15 `/studio/calendar`: month and week views of sessions and confirmed bookings; click to open; today marker.
-- [ ] 11.16 iCal feed `/api/ical/[token]` for the studio calendar; regenerate token.
+- [~] 11.15 `/studio/calendar`: month view of sessions, confirmed bookings and live holds; click to open; today marker; upcoming list. Week view not built.
+- [~] 11.16 iCal feed at `/api/calendar/[token]` (signed token anchored to the studio, shown on the calendar page); per-session `.ics` on the session page and in the client hub. Token regeneration not built (rotate APP_SECRET).
 - [ ] 11.17 Session reminder emails to client (day before) and studio (morning of), toggles in automations.
 - [ ] 11.18 Sessions CSV export.
 - [ ] 11.19 Tests: order numbering under concurrency (transaction), money math with discounts and refunds, agreement versioning.

@@ -23,6 +23,11 @@ describe("studio state labels (plan 19.2, 19.12)", () => {
     expect(studioState({ ...base, trial_ends_at: future })).toBe("trial");
     expect(studioState({ ...base, subscription_status: "active", current_period_end: future })).toBe("active");
   });
+  it("labels a studio on the Free plan as free, not active", () => {
+    const past = new Date(Date.now() - 5 * 86400000).toISOString();
+    expect(studioState({ ...base, plan: "free", trial_ends_at: past })).toBe("free");
+    expect(studioState({ ...base, plan: "free", trial_ends_at: past, subscription_status: "canceled" })).toBe("free");
+  });
 });
 
 describe("suspend blocks studio writes (plan 19.12)", () => {
