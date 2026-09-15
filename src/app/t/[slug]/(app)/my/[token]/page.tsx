@@ -60,7 +60,10 @@ export default async function ClientHubPage({ params }: PageProps<"/t/[slug]/my/
             <div key={o.id} className="flex items-center justify-between border-b border-[var(--site-line)] py-3 text-sm last:border-0">
               <div>
                 <p className="font-medium">#{o.order_number} {o.title}</p>
-                <p className="text-[var(--site-ink-2)]">{o.scheduled_at ? formatDate(o.scheduled_at, undefined, studio.timezone) : "Not scheduled"} · {orderStatusLabels[o.status as OrderStatus] ?? o.status}</p>
+                <p className="text-[var(--site-ink-2)]">
+                  {o.scheduled_at ? formatDate(o.scheduled_at, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }, studio.timezone) : "Not scheduled"} · {orderStatusLabels[o.status as OrderStatus] ?? o.status}
+                  {o.scheduled_at && new Date(o.scheduled_at) > new Date() && o.status !== "cancelled" ? <> · <a href={`/my/${token}/calendar/${o.id}`} className="underline">Add to calendar</a></> : null}
+                </p>
               </div>
               <div className="text-right">
                 <p>{formatMoney(o.amount_cents - o.discount_cents, cur)}</p>

@@ -13,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("/", 1, "weekly"),
     entry("/pricing", 0.9, "weekly"),
     entry("/lightroom", 0.8),
+    entry("/referrals", 0.5),
     entry("/security", 0.5),
     entry("/contact", 0.5, "yearly"),
     entry("/changelog", 0.4, "weekly"),

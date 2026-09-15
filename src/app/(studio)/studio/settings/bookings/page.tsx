@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireStudioPage } from "@/lib/auth";
 import { bookingSettings } from "@/lib/booking-shared";
 import { Card } from "@/components/ui";
@@ -13,7 +14,7 @@ export default async function BookingsSettingsPage() {
   return (
     <Card>
       <h2 className="font-medium mb-1">Bookings</h2>
-      <p className="text-sm text-ink-2 mb-4">Let clients book a session from your website. Turn on the Book page under Website → Pages.</p>
+      <p className="text-sm text-ink-2 mb-4">Let clients book a session from your website. Turn on the Book page under Website → Pages. Bookings that come in are listed under <Link href="/studio/bookings" className="underline">Bookings</Link>.</p>
       <BookingsForm initial={settings} />
     </Card>
   );

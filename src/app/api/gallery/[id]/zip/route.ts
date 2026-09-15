@@ -8,10 +8,11 @@ import { zipStream, type ZipEntry } from "@/lib/zip";
 import { recordDownload, visitorHash } from "@/lib/analytics";
 import type { Gallery, Photo } from "@/lib/types";
 
-/** GET /api/gallery/[id]/zip?size=web|full[&pin=] — streamed archive with access, PIN and pay-gate checks (plan 13.22). */
+/** GET /api/gallery/[id]/zip?size=web|full[&pin=][&favorites=1] — streamed archive with access, PIN and pay-gate checks (plan 13.22). favorites=1 limits the zip to the client's picks. */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const size = request.nextUrl.searchParams.get("size") === "full" ? "full" : "web";
+  const favoritesOnly = request.nextUrl.searchParams.get("favorites") === "1";
 
   const gallery = one<Gallery>(await db()`select * from galleries where id = ${id}`);
   if (!gallery || gallery.status !== "published") return new Response("Not found", { status: 404 });
@@ -29,8 +30,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return new Response("Downloads are off", { status: 403 });
   }
 
-  const photos = rows<Photo>(await db()`select * from photos where gallery_id = ${gallery.id} and deleted_at is null and preview_url <> '' order by sort_order, created_at`);
-  if (photos.length === 0) return new Response("No photos", { status: 404 });
+  const photos = rows<Photo>(
+    await db()`
+      select p.* from photos p
+      where p.gallery_id = ${gallery.id} and p.deleted_at is null and p.preview_url <> ''
+        and (${favoritesOnly}::boolean = false or exists (select 1 from photo_selections s where s.photo_id = p.id and s.selected))
+      order by p.sort_order, p.created_at`
+  );
+  if (photos.length === 0) return new Response(favoritesOnly ? "No favorites yet" : "No photos", { status: 404 });
 
   const entries: ZipEntry[] = photos.map((p) => ({
     name: p.filename,
@@ -49,7 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return new Response(zipStream(entries) as unknown as BodyInit, {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="${safe}-${size}.zip"`,
+      "Content-Disposition": `attachment; filename="${safe}${favoritesOnly ? "-favorites" : ""}-${size}.zip"`,
       "Cache-Control": "no-store",
     },
   });

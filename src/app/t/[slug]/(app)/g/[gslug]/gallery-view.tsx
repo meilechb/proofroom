@@ -80,6 +80,7 @@ export function GalleryView({
                 {download.pinRequired ? (
                   <input value={pin} onChange={(e) => setPin(e.target.value)} placeholder="Download PIN" aria-label="Download PIN" className="rounded-full border border-[var(--site-line)] bg-[var(--site-bg)] px-3 py-1 text-sm w-28" />
                 ) : null}
+                {allowComments && favoriteCount > 0 ? <a href={`/api/gallery/${galleryId}/zip?size=${download.full && !download.web ? "full" : "web"}&favorites=1${pinQuery}`} className="rounded-full border border-[var(--site-line)] px-3 py-1 text-sm">Download favorites</a> : null}
                 {download.web ? <a href={`/api/gallery/${galleryId}/zip?size=web${pinQuery}`} className="rounded-full bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-3 py-1 text-sm">Download all</a> : null}
                 {download.full && !download.web ? <a href={`/api/gallery/${galleryId}/zip?size=full${pinQuery}`} className="rounded-full bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-3 py-1 text-sm">Download all</a> : null}
                 {download.full && download.web ? <a href={`/api/gallery/${galleryId}/zip?size=full${pinQuery}`} className="rounded-full border border-[var(--site-line)] px-3 py-1 text-sm">Full size</a> : null}

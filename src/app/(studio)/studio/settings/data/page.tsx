@@ -15,7 +15,7 @@ export default async function DataSettingsPage() {
     <div className="space-y-6">
       <Card>
         <h2 className="font-medium mb-1">Export your data</h2>
-        <p className="text-sm text-ink-2 mb-4">Download a zip of your records — clients, sessions, payments, galleries and inquiries — as JSON, with a clients spreadsheet. Photos and documents stay in their galleries.</p>
+        <p className="text-sm text-ink-2 mb-4">Download a zip of your records as JSON: clients, sessions, payments, galleries, inquiries, packages, tasks, bookings, agreement versions and document links, plus a clients spreadsheet. Photos stay in their galleries; download those as zips from each gallery.</p>
         <a href="/api/data/export" className="btn-secondary btn-sm">Download export (.zip)</a>
       </Card>
 

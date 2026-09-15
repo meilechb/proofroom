@@ -8,6 +8,11 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         <p className="mt-2 text-ink-2">{error.message || "An unexpected error occurred."}</p>
         {error.digest ? <p className="mt-1 text-xs text-muted font-mono">Ref {error.digest}</p> : null}
         <button onClick={reset} className="btn-secondary mt-6">Try again</button>
+        {process.env.NEXT_PUBLIC_SUPPORT_EMAIL ? (
+          <p className="mt-4 text-sm text-ink-2">
+            Still stuck? <a href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}?subject=${encodeURIComponent(`Error${error.digest ? ` ${error.digest}` : ""}`)}`} className="underline">Email support</a>{error.digest ? " and include the reference above." : "."}
+          </p>
+        ) : null}
       </div>
     </main>
   );

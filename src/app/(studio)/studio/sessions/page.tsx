@@ -69,6 +69,16 @@ export default async function SessionsPage({ searchParams }: PageProps<"/studio/
                   );
                 })}
               </tbody>
+              {orders.length > 1 ? (
+                <tfoot>
+                  <tr className="text-sm font-medium">
+                    <td className="px-4 py-3" colSpan={3}>{orders.length} sessions</td>
+                    <td className="px-4 py-3 text-right">{formatMoney(orders.reduce((n, o) => n + o.amount_cents - o.discount_cents, 0), cur)}</td>
+                    <td className="px-4 py-3 text-right">{formatMoney(orders.reduce((n, o) => n + Math.max(0, o.amount_cents - o.discount_cents - o.paid_cents), 0), cur)}</td>
+                    <td className="hidden md:table-cell" />
+                  </tr>
+                </tfoot>
+              ) : null}
             </table>
           </div>
         )}
