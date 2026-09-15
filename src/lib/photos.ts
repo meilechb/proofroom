@@ -78,7 +78,10 @@ export async function ingestServerPhoto(studioId: string, photoId: string, buffe
       where id = ${photoId} and studio_id = ${studioId} returning *`
   );
   await addBytes(studioId, totalBytes - photo.size_bytes);
-  if (previousOriginal && previousOriginal !== originalBlob.url) await deleteMany("galleries", [previousOriginal]);
+  if (previousOriginal && previousOriginal !== originalBlob.url) {
+    const shared = await db()`select 1 from photos where original_url = ${previousOriginal} and id <> ${photoId} limit 1`;
+    if (shared.length === 0) await deleteMany("galleries", [previousOriginal]);
+  }
   return updated;
 }
 

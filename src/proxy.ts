@@ -170,6 +170,10 @@ export async function proxy(request: NextRequest) {
   }
   const remembered = request.cookies.get(TENANT_PATH_COOKIE)?.value ?? null;
   if (remembered && /^[a-z0-9-]{1,80}$/.test(remembered) && TENANT_APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    // The tenant API routes live at the root and read x-tenant-slug; pages live under /t/{slug}.
+    if (pathname.startsWith("/api/")) {
+      return finish(request, NextResponse.next({ request: { headers: withTenantHeaders(request, remembered) } }), { noindex: true });
+    }
     const url = request.nextUrl.clone();
     url.pathname = `/t/${remembered}${pathname}`;
     return finish(request, NextResponse.rewrite(url, { request: { headers: withTenantHeaders(request, remembered) } }), { noindex: true });
