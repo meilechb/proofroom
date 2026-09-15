@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db, one } from "@/lib/db";
 import { studioIdForToken } from "@/lib/api-tokens";
 import { hashToken } from "@/lib/tokens";
-import { rateLimit } from "@/lib/rate-limit";
+import { limited } from "@/lib/rate-limit";
 import { billingState } from "@/lib/plans";
 import { log } from "@/lib/logger";
 import type { Studio } from "@/lib/types";
@@ -18,7 +18,7 @@ import { ApiError, LR_API_VERSION } from "@/lib/lr-api-shared";
  * helpers and constants live in lr-api-shared.
  */
 
-export { ApiError, bodyString, bodyOptString, LR_API_VERSION, LR_MIN_PLUGIN_VERSION } from "@/lib/lr-api-shared";
+export { ApiError, bodyString, bodyOptString, LR_API_VERSION, LR_MIN_PLUGIN_VERSION, LR_PLUGIN_VERSION } from "@/lib/lr-api-shared";
 
 export type ApiContext = { studio: Studio; request: NextRequest; params: Record<string, string>; body: unknown };
 type Handler = (ctx: ApiContext) => Promise<unknown> | unknown;
@@ -32,7 +32,7 @@ export function withApi(handler: Handler, opts: { write?: boolean } = {}) {
       const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
       if (!token) throw new ApiError(401, "unauthorized", "Provide your studio token as a bearer token.");
 
-      const rl = await rateLimit(`lr:${hashToken(token).slice(0, 16)}`, 120, 60);
+      const rl = await limited("api_token", hashToken(token).slice(0, 16));
       if (!rl.ok) throw new ApiError(429, "rate_limited", `Too many requests. Try again in ${rl.retryAfterSeconds}s.`);
 
       const studioId = await studioIdForToken(token);

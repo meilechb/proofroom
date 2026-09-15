@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { db, one } from "@/lib/db";
 import { studioBySlug, galleryBySlug } from "@/lib/tenant-data";
-import { grantGalleryAccess, unlockAttemptAllowed, verifyUnlock } from "@/lib/gallery-access";
+import { grantGalleryAccess, hasGalleryAccess, unlockAttemptAllowed, unlockMethod, verifyUnlock } from "@/lib/gallery-access";
 import { recordClientEvent } from "@/lib/clients";
 import { clientIp } from "@/lib/rate-limit";
 import { cookies } from "next/headers";
@@ -20,15 +20,21 @@ export async function unlockGalleryAction(_prev: ActionState, formData: FormData
   if (!gallery) return { error: "This gallery could not be found." };
 
   const ip = clientIp(await headers());
-  if (!unlockAttemptAllowed(gallery.id, ip)) return { error: "Too many tries. Wait a few minutes and try again." };
+  if (!(await unlockAttemptAllowed(gallery.id, ip)).ok) return { error: "Too many tries. Wait a few minutes and try again." };
   if (!verifyUnlock(gallery, str(formData, "code", 100))) return { error: "That code or password is not right." };
   await grantGalleryAccess(gallery.id);
   return { ok: true };
 }
 
+/** A protected gallery's favorites and notes are only writable by someone who unlocked it. */
+async function canWriteToGallery(gallery: { access_code: string | null; password_hash: string | null; id: string }) {
+  return unlockMethod(gallery) === "open" || hasGalleryAccess(gallery.id);
+}
+
 export async function toggleFavoriteAction(galleryId: string, photoId: string, selected: boolean) {
-  const gallery = one<{ studio_id: string; allow_comments: boolean; status: string }>(await db()`select studio_id, allow_comments, status from galleries where id = ${galleryId}`);
+  const gallery = one<{ id: string; studio_id: string; allow_comments: boolean; status: string; access_code: string | null; password_hash: string | null }>(await db()`select id, studio_id, allow_comments, status, access_code, password_hash from galleries where id = ${galleryId}`);
   if (!gallery || gallery.status !== "published" || !gallery.allow_comments) return { ok: false };
+  if (!(await canWriteToGallery(gallery))) return { ok: false };
   const photo = one<{ id: string }>(await db()`select id from photos where id = ${photoId} and gallery_id = ${galleryId} and deleted_at is null`);
   if (!photo) return { ok: false };
   await db()`
@@ -41,8 +47,9 @@ export async function toggleFavoriteAction(galleryId: string, photoId: string, s
 export async function addNoteAction(galleryId: string, photoId: string, body: string, name: string) {
   const text = body.trim().slice(0, 2000);
   if (!text) return { ok: false };
-  const gallery = one<{ studio_id: string; client_id: string; allow_comments: boolean; status: string }>(await db()`select studio_id, client_id, allow_comments, status from galleries where id = ${galleryId}`);
+  const gallery = one<{ id: string; studio_id: string; client_id: string; allow_comments: boolean; status: string; access_code: string | null; password_hash: string | null }>(await db()`select id, studio_id, client_id, allow_comments, status, access_code, password_hash from galleries where id = ${galleryId}`);
   if (!gallery || gallery.status !== "published" || !gallery.allow_comments) return { ok: false };
+  if (!(await canWriteToGallery(gallery))) return { ok: false };
   const photo = one<{ id: string }>(await db()`select id from photos where id = ${photoId} and gallery_id = ${galleryId} and deleted_at is null`);
   if (!photo) return { ok: false };
   const author = (name || (await cookies()).get(NAME_COOKIE)?.value || "Client").trim().slice(0, 120);

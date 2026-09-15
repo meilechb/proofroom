@@ -22,7 +22,7 @@ export function dbConfigured() {
   return Boolean(env.databaseUrl());
 }
 
-type Row = Record<string, unknown>;
+export type Row = Record<string, unknown>;
 
 /** Normalizes driver output (Date -> ISO string) so rows can cross to client components. */
 export function rows<T>(result: Row[]): T[] {

@@ -14,7 +14,7 @@ return {
 
 	LrToolkitIdentifier = 'com.proofroom.lightroom.galleries',
 	LrPluginName = 'Proofroom Galleries',
-	LrPluginInfoUrl = 'https://proofroom.example/studio/settings/lightroom',
+	LrPluginInfoUrl = 'https://proofroom.com/lightroom',
 
 	LrExportServiceProvider = {
 		title = 'Proofroom Galleries',

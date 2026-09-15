@@ -4,7 +4,7 @@ import { db, one, rows } from "@/lib/db";
 import { formatBytes } from "@/lib/plans";
 import { getUsage } from "@/lib/usage";
 import { formatDate, formatMoney } from "@/lib/types";
-import { Card, PageHeader, Stat, ButtonLink } from "@/components/ui";
+import { Card, PageHeader, Stat, ButtonLink, Notice } from "@/components/ui";
 import { OnboardingChecklist } from "@/components/studio/onboarding";
 
 export default async function DashboardPage({ searchParams }: PageProps<"/studio">) {
@@ -25,7 +25,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/studio
           (select case when site_published_at is null then 0 else 1 end from studios where id = ${s.id}) as pages,
           (select count(*)::int from api_tokens where studio_id = ${s.id} and revoked_at is null) as tokens,
           (select count(*)::int from assets where studio_id = ${s.id}) as assets,
-          0 as unpaid_cents`
+          (select coalesce(sum(greatest(0, o.amount_cents - o.discount_cents - coalesce((select sum(p.amount_cents - coalesce(p.refunded_cents, 0)) from payments p where p.order_id = o.id and p.status in ('paid', 'partially_refunded', 'refunded')), 0))), 0)::int
+             from orders o where o.studio_id = ${s.id} and o.status not in ('cancelled','draft') and o.paid_at is null) as unpaid_cents`
     ),
     rows<{ id: string; title: string; due_on: string | null; client_name: string | null; client_id: string | null }>(
       await db()`
@@ -70,11 +71,13 @@ export default async function DashboardPage({ searchParams }: PageProps<"/studio
           </>
         }
       />
+      {sp.denied === "1" ? <Notice tone="warning" className="mt-4">That page is limited to studio admins. Ask the studio owner if you need access.</Notice> : null}
+      {sp.reset === "1" ? <Notice tone="success" className="mt-4">Your password was updated and other sessions were signed out.</Notice> : null}
       {!allDone && !s.onboarding?.dismissed ? <OnboardingChecklist state={onboarding} /> : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-6">
         <Stat label="Live galleries" value={counts?.live ?? 0} />
         <Stat label="Notes to answer" value={counts?.notes ?? 0} hint={(counts?.notes ?? 0) > 0 ? "Clients are waiting on a reply" : undefined} />
-        <Stat label="Unpaid sessions" value={counts?.unpaid ?? 0} />
+        <Stat label="Unpaid sessions" value={counts?.unpaid ?? 0} hint={(counts?.unpaid_cents ?? 0) > 0 ? `${formatMoney(counts?.unpaid_cents ?? 0, s.currency)} outstanding` : undefined} />
         <Stat label="Storage" value={formatBytes(usage.storageBytes)} hint="Photos, assets and documents" />
       </div>
       <div className="grid gap-4 lg:grid-cols-3 mt-6">

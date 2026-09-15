@@ -29,11 +29,24 @@ export async function reserveServerPhoto(studioId: string, galleryId: string, in
     : null;
   if (duplicate) return { photoId: duplicate.id, pathname: "", duplicateOf: duplicate.id };
   const pathname = galleryPath(studioId, galleryId, `${Date.now()}-${filename}`);
+  // Republish from Lightroom: the gallery already has a row for this catalog
+  // photo (unique on gallery_id + lr_photo_id). Reuse it so the new render
+  // replaces the old one instead of failing on the unique index, and restore
+  // it if the studio had soft-deleted the earlier version.
+  if (input.lrPhotoId) {
+    const existing = one<Photo>(await db()`select * from photos where gallery_id = ${galleryId} and lr_photo_id = ${input.lrPhotoId} limit 1`);
+    if (existing) {
+      await db()`
+        update photos set original_url = ${`pending:${pathname}`}, filename = ${filename}, sha256 = ${input.sha256 ?? null}, deleted_at = null, uploaded_by = 'plugin'
+        where id = ${existing.id}`;
+      return { photoId: existing.id, pathname, duplicateOf: null };
+    }
+  }
   const nextOrder = one<{ n: number }>(await db()`select coalesce(max(sort_order), 0) + 1 as n from photos where gallery_id = ${galleryId}`);
   const photo = one<Photo>(
     await db()`
       insert into photos (studio_id, gallery_id, original_url, preview_url, filename, size_bytes, sort_order, sha256, lr_photo_id, uploaded_by)
-      values (${studioId}, ${galleryId}, ${`pending:${pathname}`}, '', ${filename}, ${input.size}, ${nextOrder?.n ?? 1}, ${input.sha256 ?? null}, ${input.lrPhotoId ?? null}, 'studio')
+      values (${studioId}, ${galleryId}, ${`pending:${pathname}`}, '', ${filename}, ${input.size}, ${nextOrder?.n ?? 1}, ${input.sha256 ?? null}, ${input.lrPhotoId ?? null}, 'plugin')
       returning *`
   );
   if (!photo) throw new Error("Could not start the upload.");
@@ -45,6 +58,9 @@ export async function ingestServerPhoto(studioId: string, photoId: string, buffe
   const photo = one<Photo>(await db()`select * from photos where id = ${photoId} and studio_id = ${studioId} and deleted_at is null`);
   if (!photo) throw new Error("Photo not found.");
   const pending = photo.original_url.startsWith("pending:") ? photo.original_url.slice("pending:".length) : galleryPath(studioId, photo.gallery_id, `${photo.id}-original`);
+  // A republished photo keeps its row; the previous render's original is no
+  // longer referenced once the new one is stored (previews are overwritten in place).
+  const previousOriginal = photo.original_url.startsWith("pending:") ? null : photo.original_url;
   const originalBlob = await putPrivate(pending, buffer, contentType || "image/jpeg");
   const [preview, thumb, captured] = await Promise.all([
     watermarkText ? makeWatermarkedVersion(buffer, PREVIEW_MAX_EDGE, watermarkText) : makeWebVersion(buffer, PREVIEW_MAX_EDGE),
@@ -62,6 +78,7 @@ export async function ingestServerPhoto(studioId: string, photoId: string, buffe
       where id = ${photoId} and studio_id = ${studioId} returning *`
   );
   await addBytes(studioId, totalBytes - photo.size_bytes);
+  if (previousOriginal && previousOriginal !== originalBlob.url) await deleteMany("galleries", [previousOriginal]);
   return updated;
 }
 
@@ -159,7 +176,19 @@ export async function movePhoto(studioId: string, photoId: string, targetGallery
 export async function purgeDeleted(days = 30) {
   const doomed = rows<Photo>(await db()`select * from photos where deleted_at is not null and deleted_at < now() - (${days} || ' days')::interval limit 500`);
   if (doomed.length === 0) return 0;
-  await deleteMany("galleries", doomed.flatMap((p) => [p.original_url.startsWith("pending:") ? null : p.original_url, p.preview_url || null, p.thumb_url]));
+  // Finals galleries built from favorites copy rows by reference, so a blob may
+  // still be in use by a photo that is not being purged. Only delete unshared blobs.
+  const candidate = doomed.flatMap((p) => [p.original_url.startsWith("pending:") ? null : p.original_url, p.preview_url || null, p.thumb_url]).filter((u): u is string => Boolean(u));
+  const doomedIds = doomed.map((p) => p.id);
+  const stillUsed = new Set(
+    rows<{ url: string }>(
+      await db()`
+        select original_url as url from photos where id <> all(${doomedIds}::uuid[]) and original_url = any(${candidate}::text[])
+        union select preview_url from photos where id <> all(${doomedIds}::uuid[]) and preview_url = any(${candidate}::text[])
+        union select thumb_url from photos where id <> all(${doomedIds}::uuid[]) and thumb_url = any(${candidate}::text[])`
+    ).map((r) => r.url)
+  );
+  await deleteMany("galleries", candidate.filter((u) => !stillUsed.has(u)));
   const byStudio = new Map<string, number>();
   for (const p of doomed) byStudio.set(p.studio_id, (byStudio.get(p.studio_id) ?? 0) + p.size_bytes);
   await db()`delete from photos where id = any(${doomed.map((p) => p.id)}::uuid[])`;

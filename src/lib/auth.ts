@@ -97,7 +97,7 @@ export async function requireStudioPage(minRole: MembershipRole = "member"): Pro
   const ctx = await getStudioContext();
   if (!ctx) redirect("/signup?step=studio");
   if (!hasRole(ctx.role, minRole)) redirect("/studio?denied=1");
-  if (ctx.studio.suspended_at && !user.is_platform_admin) redirect("/studio/suspended");
+  if (ctx.studio.suspended_at && !user.is_platform_admin) redirect("/suspended");
   return ctx;
 }
 
@@ -173,6 +173,8 @@ export type OwnedTable =
 
 export async function assertOwned(table: OwnedTable, id: string, studioId: string) {
   if (!/^[a-z_]+$/.test(table)) throw new Error("Bad table");
-  const found = await db().query(`select 1 from ${table} where id = $1 and studio_id = $2 limit 1`, [id, studioId]);
+  // session_plans is keyed by the order it belongs to, not by its own id.
+  const keyColumn = table === "session_plans" ? "order_id" : "id";
+  const found = await db().query(`select 1 from ${table} where ${keyColumn} = $1 and studio_id = $2 limit 1`, [id, studioId]);
   if (found.length === 0) throw new Error("Not found");
 }

@@ -3,7 +3,8 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 /**
  * Password hashing with Node's built-in scrypt (no native dependency).
  * Stored format: scrypt:N:r:p:salt:hash (base64url). Parameters follow the
- * OWASP recommendation for scrypt (N=2^17, r=8, p=1) at 32-byte output.
+ * OWASP lists N=2^17, r=8, p=1 for scrypt; N=2^15 is used here to stay inside
+ * the Vercel function CPU budget, at 32-byte output.
  */
 const N = 2 ** 15; // 32768: balances Vercel function CPU budget and OWASP guidance
 const R = 8;
@@ -46,7 +47,8 @@ export function passwordProblem(password: string, email?: string): string | null
   if (password.length > PASSWORD_MAX) return `Use at most ${PASSWORD_MAX} characters.`;
   if (/^(.)\1+$/.test(password)) return "Choose a less repetitive password.";
   const lowered = password.toLowerCase();
-  if (email && lowered.includes(email.split("@")[0].toLowerCase()) && email.length > 3) {
+  const localPart = email ? email.split("@")[0].toLowerCase() : "";
+  if (localPart.length > 3 && lowered.includes(localPart)) {
     return "The password should not contain your email address.";
   }
   if (["password", "qwerty", "12345678", "letmein", "photograph"].some((w) => lowered.includes(w))) {

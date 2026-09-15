@@ -141,7 +141,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                     return (
                       <tr key={o.id} className="hover:bg-surface-2/60">
                         <td className="px-4 py-3 border-b border-line"><Link href={`/studio/sessions/${o.id}`} className="font-medium hover:underline">#{o.order_number} {o.title}</Link></td>
-                        <td className="px-4 py-3 border-b border-line text-ink-2">{o.scheduled_at ? formatDate(o.scheduled_at) : "—"}</td>
+                        <td className="px-4 py-3 border-b border-line text-ink-2">{o.scheduled_at ? formatDate(o.scheduled_at, undefined, ctx.studio.timezone) : "—"}</td>
                         <td className="px-4 py-3 border-b border-line"><Badge tone={o.status === "completed" ? "success" : o.status === "cancelled" ? "neutral" : "brand"}>{orderStatusLabels[o.status as OrderStatus] ?? o.status}</Badge></td>
                         <td className="px-4 py-3 border-b border-line text-right">{formatMoney(o.amount_cents - o.discount_cents, o.currency)}</td>
                         <td className="px-4 py-3 border-b border-line text-right">{bal > 0 ? <span className="text-danger font-medium">{formatMoney(bal, o.currency)}</span> : <span className="text-muted">—</span>}</td>

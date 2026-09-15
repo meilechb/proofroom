@@ -12,20 +12,20 @@ import type { ZipEntry } from "@/lib/zip";
 const encoder = new TextEncoder();
 const json = (value: unknown) => encoder.encode(JSON.stringify(value, null, 2));
 
-async function table(studioId: string, name: string, sql: Promise<unknown>): Promise<ZipEntry> {
+async function table(name: string, sql: Promise<unknown>): Promise<ZipEntry> {
   const data = (await sql) as unknown[];
   return { name: `${name}.json`, read: async () => json(data) };
 }
 
 export async function studioExportEntries(studioId: string): Promise<ZipEntry[]> {
   const entries: ZipEntry[] = [];
-  entries.push(await table(studioId, "studio", db()`select id, name, legal_name, email, phone, timezone, currency, slug, custom_domain, created_at from studios where id = ${studioId}`));
-  entries.push(await table(studioId, "clients", db()`select id, name, email, phone, company, stage, tags, source, created_at from clients where studio_id = ${studioId} order by created_at`));
-  entries.push(await table(studioId, "orders", db()`select id, order_number, client_id, title, amount_cents, currency, status, shoot_date, scheduled_at, paid_at, created_at from orders where studio_id = ${studioId} order by order_number`));
-  entries.push(await table(studioId, "payments", db()`select id, order_id, kind, amount_cents, currency, status, method, created_at from payments where studio_id = ${studioId} order by created_at`));
-  entries.push(await table(studioId, "galleries", db()`select id, order_id, client_id, slug, title, kind, status, expires_at, created_at from galleries where studio_id = ${studioId} order by created_at`));
-  entries.push(await table(studioId, "inquiries", db()`select id, name, email, phone, message, source, status, created_at from inquiries where studio_id = ${studioId} order by created_at`));
-  entries.push(await table(studioId, "packages", db()`select id, name, price_cents, deposit_cents, is_active, created_at from packages where studio_id = ${studioId} order by sort_order`));
+  entries.push(await table("studio", db()`select id, name, legal_name, email, phone, timezone, currency, slug, custom_domain, created_at from studios where id = ${studioId}`));
+  entries.push(await table("clients", db()`select id, name, email, phone, company, stage, tags, source, created_at from clients where studio_id = ${studioId} order by created_at`));
+  entries.push(await table("orders", db()`select id, order_number, client_id, title, amount_cents, currency, status, shoot_date, scheduled_at, paid_at, created_at from orders where studio_id = ${studioId} order by order_number`));
+  entries.push(await table("payments", db()`select id, order_id, kind, amount_cents, currency, status, method, created_at from payments where studio_id = ${studioId} order by created_at`));
+  entries.push(await table("galleries", db()`select id, order_id, client_id, slug, title, kind, status, expires_at, created_at from galleries where studio_id = ${studioId} order by created_at`));
+  entries.push(await table("inquiries", db()`select id, name, email, phone, message, source, status, created_at from inquiries where studio_id = ${studioId} order by created_at`));
+  entries.push(await table("packages", db()`select id, name, price_cents, deposit_cents, is_active, created_at from packages where studio_id = ${studioId} order by sort_order`));
 
   const clients = (await db()`select name, email, phone, company, stage, tags, source, created_at from clients where studio_id = ${studioId} order by created_at`) as Array<Record<string, unknown>>;
   const header = ["Name", "Email", "Phone", "Company", "Stage", "Tags", "Source", "Created"];

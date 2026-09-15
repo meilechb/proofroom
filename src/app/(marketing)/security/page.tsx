@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { APP_NAME, supportEmail } from "@/lib/env";
-import { GRACE_DAYS, RETENTION_DAYS } from "@/lib/plans";
+import { RETENTION_DAYS } from "@/lib/plans";
 import { FinalCta, Heading, Lead, Section, SectionHeader } from "@/components/marketing/sections";
 
 export const metadata: Metadata = {
@@ -41,7 +41,7 @@ const sections: Array<{ title: string; items: Array<{ h: string; p: string }> }>
     items: [
       { h: "Providers", p: "The application runs on Vercel, data is stored in Neon (Postgres) and Vercel Blob, payments are by Stripe, and email is sent through Resend. Each is an established provider with its own published security program." },
       { h: "Backups", p: "The database has point-in-time recovery. Object storage is replicated by the provider. We test restores as part of the release process." },
-      { h: "Retention", p: `If a subscription lapses, galleries and the website stay online for ${GRACE_DAYS} days while the studio is read-only. After cancellation, data is kept for ${RETENTION_DAYS} days so you can export it, then purged.` },
+      { h: "Retention", p: `If a Pro subscription lapses the studio moves to the Free plan: everything stays online and editable within the Free limits, nothing is deleted. After an account is closed, data is kept for ${RETENTION_DAYS} days so you can export it, then purged.` },
       { h: "Export", p: "Clients, sessions, orders and payments export to CSV at any time. Gallery originals download as zips. No lock-in." },
     ],
   },

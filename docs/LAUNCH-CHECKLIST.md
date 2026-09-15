@@ -12,7 +12,7 @@ or DNS, not in this repo. See `docs/SETUP.md` for the full env-var reference and
 
 ## 22.20.2 Stripe live keys and price (ops)
 - [ ] `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` set to **live** values on the Vercel project.
-- [ ] The $40/month platform price created in live mode; `STRIPE_PRICE_ID` points to it (`npm run stripe:setup` or the dashboard).
+- [ ] The $18 per seat Pro price created in live mode; `STRIPE_PRICE_PRO_SEAT_MONTHLY` points to it (`npm run stripe:setup` or the dashboard).
 
 ## 22.20.3 Connect platform profile complete in live mode (ops)
 - [ ] Platform profile at Settings → Connect completed for **direct charges, no application fee, connected accounts have full dashboard access** (Appendix A).

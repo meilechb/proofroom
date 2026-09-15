@@ -1,11 +1,18 @@
 import "server-only";
 
+import { dateISOInZone, formatLongDateInZone } from "@/lib/dates";
+
 import { db, one, rows } from "@/lib/db";
 import { recordClientEvent } from "@/lib/clients";
 import { agreementToPlainText, renderAgreement, type AgreementVars } from "@/lib/agreements";
 import { formatMoney, type Order, type Package } from "@/lib/types";
 
 /** Sessions (orders): numbered per studio, priced from a package, signed agreement, schedule. */
+
+/** The studio's IANA zone; calendar dates derived from instants must use it. */
+async function studioTimezone(studioId: string) {
+  return one<{ timezone: string }>(await db()`select timezone from studios where id = ${studioId}`)?.timezone ?? "UTC";
+}
 
 export type OrderInput = { clientId: string; packageId?: string | null; title?: string; scheduledAt?: string | null; location?: string | null; notes?: string | null; amountCents?: number; depositCents?: number; includedFinals?: number; extraFinalCents?: number; discountCents?: number };
 
@@ -21,6 +28,7 @@ export async function createOrder(studioId: string, input: OrderInput) {
   const included = input.includedFinals ?? pkg?.included_finals ?? 0;
   const extra = input.extraFinalCents ?? pkg?.extra_final_cents ?? 0;
   const scheduled = input.scheduledAt ?? null;
+  const tz = await studioTimezone(studioId);
   const order = one<Order>(
     await db()`
       with n as (
@@ -28,7 +36,7 @@ export async function createOrder(studioId: string, input: OrderInput) {
       )
       insert into orders (studio_id, order_number, client_id, package_id, title, description, amount_cents, deposit_cents, included_finals, extra_final_cents, discount_cents, status, shoot_date, scheduled_at, location, notes)
       select ${studioId}, n.num, ${input.clientId}, ${pkg?.id ?? null}, ${title}, ${pkg?.description ?? null}, ${amount}, ${deposit}, ${included}, ${extra}, ${input.discountCents ?? 0},
-             ${amount > 0 ? "pending_payment" : scheduled ? "scheduled" : "paid"}, ${scheduled ? scheduled.slice(0, 10) : null}, ${scheduled}, ${input.location ?? null}, ${input.notes ?? null}
+             ${amount > 0 ? "pending_payment" : scheduled ? "scheduled" : "paid"}, ${scheduled ? dateISOInZone(scheduled, tz) : null}, ${scheduled}, ${input.location ?? null}, ${input.notes ?? null}
       from n
       returning *`
   );
@@ -71,6 +79,7 @@ export async function updateOrder(studioId: string, id: string, patch: OrderPatc
   const moneyChanged = ["amount_cents", "deposit_cents", "included_finals", "extra_final_cents"].some((k) => patch[k as keyof OrderPatch] !== undefined && patch[k as keyof OrderPatch] !== current[k as keyof Order]);
   if (hasPayments && moneyChanged) throw new Error("This session already has payments. Add a discount or a manual adjustment instead of changing the price.");
   const scheduled = patch.scheduled_at === undefined ? current.scheduled_at : patch.scheduled_at;
+  const tz = await studioTimezone(studioId);
   const order = one<Order>(
     await db()`
       update orders set
@@ -78,7 +87,7 @@ export async function updateOrder(studioId: string, id: string, patch: OrderPatc
         notes = ${patch.notes === undefined ? current.notes : patch.notes},
         location = ${patch.location === undefined ? current.location : patch.location},
         scheduled_at = ${scheduled},
-        shoot_date = ${scheduled ? scheduled.slice(0, 10) : null},
+        shoot_date = ${scheduled ? dateISOInZone(scheduled, tz) : null},
         discount_cents = ${patch.discount_cents ?? current.discount_cents},
         amount_cents = ${patch.amount_cents ?? current.amount_cents},
         deposit_cents = ${patch.deposit_cents ?? current.deposit_cents},
@@ -113,7 +122,7 @@ export async function agreementForOrder(studioId: string, order: Order, extra: {
     studio_email: extra.studioEmail,
     client_name: extra.clientName,
     session_title: order.title,
-    session_date: order.scheduled_at ? new Date(order.scheduled_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "a date agreed in writing",
+    session_date: order.scheduled_at ? formatLongDateInZone(order.scheduled_at, await studioTimezone(studioId)) : "a date agreed in writing",
     price: formatMoney(order.amount_cents - order.discount_cents, order.currency),
     deposit: formatMoney(order.deposit_cents, order.currency),
     balance: formatMoney(Math.max(0, order.amount_cents - order.discount_cents - order.deposit_cents), order.currency),

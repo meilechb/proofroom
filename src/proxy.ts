@@ -5,12 +5,24 @@ import { classifyHost } from "@/lib/tenant";
  * Edge of the app. Three jobs:
  *  1. Tenant hosts ({slug}.APP_DOMAIN and verified custom domains) are rewritten
  *     to /t/{slug}/... so one route tree serves every studio.
- *  2. Non-production hosts get X-Robots-Tag: noindex.
+ *  2. Non-production hosts and tenant pages viewed on the root host under
+ *     /t/{slug} get X-Robots-Tag: noindex. Studio subdomains and verified custom
+ *     domains are indexable; each tenant's own robots route decides the rest.
  *  3. Optimistic redirect to /login for /studio and /admin when there is no
  *     session cookie. Real authorization happens in lib/auth.ts on every request.
+ *     While a session cookie is present its expiry is pushed out, so the cookie
+ *     lives as long as the rolling database session it points to.
+ *  4. On the root host the /t/{slug} path form (local dev and previews) sets a
+ *     short-lived pr_tenant cookie, and the tenant app's root-relative links
+ *     (/g/..., /pay/..., /my/...) are rewritten back under /t/{slug}.
  */
 
 const SESSION_COOKIE = "pr_session";
+const SESSION_COOKIE_MAX_AGE = 30 * 86400;
+const TENANT_PATH_COOKIE = "pr_tenant";
+// Tenant-app paths that only exist inside /t/{slug}; on the root host these are
+// followed back into the tenant tree when a pr_tenant cookie says which one.
+const TENANT_APP_PREFIXES = ["/g", "/pay", "/my", "/invoice", "/receipt", "/book", "/team", "/u", "/headshots", "/api/gallery", "/api/photo", "/api/pay", "/api/track"];
 const ROOT_ONLY_PREFIXES = ["/studio", "/admin", "/login", "/signup", "/api/billing", "/api/stripe", "/api/lr", "/api/connect", "/api/cron", "/api/health", "/api/resend", "/api/data", "/api/plugin"];
 
 // Custom-domain lookups are cached per instance for a minute.
@@ -61,8 +73,23 @@ function isProductionHost(request: NextRequest) {
   return Boolean(root) && (host === root || host.endsWith(`.${root}`));
 }
 
-function finish(request: NextRequest, response: NextResponse, tenant = false) {
-  if (!isProductionHost(request) || tenant) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+function finish(request: NextRequest, response: NextResponse, opts: { noindex?: boolean; tenantHost?: boolean } = {}) {
+  // A verified custom domain is not under APP_DOMAIN but is still production.
+  const production = opts.tenantHost ? Boolean(process.env.NEXT_PUBLIC_APP_DOMAIN) : isProductionHost(request);
+  if (!production || opts.noindex) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
+}
+
+function refreshSessionCookie(request: NextRequest, response: NextResponse) {
+  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  if (!token) return response;
+  response.cookies.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_COOKIE_MAX_AGE,
+  });
   return response;
 }
 
@@ -88,10 +115,10 @@ export async function proxy(request: NextRequest) {
     if (!slug) {
       const url = request.nextUrl.clone();
       url.pathname = "/studio-not-found";
-      return finish(request, NextResponse.rewrite(url), true);
+      return finish(request, NextResponse.rewrite(url), { noindex: true, tenantHost: true });
     }
     if (pathname.startsWith("/api/photo") || pathname.startsWith("/api/gallery") || pathname.startsWith("/api/pay") || pathname.startsWith("/api/track")) {
-      return finish(request, NextResponse.next({ request: { headers: withTenantHeaders(request, slug) } }), true);
+      return finish(request, NextResponse.next({ request: { headers: withTenantHeaders(request, slug) } }), { tenantHost: true });
     }
     if (ROOT_ONLY_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
       const proto = request.nextUrl.protocol;
@@ -101,11 +128,23 @@ export async function proxy(request: NextRequest) {
     if (pathname === "/sitemap.xml" || pathname === "/robots.txt") {
       const tenantUrl = request.nextUrl.clone();
       tenantUrl.pathname = `/t/${slug}${pathname === "/sitemap.xml" ? "/sitemap" : "/robots"}`;
-      return finish(request, NextResponse.rewrite(tenantUrl, { request: { headers: withTenantHeaders(request, slug) } }), true);
+      return finish(request, NextResponse.rewrite(tenantUrl, { request: { headers: withTenantHeaders(request, slug) } }), { tenantHost: true });
+    }
+    // /t/{slug}/... typed on a tenant host: send to the canonical short path. A
+    // different slug is not served from this host at all.
+    if (pathname === `/t/${slug}` || pathname.startsWith(`/t/${slug}/`)) {
+      const canonical = request.nextUrl.clone();
+      canonical.pathname = pathname.slice(`/t/${slug}`.length) || "/";
+      return NextResponse.redirect(canonical, 308);
+    }
+    if (pathname === "/t" || pathname.startsWith("/t/")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/studio-not-found";
+      return finish(request, NextResponse.rewrite(url), { noindex: true, tenantHost: true });
     }
     const url = request.nextUrl.clone();
-    url.pathname = pathname.startsWith("/t/") ? pathname : `/t/${slug}${pathname === "/" ? "" : pathname}`;
-    return finish(request, NextResponse.rewrite(url, { request: { headers: withTenantHeaders(request, slug) } }), true);
+    url.pathname = `/t/${slug}${pathname === "/" ? "" : pathname}`;
+    return finish(request, NextResponse.rewrite(url, { request: { headers: withTenantHeaders(request, slug) } }), { tenantHost: true });
   }
 
   // Root host: optimistic auth for the app areas.
@@ -119,11 +158,23 @@ export async function proxy(request: NextRequest) {
     const headers = withTenantHeaders(request, null);
     const banner = await maintenanceBanner();
     if (banner) headers.set("x-maintenance-banner", banner);
-    return finish(request, NextResponse.next({ request: { headers } }));
+    return refreshSessionCookie(request, finish(request, NextResponse.next({ request: { headers } })));
   }
-  // Tenant pages viewed directly on the root host are never indexed.
+  // Tenant pages viewed directly on the root host are never indexed. Remember
+  // which tenant so the app's root-relative links keep working on this form.
   const pathSlug = pathname.startsWith("/t/") ? pathname.split("/")[2] ?? null : null;
-  return finish(request, NextResponse.next({ request: { headers: withTenantHeaders(request, pathSlug) } }), pathname.startsWith("/t/"));
+  if (pathSlug && /^[a-z0-9-]{1,80}$/.test(pathSlug)) {
+    const response = finish(request, NextResponse.next({ request: { headers: withTenantHeaders(request, pathSlug) } }), { noindex: true });
+    response.cookies.set(TENANT_PATH_COOKIE, pathSlug, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 });
+    return response;
+  }
+  const remembered = request.cookies.get(TENANT_PATH_COOKIE)?.value ?? null;
+  if (remembered && /^[a-z0-9-]{1,80}$/.test(remembered) && TENANT_APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/t/${remembered}${pathname}`;
+    return finish(request, NextResponse.rewrite(url, { request: { headers: withTenantHeaders(request, remembered) } }), { noindex: true });
+  }
+  return finish(request, NextResponse.next({ request: { headers: withTenantHeaders(request, null) } }));
 }
 
 export const config = {

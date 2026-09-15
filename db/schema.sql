@@ -180,8 +180,10 @@ create table if not exists stripe_events (
   id text primary key,
   type text not null,
   account text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  processed_at timestamptz
 );
+alter table stripe_events add column if not exists processed_at timestamptz;
 
 -- ---------------------------------------------------------------------------
 -- Studio domain: clients, packages, sessions (orders), galleries, photos
@@ -622,6 +624,9 @@ alter table galleries add column if not exists view_count integer not null defau
 alter table photos add column if not exists thumb_url text;
 alter table photos add column if not exists sha256 text;
 alter table photos add column if not exists uploaded_by text not null default 'studio';
+-- Finals galleries built from favorites reference the proof photo's blobs, so
+-- the same original_url legitimately appears on more than one row.
+alter table photos drop constraint if exists photos_original_url_key;
 alter table photos drop constraint if exists photos_uploaded_by_check;
 alter table photos add constraint photos_uploaded_by_check check (uploaded_by in ('studio', 'client', 'plugin'));
 alter table photos add column if not exists captured_at timestamptz;

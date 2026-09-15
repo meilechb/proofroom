@@ -7,7 +7,7 @@ import { db, one } from "@/lib/db";
 import { defaultSite } from "@/lib/site/defaults";
 import { parseSite, siteSchema, type Site } from "@/lib/site/schema";
 import { validateForPublish } from "@/lib/site/publish";
-import { str, type ActionState } from "@/lib/action-state";
+import type { ActionState } from "@/lib/action-state";
 
 function currentDraft(row: { site: Record<string, unknown>; site_draft: Record<string, unknown> | null; name: string }): Site {
   const published = parseSite(row.site, defaultSite(row.name));

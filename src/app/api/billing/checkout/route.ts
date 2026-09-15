@@ -5,7 +5,7 @@ import { pendingRewardFor } from "@/lib/referrals-server";
 import { appUrl } from "@/lib/env";
 import { log } from "@/lib/logger";
 
-/** Starts the $40/month subscription in Stripe Checkout (plan 6.2). */
+/** Starts the Pro per-seat subscription in Stripe Checkout (plan 6.2). */
 export async function POST() {
   try {
     const { studio, role } = await requireStudio("admin");

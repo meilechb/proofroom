@@ -7,7 +7,7 @@ import { recheckPendingDomains } from "@/lib/sending-domains";
 
 export const maxDuration = 300;
 
-/** Every 15 minutes (vercel.json): short, chunked work. */
+/** Scheduled in vercel.json (daily at 06:30 UTC on the Hobby plan; set to every 15 minutes on Pro): short, chunked work. */
 export async function GET(request: NextRequest) {
   if (!cronAuthorized(request)) return new NextResponse("Unauthorized", { status: 401 });
   const results = await runJobs("frequent", {

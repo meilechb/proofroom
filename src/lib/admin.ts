@@ -1,14 +1,15 @@
 import "server-only";
 
 import { db, one, rows } from "@/lib/db";
-import { billingState } from "@/lib/plans";
+import { PRO_SEAT_CENTS, billingState } from "@/lib/plans";
 import type { Studio } from "@/lib/types";
 
 /** Platform admin queries and platform settings (plan 19). Guarded by requirePlatformAdmin in every caller. */
 
-export type StudioState = "trial" | "active" | "past_due" | "comped" | "suspended" | "read_only" | "deleted";
+export type StudioState = "trial" | "active" | "past_due" | "comped" | "suspended" | "read_only" | "free" | "deleted";
 
 type StateFields = {
+  plan?: string | null;
   deleted_at: string | null; suspended_at?: string | null; plan_override?: string | null; read_only_since?: string | null;
   subscription_status: string | null; trial_ends_at: string | null; current_period_end?: string | null; cancel_at_period_end?: boolean | null; grace_ends_at?: string | null;
 };
@@ -19,18 +20,19 @@ export function studioState(s: StateFields): StudioState {
   if (s.suspended_at) return "suspended";
   if (s.plan_override === "comped") return "comped";
   const bs = billingState({
-    plan: "studio", trial_ends_at: s.trial_ends_at, subscription_status: s.subscription_status,
+    plan: s.plan ?? "free", trial_ends_at: s.trial_ends_at, subscription_status: s.subscription_status,
     current_period_end: s.current_period_end ?? null, cancel_at_period_end: s.cancel_at_period_end ?? null,
     suspended_at: s.suspended_at ?? null, read_only_since: s.read_only_since ?? null, grace_ends_at: s.grace_ends_at ?? null, plan_override: s.plan_override ?? null,
   });
   if (s.read_only_since && !bs.canWrite) return "read_only";
   if (bs.status === "past_due") return "past_due";
   if (bs.trialing) return "trial";
+  if (bs.status === "free") return "free";
   return "active";
 }
 
 export type AdminStudioRow = {
-  id: string; name: string; slug: string; owner_email: string | null; created_at: string; updated_at: string;
+  id: string; name: string; slug: string; plan?: string | null; owner_email: string | null; created_at: string; updated_at: string;
   storage_bytes: number; members: number; stripe_charges_enabled: boolean; stripe_account_id: string | null;
   sending_domain: string | null; sending_status: string | null;
   deleted_at: string | null; suspended_at: string | null; plan_override: string | null; read_only_since: string | null; subscription_status: string | null; trial_ends_at: string | null; purge_at: string | null;
@@ -38,7 +40,7 @@ export type AdminStudioRow = {
 
 export async function listStudios(opts: { q?: string; state?: string; limit?: number } = {}) {
   const like = opts.q?.trim() ? `%${opts.q.trim().toLowerCase()}%` : null;
-  const list = await rows<AdminStudioRow>(
+  const list = rows<AdminStudioRow>(
     await db()`
       select s.id, s.name, s.slug, s.created_at::text, s.updated_at::text, s.storage_bytes,
         s.stripe_charges_enabled, s.stripe_account_id, s.deleted_at::text, s.suspended_at::text,
@@ -71,7 +73,7 @@ export async function studioForAdmin(id: string) {
     await db()`select
       (select count(*)::int from clients where studio_id = ${id}) as clients,
       (select count(*)::int from orders where studio_id = ${id}) as orders,
-      (select count(*)::int from galleries where studio_id = ${id} and deleted_at is null) as galleries,
+      (select count(*)::int from galleries where studio_id = ${id}) as galleries,
       (select count(*)::int from photos where studio_id = ${id} and deleted_at is null) as photos`
   );
   return { studio, counts: counts ?? { clients: 0, orders: 0, galleries: 0, photos: 0 } };
@@ -125,18 +127,19 @@ export async function setPlatformSetting(key: string, value: Record<string, unkn
 
 // ---- Metrics (plan 19.5) ---------------------------------------------------
 
-const PLAN_PRICE_CENTS = 4000;
-
 export async function platformMetrics() {
-  const all = await rows<AdminStudioRow>(await db()`
-    select s.id, s.name, s.slug, s.created_at::text, s.updated_at::text, s.storage_bytes, s.stripe_charges_enabled, s.stripe_account_id,
+  const all = rows<AdminStudioRow>(await db()`
+    select s.id, s.name, s.slug, s.plan, s.created_at::text, s.updated_at::text, s.storage_bytes, s.stripe_charges_enabled, s.stripe_account_id,
       s.deleted_at::text, s.suspended_at::text, s.plan_override, s.read_only_since::text, s.subscription_status, s.trial_ends_at::text, s.purge_at::text,
-      0 as members, null as owner_email, null as sending_domain, null as sending_status
+      (select count(*)::int from memberships m where m.studio_id = s.id) as members, null as owner_email, null as sending_domain, null as sending_status
     from studios s`);
   const byState: Record<string, number> = {};
   for (const s of all) byState[studioState(s)] = (byState[studioState(s)] ?? 0) + 1;
 
-  const active = all.filter((s) => s.subscription_status === "active" && !s.deleted_at).length;
+  const activeStudios = all.filter((s) => s.subscription_status === "active" && !s.deleted_at && s.plan_override !== "comped");
+  const active = activeStudios.length;
+  // Pro is billed per seat, so MRR is seats on active subscriptions times the seat price.
+  const seats = activeStudios.reduce((n, s) => n + Math.max(1, Number(s.members)), 0);
   const everSubscribed = all.filter((s) => s.subscription_status).length;
   const nonComped = all.filter((s) => !s.deleted_at && s.plan_override !== "comped").length;
   const conversion = nonComped > 0 ? Math.round((everSubscribed / nonComped) * 100) : 0;
@@ -148,7 +151,7 @@ export async function platformMetrics() {
   const storageTotal = all.reduce((sum, s) => sum + Number(s.storage_bytes), 0);
   const topStorage = [...all].sort((a, b) => Number(b.storage_bytes) - Number(a.storage_bytes)).slice(0, 10).map((s) => ({ id: s.id, name: s.name, bytes: Number(s.storage_bytes) }));
 
-  const galleriesLive = one<{ n: number }>(await db()`select count(*)::int as n from galleries where status = 'published' and deleted_at is null`);
+  const galleriesLive = one<{ n: number }>(await db()`select count(*)::int as n from galleries where status = 'published'`);
   const emails = one<{ sent: number; failed: number }>(await db()`
     select count(*) filter (where status = 'sent')::int as sent, count(*) filter (where status = 'failed')::int as failed
     from email_log where created_at >= now() - interval '30 days'`);
@@ -156,7 +159,8 @@ export async function platformMetrics() {
 
   return {
     byState,
-    mrrCents: active * PLAN_PRICE_CENTS,
+    mrrCents: seats * PRO_SEAT_CENTS,
+    seats,
     activeSubscriptions: active,
     conversion,
     signups,

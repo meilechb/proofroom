@@ -9,6 +9,8 @@ describe("password rules", () => {
     expect(passwordProblem("aaaaaaaaaaaa")).toMatch(/repetitive/);
     expect(passwordProblem("mypassword123")).toMatch(/common/);
     expect(passwordProblem("sarah.cohen!2026", "sarah.cohen@example.com")).toMatch(/email/);
+    // A very short local part ("jo") is not a useful signal and would reject too many good passwords.
+    expect(passwordProblem("major-journey-2026", "jo@example.com")).toBeNull();
     expect(passwordProblem("Br1ght-Lens-Tuesday")).toBeNull();
   });
 });

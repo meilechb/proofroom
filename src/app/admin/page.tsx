@@ -9,7 +9,7 @@ import { AdminStateFilter } from "./state-filter";
 export const metadata: Metadata = { title: "Studios · Admin" };
 
 const STATE_TONE: Record<StudioState, "neutral" | "success" | "warning" | "danger" | "brand"> = {
-  trial: "brand", active: "success", past_due: "warning", comped: "brand", suspended: "danger", read_only: "warning", deleted: "danger",
+  trial: "brand", active: "success", past_due: "warning", comped: "brand", suspended: "danger", read_only: "warning", free: "neutral", deleted: "danger",
 };
 
 export default async function AdminStudiosPage({ searchParams }: PageProps<"/admin">) {

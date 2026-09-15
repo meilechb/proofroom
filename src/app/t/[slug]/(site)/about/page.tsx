@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- studio portraits are blob URLs served as-is, matching the other site pages */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { studioBySlug } from "@/lib/tenant-data";
@@ -29,7 +30,7 @@ export default async function AboutPage({ params }: PageProps<"/t/[slug]/about">
       <PageHero heading={page.hero.heading || "About"} subheading={page.hero.subheading} res={assetUrl(data.assets, page.hero.imageAssetId, "full")} />
       {page.bio.enabled && (page.bio.body || portrait) ? (
         <Container className="py-14 grid gap-10 lg:grid-cols-2 lg:items-start">
-          {portrait ? <div className="overflow-hidden rounded-2xl lg:order-2">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={portrait.src} alt={portrait.alt} className="w-full object-cover aspect-[4/5]" /></div> : null}
+          {portrait ? <div className="overflow-hidden rounded-2xl lg:order-2"><img src={portrait.src} alt={portrait.alt} className="w-full object-cover aspect-[4/5]" loading="lazy" decoding="async" /></div> : null}
           <div>
             {page.bio.heading ? <h2 className="text-2xl font-semibold mb-3" style={{ fontFamily: "var(--site-font-heading)" }}>{page.bio.heading}</h2> : null}
             <div className="text-[var(--site-ink-2)] leading-relaxed whitespace-pre-line">{page.bio.body}</div>

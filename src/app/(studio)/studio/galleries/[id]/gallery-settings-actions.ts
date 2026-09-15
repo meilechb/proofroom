@@ -12,6 +12,7 @@ import { recordClientEvent } from "@/lib/clients";
 import { galleryUrl } from "@/lib/tenant";
 import { db, one } from "@/lib/db";
 import { bool, str, type ActionState } from "@/lib/action-state";
+import { endOfDayInZone } from "@/lib/dates";
 
 export async function saveGallerySettingsAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const { studio } = await requireWritableStudio();
@@ -30,7 +31,7 @@ export async function saveGallerySettingsAction(_prev: ActionState, formData: Fo
     allow_sharing: bool(formData, "allow_sharing"),
     watermark: bool(formData, "watermark"),
     sort_mode: (["manual", "filename", "captured"].includes(str(formData, "sort_mode", 12)) ? str(formData, "sort_mode", 12) : "manual") as "manual" | "filename" | "captured",
-    expires_at: /^\d{4}-\d{2}-\d{2}$/.test(expires) ? new Date(`${expires}T23:59:59Z`).toISOString() : null,
+    expires_at: /^\d{4}-\d{2}-\d{2}$/.test(expires) ? endOfDayInZone(expires, studio.timezone).toISOString() : null,
     password: str(formData, "password", 100) || (formData.has("clear_password") ? null : undefined),
     download_pin: str(formData, "download_pin", 20) || (formData.has("clear_pin") ? null : undefined),
   });

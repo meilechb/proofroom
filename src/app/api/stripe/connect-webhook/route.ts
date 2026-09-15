@@ -33,12 +33,13 @@ export async function POST(request: NextRequest) {
   if (fresh.length === 0) return NextResponse.json({ received: true, duplicate: true });
   try {
     await handle(event, event.account ?? null);
-    await db()`update stripe_events set processed_at = now() where id = ${event.id}`;
   } catch (error) {
     log.error("stripe.connect_webhook_failed", { type: event.type, id: event.id, error: error instanceof Error ? error.message : String(error) });
     await db()`delete from stripe_events where id = ${event.id}`;
     return new NextResponse("Handler failed", { status: 500 });
   }
+  // Bookkeeping only: if this update fails the event still counts as handled, so no retry and no double send.
+  await db()`update stripe_events set processed_at = now() where id = ${event.id}`.catch(() => undefined);
   return NextResponse.json({ received: true });
 }
 

@@ -1,6 +1,6 @@
 # saas/
 
-The multi-tenant photographer platform: studio websites from templates, client galleries with proofing, CRM, payments into each studio's own Stripe account, email from each studio's own domain, and a two-way Lightroom Classic plugin. One plan, $40 a month, everything included.
+The multi-tenant photographer platform: studio websites from templates, client galleries with proofing, CRM, payments into each studio's own Stripe account, email from each studio's own domain, and a two-way Lightroom Classic plugin. A Free plan for solo photographers and Pro at $18 per seat a month with everything included.
 
 The product name is not decided. `NEXT_PUBLIC_APP_NAME` is a placeholder and one rename pass (plan item 1.30) replaces it everywhere.
 

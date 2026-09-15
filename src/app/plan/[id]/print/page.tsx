@@ -37,7 +37,7 @@ export default async function PlanPrintPage({ params }: PageProps<"/plan/[id]/pr
       <div className="mb-6 border-y border-neutral-200 py-3 text-sm">
         <p><strong>Session:</strong> #{order.order_number} {order.title}</p>
         {client ? <p><strong>Client:</strong> {client.name} · {client.email}{client.phone ? ` · ${client.phone}` : ""}</p> : null}
-        <p><strong>When:</strong> {order.scheduled_at ? formatDate(order.scheduled_at, { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : "Not scheduled"}</p>
+        <p><strong>When:</strong> {order.scheduled_at ? formatDate(order.scheduled_at, { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }, ctx.studio.timezone) : "Not scheduled"}</p>
         {order.location ? <p><strong>Where:</strong> {order.location}</p> : null}
       </div>
 

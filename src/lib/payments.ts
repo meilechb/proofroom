@@ -7,6 +7,7 @@ import { canTakeCardPayments } from "@/lib/connect";
 import { payUrl } from "@/lib/tenant";
 import { orderMoney, type Order, type Payment, type PaymentKind, type PaymentStatus, type Studio } from "@/lib/types";
 import { log } from "@/lib/logger";
+import { audit } from "@/lib/audit";
 
 /**
  * Client payments. Every charge is a direct charge on the studio's own Stripe
@@ -132,7 +133,7 @@ export function statusAfterRefund(amountCents: number, amountRefunded: number): 
 export async function recordRefund(charge: Stripe.Charge) {
   const paymentIntent = idOf(charge.payment_intent);
   const existing = one<Payment>(
-    await db()`select * from payments where stripe_charge_id = ${charge.id} or (stripe_payment_intent_id = ${paymentIntent} and ${paymentIntent} is not null) limit 1`
+    await db()`select * from payments where stripe_charge_id = ${charge.id} or (stripe_payment_intent_id = ${paymentIntent} and ${paymentIntent}::text is not null) limit 1`
   );
   if (!existing) {
     log.warn("payments.refund_without_payment", { charge: charge.id });
@@ -156,7 +157,7 @@ export async function recordDispute(dispute: Stripe.Dispute) {
     await db()`
       update payments set dispute_status = ${dispute.status}, disputed_at = coalesce(disputed_at, now()),
         status = case when ${dispute.status} in ('lost') then 'disputed' when status = 'disputed' and ${dispute.status} in ('won', 'warning_closed') then 'paid' else status end
-      where stripe_charge_id = ${chargeId} or (stripe_payment_intent_id = ${paymentIntent} and ${paymentIntent} is not null)
+      where stripe_charge_id = ${chargeId} or (stripe_payment_intent_id = ${paymentIntent} and ${paymentIntent}::text is not null)
       returning *`
   );
   if (payment) await syncOrderPaymentState(payment.order_id);
@@ -174,7 +175,7 @@ export async function recordManualPayment(studioId: string, orderId: string, amo
       returning *`
   );
   if (!payment) throw new Error("Order not found.");
-  await db()`insert into audit_log (studio_id, user_id, action, target_type, target_id, meta) values (${studioId}, ${userId}, 'payment.manual', 'order', ${orderId}, ${JSON.stringify({ amountCents, method })}::jsonb)`;
+  await audit({ studioId, actorUserId: userId, action: "payment.manual", targetType: "order", targetId: orderId, metadata: { amountCents, method } });
   await syncOrderPaymentState(orderId);
   return payment;
 }

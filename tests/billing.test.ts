@@ -46,9 +46,12 @@ describe("invoices", () => {
     expect(invoiceSubscriptionId(inv)).toBe("sub_9");
     expect(invoiceSubscriptionId({ parent: null } as unknown as Stripe.Invoice)).toBeNull();
   });
-  it("recognises the first paid invoice and ignores $0 trial invoices", () => {
-    expect(isFirstPaidInvoice({ billing_reason: "subscription_create", amount_paid: 4000 } as unknown as Stripe.Invoice)).toBe(true);
+  it("recognises paid subscription invoices and ignores $0 trial invoices", () => {
+    expect(isFirstPaidInvoice({ billing_reason: "subscription_create", amount_paid: 1800 } as unknown as Stripe.Invoice)).toBe(true);
     expect(isFirstPaidInvoice({ billing_reason: "subscription_create", amount_paid: 0 } as unknown as Stripe.Invoice)).toBe(false);
-    expect(isFirstPaidInvoice({ billing_reason: "subscription_cycle", amount_paid: 4000 } as unknown as Stripe.Invoice)).toBe(false);
+    // A trial pays $0 on subscription_create; its first real charge is the first subscription_cycle invoice.
+    expect(isFirstPaidInvoice({ billing_reason: "subscription_cycle", amount_paid: 1800 } as unknown as Stripe.Invoice)).toBe(true);
+    expect(isFirstPaidInvoice({ billing_reason: "subscription_cycle", amount_paid: 0 } as unknown as Stripe.Invoice)).toBe(false);
+    expect(isFirstPaidInvoice({ billing_reason: "manual", amount_paid: 1800 } as unknown as Stripe.Invoice)).toBe(false);
   });
 });

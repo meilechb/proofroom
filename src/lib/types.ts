@@ -350,7 +350,12 @@ export function formatMoney(cents: number, currency = "usd") {
   }).format(cents / 100);
 }
 
-export function formatDate(value: string | null | undefined, opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" }) {
+export function formatDate(value: string | null | undefined, opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" }, timeZone?: string | null) {
   if (!value) return "";
-  return new Date(value).toLocaleDateString("en-US", opts);
+  // Server code runs in UTC; pass the studio's zone whenever the value is a time of day.
+  try {
+    return new Date(value).toLocaleDateString("en-US", timeZone ? { ...opts, timeZone } : opts);
+  } catch {
+    return new Date(value).toLocaleDateString("en-US", opts);
+  }
 }

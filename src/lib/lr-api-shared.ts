@@ -5,6 +5,8 @@
 
 export const LR_API_VERSION = "1";
 export const LR_MIN_PLUGIN_VERSION = "1.0.0";
+/** Version stamped in lightroom/proofroom.lrplugin/Info.lua; bump both together. */
+export const LR_PLUGIN_VERSION = "1.0.0";
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string) {

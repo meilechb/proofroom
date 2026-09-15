@@ -26,9 +26,13 @@ async function referencedUrls(store: Store): Promise<Set<string>> {
   };
   if (store === "galleries") {
     add((await db()`select original_url, preview_url, thumb_url from photos`) as Array<Record<string, unknown>>, ["original_url", "preview_url", "thumb_url"]);
+    // Uploaded import zips live in the private store until the import finishes.
+    add((await db()`select url from import_files`) as Array<Record<string, unknown>>, ["url"]);
   } else {
     add((await db()`select url, web_url, thumb_url from assets`) as Array<Record<string, unknown>>, ["url", "web_url", "thumb_url"]);
     add((await db()`select url from documents`) as Array<Record<string, unknown>>, ["url"]);
+    // Studio logos uploaded in the welcome wizard go straight to the public store.
+    add((await db()`select logo_url from studios`) as Array<Record<string, unknown>>, ["logo_url"]);
   }
   return urls;
 }

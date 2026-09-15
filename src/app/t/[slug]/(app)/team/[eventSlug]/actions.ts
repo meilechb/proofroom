@@ -1,7 +1,6 @@
 "use server";
 
 import { headers } from "next/headers";
-import { db, one } from "@/lib/db";
 import { studioBySlug, galleryBySlug } from "@/lib/tenant-data";
 import { grantGalleryAccess, unlockAttemptAllowed, verifyUnlock } from "@/lib/gallery-access";
 import { clientIp } from "@/lib/rate-limit";
@@ -15,7 +14,7 @@ export async function unlockTeamAction(_prev: ActionState, formData: FormData): 
   if (!studio) return { error: "Not found." };
   const parent = await galleryBySlug(studio.id, eventSlug);
   if (!parent) return { error: "Not found." };
-  if (!unlockAttemptAllowed(parent.id, clientIp(await headers()))) return { error: "Too many tries. Wait a few minutes." };
+  if (!(await unlockAttemptAllowed(parent.id, clientIp(await headers()))).ok) return { error: "Too many tries. Wait a few minutes." };
   if (!verifyUnlock(parent, str(formData, "code", 100))) return { error: "That manager code is not right." };
   await grantGalleryAccess(parent.id);
   return { ok: true };

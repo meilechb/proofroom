@@ -1,6 +1,6 @@
 import "server-only";
 
-import { db, one, rows } from "@/lib/db";
+import { db, rows } from "@/lib/db";
 import type { Studio } from "@/lib/types";
 import type { Package } from "@/lib/types";
 import { parseSite, type Site } from "@/lib/site/schema";

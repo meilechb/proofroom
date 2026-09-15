@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LR_API_VERSION, LR_PLUGIN_VERSION } from "@/lib/lr-api-shared";
 import { requireStudioPage } from "@/lib/auth";
 import { listApiTokens } from "@/lib/api-tokens";
 import { appUrl } from "@/lib/env";
@@ -21,7 +22,7 @@ export default async function LightroomSettingsPage() {
           <a href="/api/plugin/download" className="btn-secondary btn-sm">Download plugin (.zip)</a>
           <a href={`${appUrl()}/lightroom`} target="_blank" rel="noreferrer" className="btn-ghost btn-sm">Install guide</a>
         </div>
-        <p className="mt-2 text-xs text-muted">Plugin version 1.0. The download is pre-configured with your site URL; paste a token below to connect it.</p>
+        <p className="mt-2 text-xs text-muted">Plugin version {LR_PLUGIN_VERSION} (API {LR_API_VERSION}). The download is pre-configured with your site URL; paste a token below to connect it.</p>
       </Card>
       <Card>
         <h2 className="font-medium mb-1">Connection tokens</h2>

@@ -5,7 +5,9 @@ import { renderTemplate } from "@/lib/email-templates";
 import { getTemplate } from "@/lib/email-templates-server";
 import { sendStudioEmail } from "@/lib/email";
 import { studioBaseUrl, galleryUrl } from "@/lib/tenant";
-import { formatMoney, type Studio } from "@/lib/types";
+import { formatMoney, orderMoney, type Studio } from "@/lib/types";
+import { billingState, entitlements, type StudioBillingFields } from "@/lib/plans";
+import { formatDayInZone, formatLongDateInZone, formatTimeInZone } from "@/lib/dates";
 import { recordClientEvent } from "@/lib/clients";
 import { log } from "@/lib/logger";
 import { AUTOMATION_RULES, automationSettings, automationsPaused, type AutomationRule, type RuleDef } from "@/lib/automations-shared";
@@ -73,7 +75,7 @@ export async function dueTargets(rule: AutomationRule): Promise<DueTarget[]> {
 
 // ---- Runner (plan 16.8) ----------------------------------------------------
 
-type StudioRow = Pick<Studio, "id" | "name" | "email" | "slug" | "custom_domain" | "custom_domain_verified_at" | "settings">;
+type StudioRow = Pick<Studio, "id" | "name" | "email" | "slug" | "custom_domain" | "custom_domain_verified_at" | "settings" | "timezone"> & StudioBillingFields;
 
 /**
  * Sends the due automation emails. Idempotent: each target is claimed in
@@ -83,7 +85,18 @@ type StudioRow = Pick<Studio, "id" | "name" | "email" | "slug" | "custom_domain"
 export async function runAutomations() {
   const studios = new Map<string, StudioRow | null>();
   const getStudio = async (id: string) => {
-    if (!studios.has(id)) studios.set(id, one<StudioRow>(await db()`select id, name, email, slug, custom_domain, custom_domain_verified_at, settings from studios where id = ${id} and deleted_at is null`));
+    if (!studios.has(id)) {
+      studios.set(
+        id,
+        one<StudioRow>(
+          await db()`
+            select id, name, email, slug, custom_domain, custom_domain_verified_at, settings, timezone,
+                   plan, trial_ends_at::text, subscription_status, current_period_end::text, cancel_at_period_end,
+                   suspended_at::text, read_only_since::text, grace_ends_at::text, plan_override
+            from studios where id = ${id} and deleted_at is null`
+        )
+      );
+    }
     return studios.get(id) ?? null;
   };
 
@@ -96,6 +109,9 @@ export async function runAutomations() {
       if (!studio) continue;
       const settings = automationSettings(studio.settings);
       if (automationsPaused(studio.settings) || !settings[def.rule].enabled) continue;
+      // Automations are a Pro feature; a studio back on Free keeps its settings but nothing sends.
+      const state = billingState(studio);
+      if (!entitlements(state.effectivePlan).automations || !state.publicLive) continue;
       // Claim the target first so nothing double-sends.
       if (!(await markSent(t.studio_id, def.rule, t.target))) continue;
       try {
@@ -144,23 +160,26 @@ async function sendAutomation(def: RuleDef, studio: StudioRow, target: DueTarget
     to = g.email;
     ctaUrl = galleryUrl(studio, g.slug);
     const daysLeft = Math.max(0, Math.ceil((new Date(g.expires_at).getTime() - Date.now()) / 86400000));
-    vars = { ...vars, client_name: g.name, gallery_url: ctaUrl, days_left: String(daysLeft), expires_on: new Date(g.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) };
+    vars = { ...vars, client_name: g.name, gallery_url: ctaUrl, days_left: String(daysLeft), expires_on: formatLongDateInZone(g.expires_at, studio.timezone) };
   } else if (def.rule === "balance_reminder") {
-    const o = one<{ id: string; title: string; amount_cents: number; currency: string; name: string; email: string }>(
-      await db()`select o.id, o.title, o.amount_cents, o.currency, c.name, c.email from orders o join clients c on c.id = o.client_id where o.id = ${target.target} and o.studio_id = ${studio.id}`
+    const o = one<{ id: string; title: string; amount_cents: number; deposit_cents: number; included_finals: number; extra_final_cents: number; discount_cents: number; currency: string; name: string; email: string }>(
+      await db()`select o.id, o.title, o.amount_cents, o.deposit_cents, o.included_finals, o.extra_final_cents, o.discount_cents, o.currency, c.name, c.email from orders o join clients c on c.id = o.client_id where o.id = ${target.target} and o.studio_id = ${studio.id}`
     );
     if (!o?.email) return false;
+    // The reminder quotes what is still owed, not the session's full price.
+    const paid = (await db()`select amount_cents, status, coalesce(refunded_cents, 0) as refunded_cents from payments where order_id = ${o.id}`) as Array<{ amount_cents: number; status: "paid" | "refunded" | "partially_refunded" | "pending" | "failed"; refunded_cents: number }>;
+    const due = orderMoney(o, paid, 0).due_cents;
+    if (due <= 0) return false;
     to = o.email;
     ctaUrl = `${base}/pay/${o.id}`;
-    vars = { ...vars, client_name: o.name, amount: formatMoney(o.amount_cents, o.currency), pay_url: ctaUrl };
+    vars = { ...vars, client_name: o.name, amount: formatMoney(due, o.currency), pay_url: ctaUrl };
   } else if (def.rule === "session_reminder") {
     const o = one<{ title: string; scheduled_at: string | null; location: string | null; name: string; email: string }>(
       await db()`select o.title, o.scheduled_at::text, o.location, c.name, c.email from orders o join clients c on c.id = o.client_id where o.id = ${target.target} and o.studio_id = ${studio.id}`
     );
     if (!o?.email || !o.scheduled_at) return false;
     to = o.email;
-    const when = new Date(o.scheduled_at);
-    vars = { ...vars, client_name: o.name, session_title: o.title, session_date: when.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }), session_time: when.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), location: o.location ?? "" };
+    vars = { ...vars, client_name: o.name, session_title: o.title, session_date: formatDayInZone(o.scheduled_at, studio.timezone), session_time: formatTimeInZone(o.scheduled_at, studio.timezone), location: o.location ?? "" };
   } else if (def.rule === "thank_you" || def.rule === "review_request") {
     const o = one<{ name: string; email: string }>(
       await db()`select c.name, c.email from orders o join clients c on c.id = o.client_id where o.id = ${target.target} and o.studio_id = ${studio.id}`

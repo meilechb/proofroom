@@ -36,7 +36,7 @@ export default async function PayPage({ params, searchParams }: PageProps<"/t/[s
   return (
     <div className="mx-auto w-full max-w-lg px-5 py-12">
       <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{order.title}</h1>
-      <p className="mt-1 text-[var(--site-ink-2)]">{studio.name}{order.scheduled_at ? ` · ${formatDate(order.scheduled_at)}` : ""}</p>
+      <p className="mt-1 text-[var(--site-ink-2)]">{studio.name}{order.scheduled_at ? ` · ${formatDate(order.scheduled_at, undefined, studio.timezone)}` : ""}</p>
 
       <div className="mt-6 rounded-xl border border-[var(--site-line)] p-4 text-sm">
         <Row label="Session" value={formatMoney(order.amount_cents, cur)} />

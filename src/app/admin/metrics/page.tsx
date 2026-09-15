@@ -17,7 +17,7 @@ export default async function AdminMetricsPage() {
       <h1 className="text-xl font-semibold">Metrics</h1>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="MRR" value={formatMoney(m.mrrCents)} hint={`${m.activeSubscriptions} active`} />
+        <Stat label="MRR" value={formatMoney(m.mrrCents)} hint={`${m.activeSubscriptions} active · ${m.seats} paid seat${m.seats === 1 ? "" : "s"}`} />
         <Stat label="Trial conversion" value={`${m.conversion}%`} />
         <Stat label="Galleries live" value={m.galleriesLive.toLocaleString()} />
         <Stat label="Storage" value={formatBytes(m.storageTotal)} />

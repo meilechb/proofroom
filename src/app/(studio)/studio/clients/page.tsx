@@ -44,7 +44,7 @@ export default async function ClientsPage({ searchParams }: PageProps<"/studio/c
         actions={
           <>
             <ButtonLink href={`/api/clients/export${q || tag || tab !== "all" ? `?${new URLSearchParams({ ...(q ? { q } : {}), ...(tag ? { tag } : {}), ...(tab !== "all" ? { tab } : {}) })}` : ""}`} variant="secondary">Export CSV</ButtonLink>
-            <ButtonLink href="/studio/clients/import" variant="secondary">Import</ButtonLink>
+            <ButtonLink href="/studio/import" variant="secondary">Import</ButtonLink>
             <NewClientButton open={sp.new === "1"} />
           </>
         }
@@ -79,7 +79,7 @@ export default async function ClientsPage({ searchParams }: PageProps<"/studio/c
           <EmptyState
             title={q || tag ? "No clients match" : archived ? "No archived clients" : "No clients yet"}
             description={q || tag ? "Try a different search or clear the filter." : "Add your first client, or import from a CSV or another tool."}
-            action={!q && !tag && !archived ? <div className="flex gap-2"><NewClientButton /><ButtonLink href="/studio/clients/import" variant="secondary">Import</ButtonLink></div> : undefined}
+            action={!q && !tag && !archived ? <div className="flex gap-2"><NewClientButton /><ButtonLink href="/studio/import" variant="secondary">Import</ButtonLink></div> : undefined}
           />
         ) : (
           <>

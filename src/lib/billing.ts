@@ -215,11 +215,14 @@ export function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
   return typeof sub === "string" ? sub : sub.id;
 }
 
-/** True for the first real charge of a subscription (not a $0 trial invoice). */
+/**
+ * True for a real subscription charge (not a $0 trial invoice). A subscription
+ * started with a trial pays nothing on subscription_create and its first real
+ * charge arrives as subscription_cycle, so both reasons count; the referral
+ * layer only rewards once per referred studio.
+ */
 export function isFirstPaidInvoice(invoice: Stripe.Invoice) {
-  return invoice.billing_reason === "subscription_create" || invoice.billing_reason === "subscription_cycle"
-    ? invoice.amount_paid > 0 && invoice.billing_reason === "subscription_create"
-    : false;
+  return (invoice.billing_reason === "subscription_create" || invoice.billing_reason === "subscription_cycle") && invoice.amount_paid > 0;
 }
 
 /**

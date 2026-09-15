@@ -14,7 +14,6 @@ export default async function WebsitePreview() {
   const style = Object.fromEntries(themeCss(site.settings).split(";").map((d) => d.split(":") as [string, string]));
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={googleFontsHref(site.settings.font)} />
       <div style={style} className="min-h-screen flex flex-col bg-[var(--site-bg)] text-[var(--site-ink)]" data-theme={site.settings.colors.base === "dark" ? "dark" : undefined}>
         <SiteHeader studio={ctx0.studio} site={site} />

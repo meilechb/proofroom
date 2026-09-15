@@ -6,7 +6,7 @@ import { db, one, rows } from "@/lib/db";
 import { listPhotos } from "@/lib/photos";
 import { getOrder } from "@/lib/orders";
 import { listPayments } from "@/lib/payments";
-import { orderMoney } from "@/lib/types";
+import { formatMoney, orderMoney } from "@/lib/types";
 import { payUrl, galleryUrl } from "@/lib/tenant";
 import { GalleryView, type ClientPhoto } from "./gallery-view";
 import { ClientUploader } from "./client-uploader";
@@ -94,9 +94,9 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
   );
 }
 
-function formatBalance(order: Parameters<typeof orderMoney>[0], payments: Parameters<typeof orderMoney>[1], picks: number) {
+function formatBalance(order: Parameters<typeof orderMoney>[0] & { currency?: string }, payments: Parameters<typeof orderMoney>[1], picks: number) {
   const m = orderMoney(order, payments, picks);
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "usd" }).format(m.due_cents / 100);
+  return formatMoney(m.due_cents, order.currency ?? "usd");
 }
 
 function Centered({ title, body, children }: { title: string; body: string; children?: React.ReactNode }) {

@@ -70,33 +70,6 @@ export const PLANS: Record<PlanId, Plan> = {
   },
 };
 
-/**
- * @deprecated Transitional alias for the pre-existing single-plan callers.
- * Consumers migrate to `PLANS`/`entitlements` in later phases of the pricing
- * change; this shim keeps the old value/shape so the build stays green until
- * each caller is updated, then it is removed.
- */
-export const PLAN = {
-  id: "pro" as PlanId,
-  name: "Studio",
-  tagline: "Everything included. Unlimited seats. Cancel any time.",
-  monthlyCents: 4000,
-  lookupKey: "studio_monthly",
-  priceEnvName: "STRIPE_PRICE_STUDIO_MONTHLY",
-  highlights: [
-    "Client galleries with favorites and per-photo notes",
-    "Two-way Lightroom Classic plugin",
-    "Deposits, balances and e-signed agreements paid into your own Stripe",
-    "0% commission, we never touch your money",
-    "Website from a template, on your own domain",
-    "CRM: inbox, clients, sessions, tasks, calendar",
-    "Email from your own domain, with automations",
-    "Team headshot days with per-person galleries",
-    "Booking page, import from other tools",
-    "Unlimited team members",
-  ],
-};
-
 export const TRIAL_DAYS = 14;
 /** After the trial ends unpaid, galleries and the website stay live this long. */
 export const GRACE_DAYS = 30;

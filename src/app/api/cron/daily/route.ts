@@ -71,8 +71,8 @@ async function notifyDowngraded(ids: string[]) {
 
 async function refreshStorageCounters() {
   const updated = await db()`
-    update studios s set storage_bytes = coalesce((select sum(size_bytes) from photos where studio_id = s.id and deleted_at is null), 0)
-      + coalesce((select sum(size_bytes) from assets where studio_id = s.id and deleted_at is null), 0)
+    update studios s set storage_bytes = coalesce((select sum(size_bytes) from photos where studio_id = s.id), 0)
+      + coalesce((select sum(size_bytes) from assets where studio_id = s.id), 0)
       + coalesce((select sum(size_bytes) from documents where studio_id = s.id), 0)
     where s.deleted_at is null returning id`;
   return updated.length;

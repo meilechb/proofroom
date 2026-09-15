@@ -87,7 +87,7 @@ export async function mergeClients(studioId: string, keepId: string, dropId: str
     sql`update booking_slots set client_id = ${keepId} where client_id = ${dropId} and studio_id = ${studioId}`,
     sql`update clients set
           phone = coalesce(phone, ${drop.phone}), company = coalesce(company, ${drop.company}),
-          notes = case when ${drop.notes} is null then notes else concat_ws(E'\n\n', notes, ${drop.notes}) end,
+          notes = case when ${drop.notes}::text is null then notes else concat_ws(E'\n\n', notes, ${drop.notes}) end,
           tags = (select array_agg(distinct t) from unnest(tags || ${drop.tags}) t),
           last_activity_at = greatest(last_activity_at, ${drop.last_activity_at})
         where id = ${keepId}`,

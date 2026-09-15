@@ -49,7 +49,7 @@ export default async function SessionDetailPage({ params }: PageProps<"/studio/s
       <PageHeader
         eyebrow={`Session #${order.order_number}`}
         title={order.title}
-        description={[client?.name, order.scheduled_at ? formatDate(order.scheduled_at, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Not scheduled", order.location].filter(Boolean).join(" · ")}
+        description={[client?.name, order.scheduled_at ? formatDate(order.scheduled_at, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }, ctx.studio.timezone) : "Not scheduled", order.location].filter(Boolean).join(" · ")}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={order.status === "completed" ? "success" : order.status === "cancelled" ? "neutral" : order.status === "pending_payment" ? "warning" : "brand"}>{orderStatusLabels[order.status as OrderStatus] ?? order.status}</Badge>

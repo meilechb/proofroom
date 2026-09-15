@@ -42,6 +42,26 @@ function exportServiceProvider.startDialog( propertyTable )
 	propertyTable.connectionStatus = 'Not tested yet'
 end
 
+--- Version of this plugin as "major.minor.revision", from Info.lua.
+local function pluginVersionString()
+	local info = require 'Info'
+	local v = info and info.VERSION or {}
+	return string.format( '%d.%d.%d', v.major or 0, v.minor or 0, v.revision or 0 )
+end
+
+--- Numeric compare of dotted versions; string compare would call 1.10.0 older than 1.9.0.
+local function versionIsOlder( have, need )
+	local a, b = {}, {}
+	for n in tostring( have ):gmatch( '%d+' ) do a[ #a + 1 ] = tonumber( n ) end
+	for n in tostring( need ):gmatch( '%d+' ) do b[ #b + 1 ] = tonumber( n ) end
+	for i = 1, math.max( #a, #b ) do
+		local x, y = a[ i ] or 0, b[ i ] or 0
+		if x < y then return true end
+		if x > y then return false end
+	end
+	return false
+end
+
 --- Tests the token, and warns when the plugin is older than the API minimum (plan 18.20).
 local function testConnection( propertyTable )
 	propertyTable.connectionStatus = 'Testing…'
@@ -53,8 +73,8 @@ local function testConnection( propertyTable )
 		end
 		local status = 'Connected to ' .. tostring( ( res.studio and res.studio.name ) or 'your site' )
 		local minVersion = res.minPluginVersion
-		if minVersion and minVersion > '1.0.0' then
-			status = status .. ' — please update the plugin (server needs ' .. tostring( minVersion ) .. ').'
+		if minVersion and versionIsOlder( pluginVersionString(), tostring( minVersion ) ) then
+			status = status .. ' — please update the plugin (server needs ' .. tostring( minVersion ) .. ', you have ' .. pluginVersionString() .. ').'
 		end
 		propertyTable.connectionStatus = status
 	end )

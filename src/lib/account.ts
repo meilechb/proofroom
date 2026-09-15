@@ -1,6 +1,7 @@
 import "server-only";
 
-import { db, one } from "@/lib/db";
+import { db, one, withTx, type Row } from "@/lib/db";
+import { randomUUID } from "node:crypto";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { hashToken, randomToken } from "@/lib/tokens";
 import { TRIAL_DAYS } from "@/lib/plans";
@@ -42,21 +43,24 @@ export async function createUserWithStudio(input: {
 }): Promise<{ user: User; studio: Studio }> {
   const passwordHash = hashPassword(input.password);
   const trialEnds = new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString();
-  const user = one<User>(
-    await db()`
-      insert into users (email, name, password_hash)
-      values (${input.email}, ${input.name}, ${passwordHash})
-      returning id, email, name, email_verified_at, is_platform_admin, created_at`
-  );
-  if (!user) throw new Error("Could not create the account.");
-  const studio = one<Studio>(
-    await db()`
-      insert into studios (slug, name, legal_name, email, trial_ends_at, onboarding, timezone)
-      values (${input.slug}, ${input.studioName}, ${input.studioName}, ${input.email}, ${trialEnds}, '{}'::jsonb, ${validTimezone(input.timezone) ?? "America/New_York"})
-      returning *`
-  );
-  if (!studio) throw new Error("Could not create the studio.");
-  await db()`insert into memberships (user_id, studio_id, role) values (${user.id}, ${studio.id}, 'owner')`;
+  // Ids are chosen here so the three inserts can run in one transaction: a slug
+  // race or a duplicate email leaves no orphan user or studio behind.
+  const userId = randomUUID();
+  const studioId = randomUUID();
+  const [userRows, studioRows] = await withTx<[Row[], Row[], Row[]]>((sql) => [
+    sql`
+      insert into users (id, email, name, password_hash)
+      values (${userId}, ${input.email}, ${input.name}, ${passwordHash})
+      returning id, email, name, email_verified_at, is_platform_admin, created_at`,
+    sql`
+      insert into studios (id, slug, name, legal_name, email, trial_ends_at, onboarding, timezone)
+      values (${studioId}, ${input.slug}, ${input.studioName}, ${input.studioName}, ${input.email}, ${trialEnds}, '{}'::jsonb, ${validTimezone(input.timezone) ?? "America/New_York"})
+      returning *`,
+    sql`insert into memberships (user_id, studio_id, role) values (${userId}, ${studioId}, 'owner')`,
+  ]);
+  const user = one<User>(userRows);
+  const studio = one<Studio>(studioRows);
+  if (!user || !studio) throw new Error("Could not create the account.");
   await seedStudioDefaults(studio.id);
   return { user, studio };
 }

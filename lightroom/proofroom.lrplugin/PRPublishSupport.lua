@@ -146,7 +146,8 @@ function publishServiceProvider.getCommentsFromPublishedCollection( publishSetti
 			local who = c.author_role == 'studio' and 'You' or ( c.author_name or 'Client' )
 			list[ #list + 1 ] = {
 				commentId = c.id,
-				commentText = ( c.resolved and '\u{2713} ' or '' ) .. ( c.body or '' ),
+				-- Lua 5.1 has no \u escapes; these are the UTF-8 bytes of the check mark.
+				commentText = ( c.resolved and '\226\156\147 ' or '' ) .. ( c.body or '' ),
 				dateCreated = isoToTime( c.created_at ),
 				username = who,
 				realname = who,
