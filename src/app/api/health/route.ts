@@ -11,7 +11,7 @@ import { blobToken } from "@/lib/storage";
  */
 
 type Check = { configured: boolean; ok: boolean; ms?: number; error?: string };
-type Report = { status: "ok" | "degraded"; checkedAt: string; checks: Record<"database" | "storage" | "stripe" | "email", Check> };
+type Report = { status: "ok" | "degraded"; checkedAt: string; deployment: { commit: string | null; environment: string | null; region: string | null }; checks: Record<"database" | "storage" | "stripe" | "email", Check> };
 
 let cache: { report: Report; until: number } | null = null;
 
@@ -42,7 +42,12 @@ async function build(): Promise<Report> {
   const checks = { database, storage, stripe: stripeCheck, email };
   // Only configured dependencies count against status: a preview without Stripe is not "degraded".
   const degraded = Object.values(checks).some((c) => c.configured && !c.ok);
-  return { status: degraded ? "degraded" : "ok", checkedAt: new Date().toISOString(), checks };
+  const deployment = {
+    commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+    environment: process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? null,
+    region: process.env.VERCEL_REGION ?? null,
+  };
+  return { status: degraded ? "degraded" : "ok", checkedAt: new Date().toISOString(), deployment, checks };
 }
 
 export async function GET() {

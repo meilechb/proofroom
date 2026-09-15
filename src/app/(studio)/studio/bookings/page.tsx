@@ -8,6 +8,7 @@ import { formatInZone, formatTimeInZone } from "@/lib/dates";
 import { PageHeader, EmptyState, Badge, ButtonLink, Notice } from "@/components/ui";
 import { Tabs } from "@/components/ui/tabs";
 import { ConfirmButton } from "@/components/forms/confirm-button";
+import { CopyButton } from "@/components/forms/copy-button";
 import { setBookingStatusAction } from "./actions";
 
 export const metadata: Metadata = { title: "Bookings" };
@@ -51,6 +52,7 @@ export default async function BookingsPage({ searchParams }: PageProps<"/studio/
         description="Sessions clients booked from your website."
         actions={
           <>
+            {settings.enabled ? <CopyButton value={bookingUrl(ctx.studio)} label="Copy booking link" /> : null}
             <ButtonLink href="/studio/calendar" variant="secondary">Calendar</ButtonLink>
             <ButtonLink href="/studio/settings/bookings" variant="secondary">Availability</ButtonLink>
           </>

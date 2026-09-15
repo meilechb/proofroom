@@ -26,6 +26,10 @@ export async function studioExportEntries(studioId: string): Promise<ZipEntry[]>
   entries.push(await table("galleries", db()`select id, order_id, client_id, slug, title, kind, status, expires_at, created_at from galleries where studio_id = ${studioId} order by created_at`));
   entries.push(await table("inquiries", db()`select id, name, email, phone, message, source, status, created_at from inquiries where studio_id = ${studioId} order by created_at`));
   entries.push(await table("packages", db()`select id, name, price_cents, deposit_cents, is_active, created_at from packages where studio_id = ${studioId} order by sort_order`));
+  entries.push(await table("tasks", db()`select id, client_id, order_id, title, due_on, done_at, created_at from tasks where studio_id = ${studioId} order by created_at`));
+  entries.push(await table("bookings", db()`select id, starts_at, ends_at, status, client_id, order_id, package_id, notes, created_at from booking_slots where studio_id = ${studioId} order by starts_at`));
+  entries.push(await table("agreement_versions", db()`select version, body_md, is_active, created_at from agreement_templates where studio_id = ${studioId} order by version`));
+  entries.push(await table("documents", db()`select id, client_id, order_id, kind, title, url, size_bytes, created_at from documents where studio_id = ${studioId} order by created_at`));
 
   const clients = (await db()`select name, email, phone, company, stage, tags, source, created_at from clients where studio_id = ${studioId} order by created_at`) as Array<Record<string, unknown>>;
   const header = ["Name", "Email", "Phone", "Company", "Stage", "Tags", "Source", "Created"];

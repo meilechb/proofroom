@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-const STATES = ["all", "trial", "active", "past_due", "comped", "read_only", "suspended", "deleted"];
+const STATES = ["all", "trial", "active", "free", "past_due", "comped", "read_only", "suspended", "deleted"];
 
 export function AdminStateFilter() {
   const router = useRouter();

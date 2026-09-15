@@ -30,7 +30,8 @@ describe("ical", () => {
     ], new Date("2026-09-09T00:00:00Z"));
     expect(feed).toContain("BEGIN:VCALENDAR\r\n");
     expect(feed).toContain("DTSTART:20261001T140000Z");
-    expect(feed).toContain("SUMMARY:Headshots\; Sarah\\, Cohen");
+    // Semicolons and commas are escaped with a backslash (RFC 5545 TEXT).
+    expect(feed).toContain("SUMMARY:Headshots\\; Sarah\\, Cohen");
     expect(feed.split("\r\n").every((l) => Buffer.byteLength(l) <= 75)).toBe(true);
     expect(feed).toContain("END:VCALENDAR");
   });

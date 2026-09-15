@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireStudioPage, listMemberships } from "@/lib/auth";
+import { db, one } from "@/lib/db";
 import { APP_NAME } from "@/lib/env";
 import { Logo } from "@/components/ui";
 import { StudioNav } from "@/components/studio/nav";
@@ -12,7 +13,15 @@ export const metadata = { robots: { index: false, follow: false } };
 
 export default async function StudioLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireStudioPage();
-  const memberships = await listMemberships(ctx.user.id);
+  const [memberships, waiting] = await Promise.all([
+    listMemberships(ctx.user.id),
+    one<{ inbox: number; notes: number }>(
+      await db()`
+        select (select count(*)::int from inquiries where studio_id = ${ctx.studio.id} and status = 'new') as inbox,
+               (select count(*)::int from photo_comments where studio_id = ${ctx.studio.id} and author_role = 'client' and not resolved) as notes`
+    ),
+  ]);
+  const badges = { "/studio/inbox": waiting?.inbox ?? 0, "/studio/galleries": waiting?.notes ?? 0 };
   return (
     <div className="flex-1 flex flex-col lg:flex-row min-h-screen">
       <aside className="lg:w-60 shrink-0 border-b lg:border-b-0 lg:border-r border-line bg-surface">
@@ -23,7 +32,7 @@ export default async function StudioLayout({ children }: { children: React.React
           </Link>
           {memberships.length > 1 ? <StudioSwitcher memberships={memberships.map((m) => ({ id: m.studio_id, name: m.studio.name }))} activeId={ctx.studio.id} /> : null}
         </div>
-        <StudioNav role={ctx.role} />
+        <StudioNav role={ctx.role} badges={badges} />
         <div className="p-4 mt-auto hidden lg:block text-xs text-muted">
           <p className="truncate">{ctx.user.email}</p>
           <div className="mt-2 flex gap-3">

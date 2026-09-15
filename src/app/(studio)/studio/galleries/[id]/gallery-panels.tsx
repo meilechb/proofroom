@@ -41,7 +41,7 @@ export function SettingsButton({ gallery, expiresInput }: { gallery: Gallery; ex
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="allow_comments" defaultChecked={gallery.allow_comments} className="h-4 w-4" /> Let clients favorite and leave notes</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="allow_sharing" defaultChecked={gallery.allow_sharing} className="h-4 w-4" /> Allow sharing the link</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="watermark" defaultChecked={gallery.watermark} className="h-4 w-4" /> Watermark previews (new uploads)</label>
-          <Field label="Expires on" htmlFor="gs-exp" hint="Optional. The gallery goes offline after this date."><Input id="gs-exp" name="expires_at" type="date" defaultValue={expiresInput} /></Field>
+          <Field label="Expires on" htmlFor="gs-exp" hint="Optional. The gallery goes offline at the end of this day, in your studio's timezone."><Input id="gs-exp" name="expires_at" type="date" defaultValue={expiresInput} /></Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Password" htmlFor="gs-pw" hint={gallery.password_hash ? "Set. Type to change." : "Optional."}><Input id="gs-pw" name="password" type="text" placeholder={gallery.password_hash ? "••••••" : ""} /></Field>
             <Field label="Download PIN" htmlFor="gs-pin" hint={gallery.download_pin_hash ? "Set. Type to change." : "Optional."}><Input id="gs-pin" name="download_pin" type="text" /></Field>

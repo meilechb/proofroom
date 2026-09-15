@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePlatformAdminPage } from "@/lib/auth";
-import { studioForAdmin, studioState } from "@/lib/admin";
+import { studioForAdmin, studioState, STUDIO_STATE_TONE } from "@/lib/admin";
 import { formatBytes } from "@/lib/assets-shared";
 import { Card, Badge } from "@/components/ui";
 import { StudioControls } from "./controls";
@@ -22,7 +22,7 @@ export default async function AdminStudioDetail({ params }: PageProps<"/admin/st
       <div className="flex items-center justify-between gap-3">
         <div>
           <Link href="/admin" className="text-sm text-muted hover:text-ink">← Studios</Link>
-          <h1 className="text-xl font-semibold mt-1">{studio.name} <Badge>{state.replace("_", " ")}</Badge></h1>
+          <h1 className="text-xl font-semibold mt-1">{studio.name} <Badge tone={STUDIO_STATE_TONE[state]}>{state.replace("_", " ")}</Badge></h1>
           <p className="text-sm text-muted">{studio.slug} · owner {studio.owner_email ?? "—"}</p>
         </div>
       </div>

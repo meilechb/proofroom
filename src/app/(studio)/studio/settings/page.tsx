@@ -13,6 +13,7 @@ export default async function SettingsProfilePage() {
     <Card>
       <h2 className="font-medium mb-4">Profile</h2>
       <ProfileForm
+        timezones={Intl.supportedValuesOf("timeZone")}
         values={{
           name: studio.name,
           legal_name: studio.legal_name ?? "",

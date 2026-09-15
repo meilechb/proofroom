@@ -96,7 +96,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/studio
           </ul>
         </Card>
         <Card>
-          <h2 className="font-medium">Upcoming shoots</h2>
+          <div className="flex items-center justify-between"><h2 className="font-medium">Upcoming shoots</h2><Link href="/studio/calendar" className="text-xs underline text-ink-2">Calendar</Link></div>
           <ul className="mt-3 space-y-2 text-sm">
             {upcoming.map((o) => (
               <li key={o.id} className="flex justify-between gap-3">

@@ -8,6 +8,11 @@ import type { Studio } from "@/lib/types";
 
 export type StudioState = "trial" | "active" | "past_due" | "comped" | "suspended" | "read_only" | "free" | "deleted";
 
+/** Badge tone per state, shared by the studio list and the studio page. */
+export const STUDIO_STATE_TONE: Record<StudioState, "neutral" | "success" | "warning" | "danger" | "brand"> = {
+  trial: "brand", active: "success", past_due: "warning", comped: "brand", suspended: "danger", read_only: "warning", free: "neutral", deleted: "danger",
+};
+
 type StateFields = {
   plan?: string | null;
   deleted_at: string | null; suspended_at?: string | null; plan_override?: string | null; read_only_since?: string | null;

@@ -11,6 +11,7 @@ import { CopyButton } from "@/components/forms/copy-button";
 import { GalleryUploader } from "./gallery-uploader";
 import { PhotoGrid } from "./photo-grid";
 import { SettingsButton, SendGalleryButton } from "./gallery-panels";
+import { dateISOInZone } from "@/lib/dates";
 import { createFinalsFromFavoritesAction, publishGalleryAction, regenerateCodeAction, archiveGalleryAction } from "./gallery-settings-actions";
 import { resolveNoteAction } from "./photo-actions";
 
@@ -39,7 +40,7 @@ export default async function GalleryDetailPage({ params }: PageProps<"/studio/g
   const url = galleryUrl(ctx.studio, gallery.slug);
   const published = gallery.status === "published";
   const unresolved = notes.filter((n) => !n.resolved).length;
-  const expiresInput = gallery.expires_at ? gallery.expires_at.slice(0, 10) : "";
+  const expiresInput = gallery.expires_at ? dateISOInZone(gallery.expires_at, ctx.studio.timezone) : "";
 
   return (
     <>

@@ -3,7 +3,8 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { db, one, rows } from "@/lib/db";
-import { readSession, setSessionStudio } from "@/lib/session";
+import { cookies } from "next/headers";
+import { readSession, setSessionStudio, SESSION_COOKIE } from "@/lib/session";
 import type { Membership, MembershipRole, Studio, User } from "@/lib/types";
 import { billingState, entitlements, type BillingState, type Entitlements } from "@/lib/plans";
 
@@ -93,7 +94,11 @@ function normalizeStudio(s: Studio): Studio {
 /** Pages: redirect to login (or to studio creation) when there is no context. */
 export async function requireStudioPage(minRole: MembershipRole = "member"): Promise<StudioContext> {
   const user = await getCurrentUser();
-  if (!user) redirect("/login?next=/studio");
+  if (!user) {
+    // A cookie with no valid session behind it means the session expired or was revoked.
+    const hadCookie = Boolean((await cookies()).get(SESSION_COOKIE)?.value);
+    redirect(hadCookie ? "/login?next=/studio&expired=1" : "/login?next=/studio");
+  }
   const ctx = await getStudioContext();
   if (!ctx) redirect("/signup?step=studio");
   if (!hasRole(ctx.role, minRole)) redirect("/studio?denied=1");

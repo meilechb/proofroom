@@ -30,7 +30,7 @@ export default async function SessionsPage({ searchParams }: PageProps<"/studio/
       <PageHeader
         title="Sessions"
         description="Every shoot, with its money and agreement status."
-        actions={<NewSessionButton clients={clientOpts} packages={pkgOpts} timezone={ctx.studio.timezone} presetClientId={presetClient} open={sp.new === "1"} />}
+        actions={<div className="flex gap-2"><Link href="/studio/calendar" className="btn-ghost btn-sm">Calendar</Link><NewSessionButton clients={clientOpts} packages={pkgOpts} timezone={ctx.studio.timezone} presetClientId={presetClient} open={sp.new === "1"} /></div>}
       />
       <Tabs items={[{ value: "all", label: "All" }, { value: "upcoming", label: "Upcoming" }, { value: "unpaid", label: "Unpaid" }, { value: "past", label: "Past" }]} />
       <div className="mt-4">

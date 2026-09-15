@@ -56,6 +56,7 @@ export default async function SessionDetailPage({ params }: PageProps<"/studio/s
             {slot?.status === "no_show" ? <Badge tone="neutral">No-show</Badge> : null}
             {slot && slot.status === "confirmed" && slotPast && order.status !== "cancelled" ? <NoShowButton orderId={order.id} /> : null}
             {order.status !== "cancelled" ? <EditSessionButton order={order} timezone={ctx.studio.timezone} /> : null}
+            {order.scheduled_at && order.status !== "cancelled" ? <a href={`/studio/sessions/${order.id}/calendar.ics`} className="btn-ghost" download>Add to calendar</a> : null}
             {client ? <ButtonLink href={`/studio/clients/${client.id}`} variant="ghost">Client</ButtonLink> : null}
           </div>
         }

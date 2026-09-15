@@ -11,7 +11,7 @@ const CURRENCIES = ["usd", "eur", "gbp", "cad", "aud", "nzd", "chf", "sek", "dkk
 
 type Values = { name: string; legal_name: string; email: string; phone: string; timezone: string; currency: string; address: string; business_hours: string };
 
-export function ProfileForm({ values }: { values: Values }) {
+export function ProfileForm({ values, timezones }: { values: Values; timezones: string[] }) {
   const [state, action] = useActionState(saveProfileAction, initialActionState);
   return (
     <form action={action} className="space-y-4 max-w-2xl">
@@ -29,8 +29,9 @@ export function ProfileForm({ values }: { values: Values }) {
         <Field label="Phone" htmlFor="phone">
           <Input id="phone" name="phone" defaultValue={values.phone} />
         </Field>
-        <Field label="Timezone" htmlFor="timezone" error={state.fields?.timezone} hint="An IANA name like America/New_York.">
-          <Input id="timezone" name="timezone" defaultValue={values.timezone} />
+        <Field label="Timezone" htmlFor="timezone" error={state.fields?.timezone} hint="Start typing a city or region, for example America/New_York. Session times, reminders and the calendar use it.">
+          <Input id="timezone" name="timezone" defaultValue={values.timezone} list="timezone-options" autoComplete="off" spellCheck={false} />
+          <datalist id="timezone-options">{timezones.map((tz) => <option key={tz} value={tz} />)}</datalist>
         </Field>
         <Field label="Currency" htmlFor="currency" error={state.fields?.currency}>
           <Select id="currency" name="currency" defaultValue={values.currency}>
