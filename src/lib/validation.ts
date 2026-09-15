@@ -63,6 +63,63 @@ export const packageSchema = z.object({
   bookable: z.coerce.boolean().optional(),
 });
 
+export const storeProductSchema = z.object({
+  title: z.string().trim().min(1, "Name the product.").max(120),
+  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  licenseText: z.string().trim().max(4000).optional().or(z.literal("")),
+  isActive: z.coerce.boolean().optional(),
+  isFeatured: z.coerce.boolean().optional(),
+});
+
+export const broadcastSchema = z.object({
+  subject: z.string().trim().min(1, "Write a subject.").max(200),
+  body: z.string().trim().min(1, "Write your message.").max(20000),
+  audience: z.enum(["buyers", "clients"]),
+});
+
+export const storeCollectionSchema = z.object({
+  title: z.string().trim().min(1, "Name the collection.").max(120),
+  description: z.string().trim().max(2000).optional().or(z.literal("")),
+  visibility: z.enum(["public", "unlisted", "hidden"]),
+});
+
+export const storePriceRowSchema = z.object({
+  resolution: z.enum(["web", "standard", "original"]),
+  license: z.enum(["personal", "rf", "rm", "extended"]),
+  amountCents: z.coerce.number().int().min(0).max(10_000_000),
+});
+
+export const storeSettingsSchema = z.object({
+  enabled: z.coerce.boolean().optional(),
+  paymentMode: z.enum(["connected", "marketplace", "manual"]),
+  taxMode: z.enum(["off", "stripe"]),
+  commissionBps: z.coerce.number().int().min(0).max(10_000),
+  watermark: z.coerce.boolean().optional(),
+  watermarkText: z.string().trim().max(60).optional().or(z.literal("")),
+  downloadMaxCount: z.coerce.number().int().min(1).max(100),
+  downloadWindowHours: z.coerce.number().int().min(1).max(8760),
+  deliveryPolicy: z.string().trim().max(4000).optional().or(z.literal("")),
+  manualInstructions: z.string().trim().max(4000).optional().or(z.literal("")),
+  manualPaymentLink: z.string().trim().url("Enter a full URL.").max(500).optional().or(z.literal("")),
+});
+
+export const storeDiscountSchema = z.object({
+  code: z.string().trim().min(2, "Enter a code of at least 2 characters.").max(40).regex(/^[A-Za-z0-9_-]+$/, "Use letters, numbers, - and _ only."),
+  kind: z.enum(["percent", "fixed", "free_ship"]),
+  value: z.coerce.number().int().min(0).max(10_000_000),
+  minSubtotalCents: z.coerce.number().int().min(0).max(10_000_000).optional(),
+  maxUses: z.coerce.number().int().min(1).max(1_000_000).optional(),
+});
+
+export const storeGiftCardSchema = z.object({
+  initialCents: z.coerce.number().int().min(1, "Enter an amount.").max(10_000_000),
+  expiresAt: z.string().datetime({ offset: true }).optional().or(z.literal("")),
+});
+
+export const storePriceSheetSchema = z.object({
+  name: z.string().trim().min(1, "Name the price sheet.").max(80),
+});
+
 export const orderSchema = z.object({
   clientId: z.string().uuid(),
   packageId: z.string().uuid().optional().or(z.literal("")),

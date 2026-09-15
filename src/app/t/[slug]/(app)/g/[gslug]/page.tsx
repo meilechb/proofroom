@@ -6,7 +6,10 @@ import { db, one, rows } from "@/lib/db";
 import { listPhotos } from "@/lib/photos";
 import { getOrder } from "@/lib/orders";
 import { listPayments } from "@/lib/payments";
-import { formatMoney, orderMoney } from "@/lib/types";
+import { getGalleryStoreProduct, listGalleryPhotoProducts } from "@/lib/store";
+import { storeSettings } from "@/lib/store-shared";
+import { billingState, entitlements } from "@/lib/plans";
+import { orderMoney, formatMoney } from "@/lib/types";
 import { payUrl, galleryUrl } from "@/lib/tenant";
 import { GalleryView, type ClientPhoto } from "./gallery-view";
 import { ClientUploader } from "./client-uploader";
@@ -56,11 +59,17 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
   const payments = gallery.order_id ? await listPayments(gallery.order_id) : [];
   const gate = downloadGate(gallery, order, payments, favSet.size);
   const included = one<{ included: number }>(await db()`select included_finals as included from orders where id = ${gallery.order_id ?? null}`);
+  const storeOn = storeSettings((studio.settings ?? {}) as Record<string, unknown>).enabled && entitlements(billingState(studio).effectivePlan).store;
+  const shopProduct = storeOn ? await getGalleryStoreProduct(studio.id, gallery.id) : null;
+  const photoProducts = storeOn ? await listGalleryPhotoProducts(studio.id, gallery.id) : [];
+  const buyable: Record<string, { slug: string; label: string }> = {};
+  for (const pp of photoProducts) buyable[pp.photo_id] = { slug: pp.slug, label: formatMoney(pp.from, studio.currency) };
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 sm:px-8 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{gallery.title}</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--site-accent)]">{gallery.kind === "final" ? "Your photos are ready" : "Your proofs are ready"}</p>
+        <h1 className="mt-2 text-2xl sm:text-3xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{gallery.title}</h1>
         {gallery.welcome_message ? <p className="mt-2 text-[var(--site-ink-2)] max-w-2xl">{gallery.welcome_message}</p> : null}
       </header>
 
@@ -68,6 +77,13 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
         <div className="mb-6 rounded-xl border border-[var(--site-line)] bg-[var(--site-bg-2)] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-sm">Your downloads unlock once the balance is paid.</p>
           <a href={payUrl(studio, order.id)} className="inline-flex items-center justify-center rounded-lg bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-4 h-10 text-sm font-medium">Pay {formatBalance(order, payments, favSet.size)}</a>
+        </div>
+      ) : null}
+
+      {shopProduct ? (
+        <div className="mb-6 rounded-xl border border-[var(--site-line)] bg-[var(--site-bg-2)] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-sm">{shopProduct.kind === "bundle" ? "Buy prints and downloads — pick your favourites." : "Buy prints and downloads of this gallery."}</p>
+          <a href={`/shop/${shopProduct.slug}`} className="inline-flex items-center justify-center rounded-lg bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-4 h-10 text-sm font-medium shrink-0">Shop this gallery</a>
         </div>
       ) : null}
 
@@ -88,6 +104,7 @@ export default async function TenantGalleryPage({ params, searchParams }: PagePr
           }}
           shareUrl={sharingAllowed(gallery) ? galleryUrl(studio, gallery.slug) : null}
           previewToken={previewing ? previewToken : null}
+          buyable={buyable}
         />
       )}
     </div>

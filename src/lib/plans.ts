@@ -103,6 +103,8 @@ export type Entitlements = {
   payments: boolean;
   /** Lightroom Classic plugin. True on both tiers. */
   lightroom: boolean;
+  /** The online store: sell images, packages and licences. Pro only. */
+  store: boolean;
 };
 
 export const FREE_ENTITLEMENTS: Entitlements = {
@@ -118,6 +120,7 @@ export const FREE_ENTITLEMENTS: Entitlements = {
   referralReward: false,
   payments: true,
   lightroom: true,
+  store: false,
 };
 
 export const PRO_ENTITLEMENTS: Entitlements = {
@@ -133,6 +136,7 @@ export const PRO_ENTITLEMENTS: Entitlements = {
   referralReward: true,
   payments: true,
   lightroom: true,
+  store: true,
 };
 
 export function entitlements(plan: PlanId): Entitlements {

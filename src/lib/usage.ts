@@ -19,7 +19,8 @@ export async function getUsage(studioId: string): Promise<Usage> {
       select
         (select coalesce(sum(size_bytes), 0) from photos where studio_id = ${studioId})
           + (select coalesce(sum(size_bytes), 0) from assets where studio_id = ${studioId})
-          + (select coalesce(sum(size_bytes), 0) from documents where studio_id = ${studioId}) as storage,
+          + (select coalesce(sum(size_bytes), 0) from documents where studio_id = ${studioId})
+          + (select coalesce(sum(size_bytes), 0) from digital_files where studio_id = ${studioId} and url not like 'pending:%') as storage,
         (select count(*)::int from galleries where studio_id = ${studioId} and status = 'published') as galleries,
         (select count(*)::int from memberships where studio_id = ${studioId}) as members,
         (select count(*)::int from api_tokens where studio_id = ${studioId} and revoked_at is null) as tokens`

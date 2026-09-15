@@ -3,9 +3,11 @@ import Link from "next/link";
 import { requireStudioPage } from "@/lib/auth";
 import { db, rows } from "@/lib/db";
 import { bookingSettings } from "@/lib/booking-shared";
+import { listBookingRequests, bookingCounts } from "@/lib/booking";
 import { bookingUrl } from "@/lib/tenant";
 import { formatInZone, formatTimeInZone } from "@/lib/dates";
-import { PageHeader, EmptyState, Badge, ButtonLink, Notice } from "@/components/ui";
+import { PageHeader, EmptyState, Badge, ButtonLink, Notice, Stat, Card } from "@/components/ui";
+import { formatDate } from "@/lib/types";
 import { Tabs } from "@/components/ui/tabs";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { CopyButton } from "@/components/forms/copy-button";
@@ -28,6 +30,7 @@ export default async function BookingsPage({ searchParams }: PageProps<"/studio/
   const tab = (["upcoming", "past", "cancelled"].includes(String(sp.tab)) ? sp.tab : "upcoming") as "upcoming" | "past" | "cancelled";
   const tz = ctx.studio.timezone;
   const settings = bookingSettings((ctx.studio.settings ?? {}) as Record<string, unknown>);
+  const [requests, counts] = await Promise.all([listBookingRequests(ctx.studio.id), bookingCounts(ctx.studio.id)]);
   const list = rows<Row>(
     await db()`
       select s.id, s.starts_at::text, s.ends_at::text, s.status, s.notes, s.created_at::text,
@@ -63,7 +66,12 @@ export default async function BookingsPage({ searchParams }: PageProps<"/studio/
           Online booking is off. Turn it on under <Link href="/studio/settings/bookings" className="underline">Settings → Bookings</Link> and enable the Book page under Website → Pages. Your booking link will be <span className="font-mono text-xs">{bookingUrl(ctx.studio)}</span>.
         </Notice>
       ) : null}
-      <Tabs className="mt-4" items={[{ value: "upcoming", label: "Upcoming" }, { value: "past", label: "Past" }, { value: "cancelled", label: "Cancelled" }]} />
+      <div className="grid gap-4 sm:grid-cols-3 mt-6">
+        <Stat label="Upcoming" value={counts.upcoming} hint="Confirmed sessions" />
+        <Stat label="Held right now" value={counts.held} hint="Someone is mid-checkout" />
+        <Stat label="Booking requests" value={counts.requests} hint="From your contact form" />
+      </div>
+      <Tabs className="mt-6" items={[{ value: "upcoming", label: "Upcoming" }, { value: "past", label: "Past" }, { value: "cancelled", label: "Cancelled" }]} />
       <div className="mt-4">
         {list.length === 0 ? (
           <EmptyState
@@ -116,6 +124,46 @@ export default async function BookingsPage({ searchParams }: PageProps<"/studio/
           </div>
         )}
       </div>
+
+      <Card className="mt-8">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h2 className="font-medium">Booking requests</h2>
+            <p className="text-sm text-ink-2">Requests sent through your contact form with a package or preferred dates. Reply from the inbox.</p>
+          </div>
+          <ButtonLink href="/studio/inbox" variant="secondary" size="sm">Inbox</ButtonLink>
+        </div>
+        {requests.length === 0 ? (
+          <p className="text-sm text-ink-2">No booking requests yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead><tr className="text-left text-xs uppercase tracking-wide text-muted">
+                <th className="px-3 py-2 border-b border-line font-medium">Contact</th>
+                <th className="px-3 py-2 border-b border-line font-medium hidden md:table-cell">Package</th>
+                <th className="px-3 py-2 border-b border-line font-medium hidden sm:table-cell">People</th>
+                <th className="px-3 py-2 border-b border-line font-medium hidden lg:table-cell">Preferred dates</th>
+                <th className="px-3 py-2 border-b border-line font-medium">Received</th>
+              </tr></thead>
+              <tbody>
+                {requests.map((r) => (
+                  <tr key={r.id}>
+                    <td className="px-3 py-2 border-b border-line">
+                      <div className="font-medium">{r.name ?? "Someone"}</div>
+                      {r.email ? <div className="text-xs text-ink-2">{r.email}</div> : null}
+                      {r.inquiry_status === "new" ? <Badge tone="info" className="mt-1">New</Badge> : null}
+                    </td>
+                    <td className="px-3 py-2 border-b border-line hidden md:table-cell text-ink-2">{r.package_name ?? "—"}</td>
+                    <td className="px-3 py-2 border-b border-line hidden sm:table-cell text-ink-2">{r.people_count ?? "—"}</td>
+                    <td className="px-3 py-2 border-b border-line hidden lg:table-cell text-ink-2">{r.preferred_dates || "—"}</td>
+                    <td className="px-3 py-2 border-b border-line text-ink-2 whitespace-nowrap">{formatDate(r.created_at, { month: "short", day: "numeric" })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </>
   );
 }

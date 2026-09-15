@@ -35,6 +35,11 @@ export default async function TeamManagerPage({ params }: PageProps<"/t/[slug]/t
     <div className="mx-auto w-full max-w-3xl px-5 sm:px-8 py-10">
       <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--site-font-heading)" }}>{parent.title}</h1>
       <p className="mt-1 text-[var(--site-ink-2)]">{picked} of {people.length} have chosen. Share each person their own link to pick.</p>
+      {people.length > 0 ? (
+        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--site-bg-2)]" aria-hidden>
+          <div className="h-full rounded-full bg-[var(--site-primary)]" style={{ width: `${Math.round((picked / people.length) * 100)}%` }} />
+        </div>
+      ) : null}
       <div className="mt-6 rounded-xl border border-[var(--site-line)] overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr className="text-left text-[var(--site-ink-2)] border-b border-[var(--site-line)]">

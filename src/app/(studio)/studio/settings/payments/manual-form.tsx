@@ -13,9 +13,12 @@ export function ManualPaymentsForm({ enabled, instructions, link }: { enabled: b
   return (
     <form action={action} className="space-y-3">
       <FormMessage state={state} />
-      <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" name="manual" className="mt-1 h-4 w-4" checked={on} onChange={(e) => setOn(e.target.checked)} />
+      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
         <span><strong>I collect payment myself.</strong> The pay page shows your instructions instead of a card form. You mark sessions paid by hand.</span>
+        <span className="relative inline-flex shrink-0">
+          <input type="checkbox" name="manual" className="peer sr-only" checked={on} onChange={(e) => setOn(e.target.checked)} />
+          <span aria-hidden className="relative block h-[26px] w-[46px] rounded-full bg-line-2 transition-colors peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40 peer-focus-visible:ring-offset-1 after:absolute after:left-[3px] after:top-[3px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-[19px]" />
+        </span>
       </label>
       {on ? (
         <>

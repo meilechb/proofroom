@@ -24,9 +24,12 @@ export function BookingsForm({ initial }: { initial: BookingSettings }) {
     <div className="space-y-6">
       {msg ? <div className={msg.ok ? "rounded-lg border border-success/20 bg-success-bg p-3 text-sm text-success" : "rounded-lg border border-danger/20 bg-danger-bg p-3 text-sm text-danger"}>{msg.text}</div> : null}
 
-      <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" checked={s.enabled} onChange={(e) => setField("enabled", e.target.checked)} className="mt-1 h-4 w-4" />
+      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
         <span><strong>Take bookings on your website.</strong> Clients can pick a time on your /book page.</span>
+        <span className="relative inline-flex shrink-0">
+          <input type="checkbox" checked={s.enabled} onChange={(e) => setField("enabled", e.target.checked)} className="peer sr-only" />
+          <span aria-hidden className="relative block h-[26px] w-[46px] rounded-full bg-line-2 transition-colors peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40 peer-focus-visible:ring-offset-1 after:absolute after:left-[3px] after:top-[3px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-[19px]" />
+        </span>
       </label>
 
       <fieldset className={s.enabled ? "" : "opacity-50 pointer-events-none"}>
@@ -58,9 +61,12 @@ export function BookingsForm({ initial }: { initial: BookingSettings }) {
         <NumField label="Self reschedule/cancel until (hours before)" value={s.cancelWindowHours} min={0} max={720} onChange={(v) => setField("cancelWindowHours", v)} />
       </div>
 
-      <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" checked={s.depositRequired} onChange={(e) => setField("depositRequired", e.target.checked)} className="mt-1 h-4 w-4" />
+      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
         <span>Require a deposit to confirm a booking. When off, clients can book without paying.</span>
+        <span className="relative inline-flex shrink-0">
+          <input type="checkbox" checked={s.depositRequired} onChange={(e) => setField("depositRequired", e.target.checked)} className="peer sr-only" />
+          <span aria-hidden className="relative block h-[26px] w-[46px] rounded-full bg-line-2 transition-colors peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand/40 peer-focus-visible:ring-offset-1 after:absolute after:left-[3px] after:top-[3px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-[19px]" />
+        </span>
       </label>
 
       <label className="block max-w-lg">

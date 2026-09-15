@@ -75,7 +75,7 @@ export default async function GalleriesPage({ searchParams }: PageProps<"/studio
                     </div>
                   </div>
                   <div className="p-4">
-                    <p className="font-medium truncate">{g.title}</p>
+                    <p className="font-display text-lg leading-snug truncate">{g.title}</p>
                     <p className="text-xs text-muted mt-0.5">{g.client_name} · {galleryKindLabels[g.kind]} · {formatDate(g.created_at)}</p>
                     <p className="text-xs text-muted mt-1">{g.photos} photos · {g.favorites} favorited</p>
                   </div>

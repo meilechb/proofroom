@@ -3,7 +3,7 @@ import { requireStudioPage } from "@/lib/auth";
 import { listTasks } from "@/lib/tasks";
 import { db, one } from "@/lib/db";
 import { formatDate } from "@/lib/types";
-import { PageHeader, EmptyState, cx } from "@/components/ui";
+import { PageHeader, EmptyState, Badge, cx } from "@/components/ui";
 import { Tabs } from "@/components/ui/tabs";
 import { NewTaskForm } from "./new-task-form";
 import { completeTaskAction, deleteTaskAction } from "./actions";
@@ -43,27 +43,24 @@ export default async function TasksPage({ searchParams }: PageProps<"/studio/tas
         {tasks.length === 0 ? (
           <EmptyState title={view === "done" ? "Nothing finished yet" : "No tasks"} description="Add one above, or create tasks from a client's record." />
         ) : (
-          <ul className="space-y-2">
+          <ul className="card divide-y divide-line">
             {tasks.map((t) => {
               const overdue = !t.done_at && t.due_on && t.due_on < today;
               return (
-                <li key={t.id} className="card card-pad flex items-center gap-3">
-                  <form action={completeTaskAction}>
+                <li key={t.id} className="flex items-start gap-3 px-4 py-3.5">
+                  <form action={completeTaskAction} className="pt-0.5">
                     <input type="hidden" name="id" value={t.id} />
                     <input type="hidden" name="done" value={t.done_at ? "false" : "true"} />
-                    <button aria-label={t.done_at ? "Mark not done" : "Mark done"} className={cx("h-5 w-5 rounded-full border flex items-center justify-center text-[11px]", t.done_at ? "bg-success border-success text-white" : "border-line-2 hover:border-ink")}>
+                    <button aria-label={t.done_at ? "Mark not done" : "Mark done"} className={cx("h-5 w-5 rounded-md border flex items-center justify-center text-[11px]", t.done_at ? "bg-success border-success text-white" : "border-line-2 hover:border-ink")}>
                       {t.done_at ? "✓" : ""}
                     </button>
                   </form>
                   <div className="min-w-0 flex-1">
                     <p className={cx("text-sm", t.done_at && "line-through text-muted")}>{t.title}</p>
-                    <p className="text-xs text-muted">
-                      {t.client_name ? <Link href={`/studio/clients/${t.client_id}`} className="hover:underline">{t.client_name}</Link> : null}
-                      {t.client_name && t.due_on ? " · " : ""}
-                      {t.due_on ? <span className={overdue ? "text-danger" : undefined}>Due {formatDate(t.due_on, { month: "short", day: "numeric" })}</span> : null}
-                    </p>
+                    {t.client_name ? <p className="mt-0.5 text-xs text-muted"><Link href={`/studio/clients/${t.client_id}`} className="hover:underline">{t.client_name}</Link></p> : null}
                   </div>
-                  <form action={deleteTaskAction}>
+                  {t.due_on ? <Badge tone={overdue ? "danger" : "neutral"} className="mt-0.5 shrink-0">Due {formatDate(t.due_on, { month: "short", day: "numeric" })}</Badge> : null}
+                  <form action={deleteTaskAction} className="pt-0.5">
                     <input type="hidden" name="id" value={t.id} />
                     <button className="text-xs text-muted hover:text-danger" aria-label="Delete task">Delete</button>
                   </form>

@@ -29,8 +29,8 @@ export default async function PortfolioPage() {
       />
       {items.length === 0 && available.length === 0 ? (
         <EmptyState
-          title="No photos to show yet"
-          description="Upload photos under Assets first, then add your best ones here."
+          title="No portfolio photos yet"
+          description="Add some from your assets."
           action={<a href="/studio/assets" className="btn-primary btn-sm">Go to Assets</a>}
         />
       ) : (

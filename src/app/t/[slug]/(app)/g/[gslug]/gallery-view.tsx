@@ -17,6 +17,7 @@ export function GalleryView({
   download,
   shareUrl,
   previewToken,
+  buyable = {},
 }: {
   galleryId: string;
   photos: ClientPhoto[];
@@ -25,6 +26,7 @@ export function GalleryView({
   download: DownloadOptions;
   shareUrl: string | null;
   previewToken: string | null;
+  buyable?: Record<string, { slug: string; label: string }>;
 }) {
   const [photos, setPhotos] = useState(initial);
   const [index, setIndex] = useState<number | null>(null);
@@ -61,7 +63,8 @@ export function GalleryView({
   return (
     <div>
       {(allowComments || anyDownload || shareUrl) ? (
-        <div className="sticky top-0 z-20 -mx-5 sm:-mx-8 mb-6 border-b border-[var(--site-line)] bg-[var(--site-bg)]/90 backdrop-blur px-5 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="sticky top-0 z-20 -mx-5 sm:-mx-8 mb-6 border-b border-[var(--site-line)] bg-[var(--site-bg)]/90 backdrop-blur px-5 sm:px-8 py-3 flex flex-col gap-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
           {allowComments ? (
             <p className="text-sm text-[var(--site-ink-2)]">
               {favoriteCount} favorited{favoritesLimit ? ` of ${favoritesLimit} included` : ""}
@@ -87,6 +90,12 @@ export function GalleryView({
               </>
             ) : null}
           </div>
+          </div>
+          {allowComments && favoritesLimit ? (
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--site-bg-2)]" aria-hidden>
+              <div className="h-full rounded-full bg-[var(--site-primary)] transition-[width] duration-200" style={{ width: `${Math.min(100, Math.round((favoriteCount / favoritesLimit) * 100))}%` }} />
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -101,6 +110,11 @@ export function GalleryView({
               <button type="button" onClick={() => toggle(p.id)} aria-pressed={p.favorite} aria-label={p.favorite ? "Remove favorite" : "Add favorite"} className="absolute top-2 right-2 text-lg drop-shadow">
                 <span className={p.favorite ? "text-red-500" : "text-white/90"}>{p.favorite ? "♥" : "♡"}</span>
               </button>
+            ) : null}
+            {buyable[p.id] ? (
+              <a href={`/shop/${buyable[p.id].slug}`} className="absolute bottom-2 left-2 rounded-full bg-black/70 px-2.5 py-1 text-xs font-medium text-white backdrop-blur hover:bg-black/85">
+                Buy {buyable[p.id].label}
+              </a>
             ) : null}
           </li>
         ))}
@@ -117,6 +131,9 @@ export function GalleryView({
             {allowComments ? <NoteBox galleryId={galleryId} photoId={photo.id} favorite={photos.find((p) => p.id === photo.id)?.favorite ?? false} onToggle={() => toggle(photo.id)} /> : null}
             {download.full || download.web ? (
               <a href={`/api/photo/${photo.id}?size=${download.full ? "full" : "web"}${pinQuery}${pv}`} className="self-start rounded-full bg-white text-black px-3 py-1 text-sm font-medium">Download this photo</a>
+            ) : null}
+            {buyable[photo.id] ? (
+              <a href={`/shop/${buyable[photo.id].slug}`} className="self-start rounded-full bg-[var(--site-primary)] text-[var(--site-primary-ink)] px-3 py-1 text-sm font-medium">Buy this photo — {buyable[photo.id].label}</a>
             ) : null}
           </div>
         )}

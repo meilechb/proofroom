@@ -55,6 +55,24 @@ export function bookingUrl(studio: StudioHost) {
   return `${studioBaseUrl(studio)}/book`;
 }
 
+/** Public storefront and a single product page. */
+export function shopUrl(studio: StudioHost) {
+  return `${studioBaseUrl(studio)}/shop`;
+}
+export function productUrl(studio: StudioHost, productSlug: string) {
+  return `${studioBaseUrl(studio)}/shop/${productSlug}`;
+}
+
+/** Buyer download library, entered through an emailed token (no login). */
+export function storeLibraryUrl(studio: StudioHost, token: string) {
+  return `${studioBaseUrl(studio)}/library/${token}`;
+}
+
+/** Printable licence / print-release for a purchase. */
+export function storeLicenseUrl(studio: StudioHost, token: string) {
+  return `${studioBaseUrl(studio)}/license/${token}`;
+}
+
 /** Client hub entered through an emailed magic link token. */
 export function clientHubUrl(studio: StudioHost, token: string) {
   return `${studioBaseUrl(studio)}/my/${token}`;

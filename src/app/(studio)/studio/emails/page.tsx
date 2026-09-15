@@ -19,7 +19,7 @@ export default async function EmailsPage() {
 
   return (
     <div>
-      <PageHeader title="Emails" description="The messages your clients receive. Personalize the wording; the timing and recipients stay automatic." actions={<div className="flex gap-2"><Link href="/studio/emails/automations" className="btn-ghost btn-sm">Automations</Link><Link href="/studio/emails/suppressions" className="btn-ghost btn-sm">Suppressed</Link><Link href="/studio/emails/log" className="btn-secondary btn-sm">Email log</Link></div>} />
+      <PageHeader title="Emails" description="The messages your clients receive. Personalize the wording; the timing and recipients stay automatic." actions={<div className="flex gap-2"><Link href="/studio/emails/broadcasts" className="btn-ghost btn-sm">Broadcasts</Link><Link href="/studio/emails/automations" className="btn-ghost btn-sm">Automations</Link><Link href="/studio/emails/suppressions" className="btn-ghost btn-sm">Suppressed</Link><Link href="/studio/emails/log" className="btn-secondary btn-sm">Email log</Link></div>} />
 
       <Card className="mb-6">
         <h2 className="font-medium mb-3">Sender</h2>

@@ -4,7 +4,9 @@ import { createHash } from "node:crypto";
 import { env } from "@/lib/env";
 import { db, dbConfigured } from "@/lib/db";
 
-export type AnalyticsEvent = "site_view" | "gallery_view" | "photo_view" | "download" | "favorite";
+export type AnalyticsEvent =
+  | "site_view" | "gallery_view" | "photo_view" | "download" | "favorite"
+  | "store_view" | "product_view" | "cart_add" | "checkout_start" | "purchase";
 
 /** Increments a daily counter. Cheap upsert; never throws. */
 export async function track(studioId: string, event: AnalyticsEvent, target: string) {

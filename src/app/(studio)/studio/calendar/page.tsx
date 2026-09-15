@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireStudioPage } from "@/lib/auth";
 import { calendarFeedUrl, calendarItems, type StudioCalendarItem } from "@/lib/calendar";
-import { zonedTime } from "@/lib/booking-shared";
+import { zonedTime, bookingSettings, overrideDates } from "@/lib/booking-shared";
 import { dateISOInZone, formatTimeInZone } from "@/lib/dates";
 import { PageHeader, Card, ButtonLink, cx } from "@/components/ui";
 import { CopyButton } from "@/components/forms/copy-button";
@@ -44,6 +44,8 @@ export default async function CalendarPage({ searchParams }: PageProps<"/studio/
   for (let d = 1; d <= daysInMonth; d++) cells.push({ iso: `${m}-${String(d).padStart(2, "0")}`, day: d });
   while (cells.length % 7 !== 0) cells.push(null);
   const upcoming = items.filter((i) => new Date(i.starts_at) >= new Date()).slice(0, 8);
+  const bookingConf = bookingSettings((ctx.studio.settings ?? {}) as Record<string, unknown>);
+  const closed = new Set<string>([...bookingConf.blockedDates, ...overrideDates(bookingConf).closed]);
 
   return (
     <>
@@ -72,7 +74,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/studio/
           </div>
           <div className="grid grid-cols-7">
             {cells.map((cell, i) => (
-              <div key={i} className={cx("min-h-24 border-b border-r border-line p-1.5 text-xs", (i + 1) % 7 === 0 && "border-r-0", !cell && "bg-surface-2/40")}>
+              <div key={i} className={cx("min-h-24 border-b border-r border-line p-1.5 text-xs", (i + 1) % 7 === 0 && "border-r-0", (!cell || closed.has(cell.iso)) && "bg-surface-2/40")} title={cell && closed.has(cell.iso) ? "Closed for bookings" : undefined}>
                 {cell ? (
                   <>
                     <div className={cx("mb-1 inline-flex h-6 w-6 items-center justify-center rounded-full", cell.iso === todayISO ? "bg-ink text-white font-medium" : "text-ink-2")}>{cell.day}</div>
@@ -125,6 +127,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/studio/
               <li className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-brand/30" /> Session</li>
               <li className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-success-bg border border-success/30" /> Website booking</li>
               <li className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-warning-bg border border-warning/30" /> Hold (expires in minutes)</li>
+              <li className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-surface-2 border border-line" /> Closed for bookings</li>
             </ul>
           </Card>
         </div>

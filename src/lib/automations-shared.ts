@@ -6,7 +6,7 @@ import type { TemplateKey } from "@/lib/email-templates";
  * them without pulling in the server-only runner.
  */
 
-export type AutomationRule = "balance_reminder" | "gallery_expiring" | "unanswered_note" | "thank_you" | "review_request" | "session_reminder";
+export type AutomationRule = "balance_reminder" | "gallery_expiring" | "unanswered_note" | "thank_you" | "review_request" | "session_reminder" | "favorite_frame";
 
 export type RuleDef = { rule: AutomationRule; template: TemplateKey; label: string; defaultDays: number; defaultEnabled: boolean; description: string };
 
@@ -17,6 +17,7 @@ export const AUTOMATION_RULES: RuleDef[] = [
   { rule: "thank_you", template: "thank_you", label: "Send a thank-you note", defaultDays: 2, defaultEnabled: false, description: "Days after the final gallery is delivered and paid." },
   { rule: "review_request", template: "review_request", label: "Ask for a review", defaultDays: 7, defaultEnabled: false, description: "Days after delivery." },
   { rule: "session_reminder", template: "booking_reminder", label: "Remind clients the day before", defaultDays: 1, defaultEnabled: true, description: "Days before the session." },
+  { rule: "favorite_frame", template: "favorite_frame", label: "Nudge shoppers about a store favourite", defaultDays: 7, defaultEnabled: false, description: "Days after a shopper saved a product (and gave their email) without buying it." },
 ];
 
 export type AutomationSettings = Record<AutomationRule, { enabled: boolean; days: number }>;

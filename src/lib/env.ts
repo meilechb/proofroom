@@ -50,6 +50,8 @@ export const env = {
   vercelProjectId: () => read("VERCEL_PROJECT_ID"),
   vercelTeamId: () => read("VERCEL_TEAM_ID"),
   cronSecret: () => read("CRON_SECRET"),
+  googleClientId: () => read("GOOGLE_CLIENT_ID"),
+  googleClientSecret: () => read("GOOGLE_CLIENT_SECRET"),
 };
 
 export function requireEnv(name: string): string {
@@ -64,4 +66,5 @@ export const configured = {
   storage: () => Boolean(env.blobToken()),
   stripe: () => Boolean(env.stripeSecretKey() && env.stripePublishableKey()),
   email: () => Boolean(env.resendApiKey()),
+  google: () => Boolean(env.googleClientId() && env.googleClientSecret()),
 };

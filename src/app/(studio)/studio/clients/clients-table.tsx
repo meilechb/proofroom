@@ -5,10 +5,10 @@ import { formatDate, formatMoney } from "@/lib/types";
 import { cx } from "@/components/ui";
 
 const STAGE_TONE: Record<string, string> = {
-  lead: "badge-warning",
+  lead: "badge-info",
   awaiting_payment: "badge-danger",
-  booked: "badge-brand",
-  proofing: "badge-neutral",
+  booked: "badge-info",
+  proofing: "badge-warning",
   delivered: "badge-success",
   archived: "badge-neutral",
 };

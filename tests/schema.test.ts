@@ -56,6 +56,15 @@ describe("db/schema.sql", () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
+  it("declares the sales gift-card columns after gift_cards exists", () => {
+    const giftCardsAt = text.indexOf("create table if not exists gift_cards");
+    const giftIdAt = text.indexOf("alter table sales add column if not exists gift_card_id");
+    const giftCentsAt = text.indexOf("alter table sales add column if not exists gift_card_cents");
+    expect(giftCardsAt).toBeGreaterThan(-1);
+    expect(giftIdAt).toBeGreaterThan(giftCardsAt); // FK resolves only if declared after the table
+    expect(giftCentsAt).toBeGreaterThan(-1);
+  });
+
   it("every tenant table carries studio_id or hangs off one that does", () => {
     const tenantless = ["studios", "users", "referrals", "platform_settings", "rate_limits", "stripe_events", "leads", "gallery_visits", "gallery_downloads", "import_files", "memberships", "invitations", "sessions", "auth_tokens", "photo_selections", "photo_comments", "marketing_views_daily"];
     for (const stmt of statements) {
