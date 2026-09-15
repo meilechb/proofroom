@@ -62,6 +62,44 @@ export async function sendReceiptEmail(studio: StudioMail, input: { to: string; 
   });
 }
 
+export async function sendStoreDeliveryEmail(studio: StudioMail, input: { to: string; buyerName: string | null; amount: string; orderNumber: number; url: string }) {
+  return sendEmail({
+    to: input.to,
+    subject: `Your download from ${studio.name}`,
+    text: `Hi ${input.buyerName || "there"},\n\nThank you for your purchase (order #${input.orderNumber}, ${input.amount}). Download your files here:\n\n${input.url}\n\nThis link is yours to keep — come back any time within the download window.\n\n${studio.name}\n${studio.email}`,
+    replyTo: studio.email,
+    fromName: studio.name,
+    kind: "store_delivery",
+    studioId: studio.id,
+  });
+}
+
+export async function sendStoreAbandonedEmail(studio: StudioMail, input: { to: string; buyerName: string | null; amount: string; url: string }) {
+  return sendEmail({
+    to: input.to,
+    subject: `You left something at ${studio.name}`,
+    text: `Hi ${input.buyerName || "there"},\n\nYou started a purchase (${input.amount}) at ${studio.name} but didn't finish checking out. Your selection is still waiting whenever you're ready:\n\n${input.url}\n\n${studio.name}\n${studio.email}`,
+    replyTo: studio.email,
+    fromName: studio.name,
+    kind: "store_abandoned",
+    studioId: studio.id,
+  });
+}
+
+export async function sendGiftCardEmail(studio: StudioMail, input: { to: string; buyerName: string | null; codes: { code: string; amount: string }[] }) {
+  const many = input.codes.length > 1;
+  const lines = input.codes.map((c) => `${c.code}  —  ${c.amount}`).join("\n");
+  return sendEmail({
+    to: input.to,
+    subject: `Your ${studio.name} gift card`,
+    text: `Hi ${input.buyerName || "there"},\n\nThank you! Here ${many ? "are your gift cards" : "is your gift card"}:\n\n${lines}\n\nEnter the code at checkout to spend it in the store. Keep it somewhere safe — it won't be re-sent.\n\n${studio.name}\n${studio.email}`,
+    replyTo: studio.email,
+    fromName: studio.name,
+    kind: "store_giftcard",
+    studioId: studio.id,
+  });
+}
+
 export async function sendInquiryNoticeEmail(studio: StudioMail, input: { name: string; email: string; message: string; url: string }) {
   return sendEmail({
     to: studio.email,

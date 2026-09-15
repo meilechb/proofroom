@@ -33,13 +33,14 @@ describe("entitlements", () => {
     expect(e.sessionPlanning).toBe(false);
     expect(e.removeBranding).toBe(false);
     expect(e.referralReward).toBe(false);
+    expect(e.store).toBe(false);
   });
 
   it("uncaps everything on pro", () => {
     const e = entitlements("pro");
     expect(e.storageBytes).toBeNull();
     expect(e.maxSeats).toBeNull();
-    for (const flag of ["customDomain", "sendingDomain", "automations", "booking", "imports", "sessionPlanning", "removeBranding", "referralReward", "payments", "lightroom"] as const) {
+    for (const flag of ["customDomain", "sendingDomain", "automations", "booking", "imports", "sessionPlanning", "removeBranding", "referralReward", "payments", "lightroom", "store"] as const) {
       expect(e[flag]).toBe(true);
     }
   });

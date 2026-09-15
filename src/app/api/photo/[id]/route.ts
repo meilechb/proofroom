@@ -19,7 +19,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const previewing = verifyLink("preview", request.nextUrl.searchParams.get("preview")) === gallery.id;
   const open = unlockMethod(gallery) === "open" && gallery.status === "published";
-  const unlocked = previewing || open || (await hasGalleryAccess(gallery.id));
+  // A watermarked (web/thumb) preview may be shown on the public shop when this
+  // gallery backs an active store bundle — never the full-size original.
+  const sellableBundle =
+    size !== "full" &&
+    (await db()`select 1 from store_products where gallery_id = ${gallery.id} and studio_id = ${gallery.studio_id} and kind = 'bundle' and is_active limit 1`).length > 0;
+  const unlocked = previewing || open || sellableBundle || (await hasGalleryAccess(gallery.id));
   if (!unlocked) return new NextResponse(null, { status: 403 });
 
   if (size === "full" && !previewing) {

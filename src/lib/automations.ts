@@ -68,6 +68,18 @@ export async function dueTargets(rule: AutomationRule): Promise<DueTarget[]> {
         where o.scheduled_at is not null and o.status not in ('cancelled','draft','completed')
           and o.scheduled_at between now() and now() + ((coalesce((s.settings->'automations'->'session_reminder'->>'days')::int, 1)) || ' days')::interval
           and not exists (select 1 from automation_sends a where a.studio_id = o.studio_id and a.rule = 'session_reminder' and a.target = o.id::text)`) as DueTarget[];
+    case "favorite_frame":
+      return (await db()`
+        select f.studio_id, f.id as target, null::uuid as client_id, f.product_id as ref_id
+        from store_favorites f join studios s on s.id = f.studio_id
+        join store_products p on p.id = f.product_id and p.is_active
+        where f.email is not null and f.product_id is not null
+          and f.created_at < now() - ((coalesce((s.settings->'automations'->'favorite_frame'->>'days')::int, 7)) || ' days')::interval
+          and not exists (
+            select 1 from sales sa join sale_items si on si.sale_id = sa.id
+            where sa.studio_id = f.studio_id and lower(sa.buyer_email) = f.email and si.product_id = f.product_id
+              and sa.status in ('paid', 'partially_refunded'))
+          and not exists (select 1 from automation_sends a where a.studio_id = f.studio_id and a.rule = 'favorite_frame' and a.target = f.id::text)`) as DueTarget[];
   }
 }
 
@@ -135,6 +147,7 @@ async function sendAutomation(def: RuleDef, studio: StudioRow, target: DueTarget
   let vars: Record<string, string> = { ...globals };
   let to: string | null = null;
   let ctaUrl: string | null = null;
+  let relatedType = "order";
 
   if (def.rule === "gallery_expiring") {
     const g = one<{ slug: string; expires_at: string | null; name: string; email: string }>(
@@ -170,6 +183,15 @@ async function sendAutomation(def: RuleDef, studio: StudioRow, target: DueTarget
     const reviewUrl = (typeof studio.settings.review_url === "string" && studio.settings.review_url) || `${base}/`;
     ctaUrl = def.rule === "review_request" ? reviewUrl : null;
     vars = { ...vars, client_name: o.name, review_url: reviewUrl };
+  } else if (def.rule === "favorite_frame") {
+    const f = one<{ email: string; slug: string; title: string }>(
+      await db()`select f.email, p.slug, p.title from store_favorites f join store_products p on p.id = f.product_id where f.id = ${target.target} and f.studio_id = ${studio.id}`
+    );
+    if (!f?.email) return false;
+    to = f.email;
+    ctaUrl = `${base}/shop/${f.slug}`;
+    relatedType = "product";
+    vars = { ...vars, product_title: f.title, product_url: ctaUrl };
   }
 
   if (!to) return false;
@@ -182,7 +204,7 @@ async function sendAutomation(def: RuleDef, studio: StudioRow, target: DueTarget
     cta: tmpl.values.cta_label && ctaUrl ? { label: tmpl.values.cta_label, url: ctaUrl } : undefined,
     kind: `automation_${def.rule}`,
     templateKey: def.template,
-    related: { type: "order", id: target.ref_id },
+    related: { type: relatedType, id: target.ref_id },
   });
   return res.ok;
 }

@@ -4,6 +4,7 @@ import type { Studio, Package } from "@/lib/types";
 import { formatMoney } from "@/lib/types";
 import type { Site, TemplateId } from "@/lib/site/schema";
 import { buttonHref, navPages } from "@/lib/site/publish";
+import { storeSettings } from "@/lib/store-shared";
 import { assetUrl, type SiteAsset, type PortfolioItem, type Testimonial } from "@/lib/site/render";
 import { APP_NAME, appUrl } from "@/lib/env";
 import { billingState, entitlements } from "@/lib/plans";
@@ -42,7 +43,8 @@ function Heading({ children, className }: { children: ReactNode; className?: str
 // ---- Chrome ----------------------------------------------------------------
 
 export function SiteHeader({ studio, site }: { studio: Studio; site: Site }) {
-  const nav = navPages(site);
+  const shopOn = storeSettings((studio.settings ?? {}) as Record<string, unknown>).enabled;
+  const nav = shopOn ? [...navPages(site), { page: "shop", label: "Shop", path: "/shop" }] : navPages(site);
   return (
     <header className="border-b border-[var(--site-line)] sticky top-0 z-30 bg-[var(--site-bg)]/90 backdrop-blur">
       <Container className="h-16 flex items-center justify-between gap-4">

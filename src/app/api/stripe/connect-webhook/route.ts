@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { db, one } from "@/lib/db";
 import { applyAccountSnapshot, clearConnection, studioIdForAccount } from "@/lib/connect";
 import { recordCheckoutFailed, recordCheckoutPaid, recordDispute, recordRefund } from "@/lib/payments";
+import { fulfillPaidStoreSale, markSalePaid, recordStoreDisputeByCharge, recordStoreRefundByCharge } from "@/lib/store";
 import { recordClientEvent } from "@/lib/clients";
 import { sendReceiptEmail } from "@/lib/emails/studio";
 import { sendPlatformEmail } from "@/lib/email";
@@ -57,10 +58,29 @@ async function notifyStudio(studioId: string, subject: string, text: string) {
   if (owner) await sendPlatformEmail({ to: owner.email, kind: "payment_notice", subject, text: `${text}\n\n${appUrl()}/studio/sessions\n\n${APP_NAME}` }).catch(() => undefined);
 }
 
+/** A store sale's Checkout completed: mark paid once, mint download grants, email the buyer their library link, notify the studio. */
+async function handleStorePaid(session: Stripe.Checkout.Session) {
+  if (session.payment_status !== "paid") return; // async methods: wait for async_payment_succeeded
+  const saleId = session.metadata?.sale_id ?? session.client_reference_id;
+  if (!saleId) return;
+  const pi = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
+  const result = await markSalePaid(saleId, { paymentIntentId: pi });
+  if (!result || !result.firstTime) return;
+  const done = await fulfillPaidStoreSale(saleId);
+  if (!done) return;
+  const { sale, amount } = done;
+  await notifyStudio(sale.studio_id, `New sale: ${amount}`, `${sale.buyer_email} bought from your store (order #${sale.order_number}, ${amount}). It is in your Stripe account.`);
+  if (sale.buyer_client_id) await recordClientEvent(sale.studio_id, sale.buyer_client_id, "store.order_placed", "sale", sale.id, `Bought ${amount} from the store (order #${sale.order_number})`).catch(() => undefined);
+}
+
 async function handle(event: Stripe.Event, accountId: string | null) {
   switch (event.type) {
     case "checkout.session.completed":
     case "checkout.session.async_payment_succeeded": {
+      if (event.data.object.metadata?.kind === "store") {
+        await handleStorePaid(event.data.object);
+        return;
+      }
       const payment = await recordCheckoutPaid(event.data.object, accountId);
       if (!payment) return;
       const info = await orderInfo(payment.order_id);
@@ -79,7 +99,14 @@ async function handle(event: Stripe.Event, accountId: string | null) {
       return;
     }
     case "charge.refunded": {
-      const payment = await recordRefund(event.data.object);
+      const charge = event.data.object;
+      const pi = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id ?? null;
+      const storeSale = await recordStoreRefundByCharge({ id: charge.id, paymentIntentId: pi, totalRefunded: charge.amount_refunded, receiptUrl: charge.receipt_url });
+      if (storeSale) {
+        await notifyStudio(storeSale.studio_id, `Refund on store order #${storeSale.order_number}`, `You refunded ${formatMoney(storeSale.refunded_cents, storeSale.currency)} on store order #${storeSale.order_number}. The buyer's downloads are ${storeSale.status === "refunded" ? "revoked" : "still available"}.`);
+        return;
+      }
+      const payment = await recordRefund(charge);
       if (!payment) return;
       const info = await orderInfo(payment.order_id);
       if (info) await recordClientEvent(info.studio_id, info.client_id, "payment.refunded", "payment", payment.id, `Refunded ${formatMoney(payment.refunded_cents, payment.currency)} on session #${info.order_number}`);
@@ -88,6 +115,13 @@ async function handle(event: Stripe.Event, accountId: string | null) {
     case "charge.dispute.created":
     case "charge.dispute.closed": {
       const dispute = event.data.object;
+      const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id ?? null;
+      const dpi = typeof dispute.payment_intent === "string" ? dispute.payment_intent : dispute.payment_intent?.id ?? null;
+      const storeSale = await recordStoreDisputeByCharge(chargeId, dpi, dispute.status);
+      if (storeSale) {
+        if (event.type === "charge.dispute.created") await notifyStudio(storeSale.studio_id, "A store payment was disputed", `A card dispute (${dispute.reason}) was opened on store order #${storeSale.order_number}. Respond in your Stripe Dashboard: https://dashboard.stripe.com/disputes`);
+        return;
+      }
       const payment = await recordDispute(dispute);
       if (!payment) return;
       const info = await orderInfo(payment.order_id);

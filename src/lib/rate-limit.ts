@@ -51,6 +51,9 @@ export const LIMITS = {
   pay_checkout: { max: 10, window: 10 * 60 },
   booking: { max: 10, window: 60 * 60 },
   unsubscribe: { max: 20, window: 60 * 60 },
+  store_checkout: { max: 15, window: 10 * 60 },
+  store_download: { max: 60, window: 10 * 60 },
+  store_favorite: { max: 120, window: 10 * 60 },
 } as const;
 
 export type LimitName = keyof typeof LIMITS;

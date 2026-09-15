@@ -23,6 +23,8 @@ export default async function AdminMetricsPage() {
         <Stat label="Storage" value={formatBytes(m.storageTotal)} />
         <Stat label="Emails (30d)" value={m.emailsSent.toLocaleString()} hint={`${m.emailsFailed} failed`} />
         <Stat label="Referral rewards" value={m.rewardsGranted.toLocaleString()} />
+        <Stat label="Store GMV" value={formatMoney(m.storeGmvCents)} hint={`${m.storeOrders} orders · ${m.storeSellingStudios} selling`} />
+        <Stat label="Gift-card liability" value={formatMoney(m.giftLiabilityCents)} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
